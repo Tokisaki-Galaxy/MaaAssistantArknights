@@ -81,6 +81,7 @@ Assistant::~Assistant()
     // dirty stuff preventing Logger from being destructed before ResourceLoader::load_thread_func exits,
     // which creates empty files with random name on Linux. I have no idea how this could work
     ResourceLoader::get_instance().cancel();
+    stop(false);
 
     m_thread_exit = true;
     m_thread_idle = true;
