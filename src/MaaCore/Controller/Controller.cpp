@@ -26,6 +26,7 @@
 #ifdef _WIN32
 #include "Win32Controller.h"
 #endif
+#include "CloudGamingController.h"
 
 #include "Common/AsstTypes.h"
 #include "Utils/Logger.hpp"
