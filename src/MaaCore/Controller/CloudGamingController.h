@@ -28,8 +28,8 @@ public:
     virtual void back_to_home() noexcept override;
     virtual std::pair<int, int> get_screen_res() const noexcept override;
 
-    virtual bool start_game([[maybe_unused]] const std::string& client_type) override { return true; }
-    virtual bool stop_game([[maybe_unused]] const std::string& client_type) override { return true; }
+    virtual bool start_game(const std::string& client_type) override;
+    virtual bool stop_game(const std::string& client_type) override;
     virtual size_t get_pipe_data_size() const noexcept override { return 0; }
     virtual size_t get_version() const noexcept override { return 0; }
     virtual bool inject_input_event([[maybe_unused]] const InputEvent& event) override { return false; }

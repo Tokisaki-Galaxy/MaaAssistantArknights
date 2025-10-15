@@ -147,6 +147,34 @@ ControlFeat::Feat CloudGamingController::support_features() const noexcept
     return ControlFeat::PRECISE_SWIPE;
 }
 
+bool CloudGamingController::start_game([[maybe_unused]] const std::string& client_type)
+{
+    LogInfo << "Starting Cloud Gaming session...";
+    auto response = send_request("POST", "/start");
+    if (response.first == 200) {
+        LogInfo << "Cloud Gaming session started successfully.";
+        return true;
+    }
+    else {
+        LogError << "Failed to start Cloud Gaming session. Status: " << response.first;
+        return false;
+    }
+}
+
+bool CloudGamingController::stop_game([[maybe_unused]] const std::string& client_type)
+{
+    LogInfo << "Stopping Cloud Gaming session...";
+    auto response = send_request("POST", "/exit");
+    if (response.first == 200) {
+        LogInfo << "Cloud Gaming session stopped successfully.";
+        return true;
+    }
+    else {
+        LogError << "Failed to stop Cloud Gaming session. Status: " << response.first;
+        return false;
+    }
+}
+
 // Private helper to send HTTP requests using pure boost::asio
 std::pair<unsigned int, std::string>
 CloudGamingController::send_request(const std::string& method, const std::string& target, const std::string& body, const std::string& content_type)

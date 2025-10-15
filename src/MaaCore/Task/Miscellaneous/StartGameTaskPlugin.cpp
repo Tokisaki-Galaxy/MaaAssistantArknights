@@ -34,6 +34,11 @@ bool StartGameTaskPlugin::_run()
     if (ctrler()->get_controller_type() == ControllerType::MacPlayTools) {
         return ctrler()->start_game(m_client_type);
     }
+    
+    // check for CloudGaming
+    if (ctrler()->get_controller_type() == ControllerType::CloudGaming) {
+        return ctrler()->start_game(m_client_type);
+    }
 
     // check for android version, because it leads to different magic values
     // >8:  167: magic value needs to be >164 but <172 (as that's max)
