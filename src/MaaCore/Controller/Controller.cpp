@@ -65,6 +65,9 @@ std::shared_ptr<asst::ControllerAPI> asst::Controller::create_controller(
         case ControllerType::MacPlayTools:
             controller = std::make_shared<PlayToolsController>(m_callback, m_inst, platform_type);
             break;
+        case ControllerType::CloudGaming:
+            controller = std::make_shared<CloudGamingController>(m_callback, m_inst, platform_type);
+            break;
         default:
             return nullptr;
         }
@@ -368,6 +371,9 @@ void asst::Controller::set_touch_mode(const TouchMode& mode) noexcept
         break;
     case TouchMode::MacPlayTools:
         m_controller_type = ControllerType::MacPlayTools;
+        break;
+    case TouchMode::CloudGaming:
+        m_controller_type = ControllerType::CloudGaming;
         break;
     default:
         m_controller_type = ControllerType::Minitouch;

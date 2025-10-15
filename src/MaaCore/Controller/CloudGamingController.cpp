@@ -1,18 +1,19 @@
 #include "CloudGamingController.h"
 #include "Utils/Logger.hpp"
-#include "Utils/Json.hpp"
+#include <meojson/json.hpp>
 #include "Utils/NoWarningCV.h"
+#include <istream>
+#include <ostream>
+#include <sstream>
 
 namespace asst
 {
 
-namespace beast = boost::beast;
-namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
 
-CloudGamingController::CloudGamingController(const AsstCallback& callback, Assistant* inst, PlatformType type)
-    : InstHelper(inst), m_callback(callback), m_stream(m_context)
+CloudGamingController::CloudGamingController(const AsstCallback& callback, Assistant* inst, [[maybe_unused]] PlatformType type)
+    : InstHelper(inst), m_callback(callback)
 {
     LogTraceFunction;
 }
@@ -20,27 +21,27 @@ CloudGamingController::CloudGamingController(const AsstCallback& callback, Assis
 CloudGamingController::~CloudGamingController()
 {
     LogTraceFunction;
-    beast::error_code ec;
-    m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
 }
 
 bool CloudGamingController::connect(const std::string&, const std::string&, const std::string&)
 {
     LogInfo << "Connecting to Cloud Gaming backend at " << m_host << ":" << m_port;
 
-    try {
-        auto const results = tcp::resolver(m_context).resolve(m_host, m_port);
-        m_stream.connect(results);
+    auto response = send_request("GET", "/info");
+    if (response.first != 200) {
+        LogError << "Failed to get info from cloud backend. Status: " << response.first;
+        return false;
+    }
 
-        auto response = send_request(http::verb::get, "/info");
-        if (response.result() != http::status::ok) {
-            LogError << "Failed to get info from cloud backend. Status: " << response.result_int();
+    try {
+        auto j_opt = json::parse(response.second);
+        if (!j_opt) {
+            LogError << "Failed to parse JSON from cloud backend info.";
             return false;
         }
+        auto& j = j_opt.value();
 
-        std::string body = beast::buffers_to_string(response.body().data());
-        auto j = json::parse(body);
-        m_screen_size = {j["width"].get<int>(), j["height"].get<int>()};
+        m_screen_size = {static_cast<int>(j.at("width").as_integer()), static_cast<int>(j.at("height").as_integer())};
         
         if (m_screen_size.first <= 0 || m_screen_size.second <= 0) {
             LogError << "Invalid screen resolution from cloud backend.";
@@ -52,7 +53,7 @@ bool CloudGamingController::connect(const std::string&, const std::string&, cons
         LogInfo << "Cloud Gaming backend connected. Resolution: " << m_screen_size.first << "x" << m_screen_size.second;
     }
     catch (const std::exception& e) {
-        LogError << "Failed to connect to Cloud Gaming backend: " << e.what();
+        LogError << "Failed to parse info from Cloud Gaming backend: " << e.what();
         m_inited = false;
         return false;
     }
@@ -69,25 +70,18 @@ const std::string& CloudGamingController::get_uuid() const
     return m_uuid;
 }
 
-bool CloudGamingController::screencap(cv::Mat& image_payload, bool allow_reconnect)
+bool CloudGamingController::screencap(cv::Mat& image_payload, [[maybe_unused]] bool allow_reconnect)
 {
     if (!inited()) return false;
 
-    try {
-        auto response = send_request(http::verb::get, "/screencap");
-        if (response.result() != http::status::ok) {
-            LogError << "Cloud screencap failed. Status: " << response.result_int();
-            return false;
-        }
-        std::string body = beast::buffers_to_string(response.body().data());
-        std::vector<char> data(body.begin(), body.end());
-        image_payload = cv::imdecode(data, cv::IMREAD_COLOR);
-        return !image_payload.empty();
-    }
-    catch (const std::exception& e) {
-        LogError << "Exception during cloud screencap: " << e.what();
+    auto response = send_request("GET", "/screencap");
+    if (response.first != 200) {
+        LogError << "Cloud screencap failed. Status: " << response.first;
         return false;
     }
+    std::vector<char> data(response.second.begin(), response.second.end());
+    image_payload = cv::imdecode(data, cv::IMREAD_COLOR);
+    return !image_payload.empty();
 }
 
 bool CloudGamingController::click(const Point& p)
@@ -96,8 +90,8 @@ bool CloudGamingController::click(const Point& p)
     LogTrace << "Cloud click: " << p;
 
     json::value body = {{"x", p.x}, {"y", p.y}};
-    auto response = send_request(http::verb::post, "/click", body.dump());
-    return response.result() == http::status::ok;
+    auto response = send_request("POST", "/click", body.dumps());
+    return response.first == 200;
 }
 
 bool CloudGamingController::swipe(const Point& p1, const Point& p2, int duration, bool, double, double, bool)
@@ -110,8 +104,8 @@ bool CloudGamingController::swipe(const Point& p1, const Point& p2, int duration
         {"x2", p2.x}, {"y2", p2.y},
         {"duration", duration}
     };
-    auto response = send_request(http::verb::post, "/swipe", body.dump());
-    return response.result() == http::status::ok;
+    auto response = send_request("POST", "/swipe", body.dumps());
+    return response.first == 200;
 }
 
 bool CloudGamingController::input(const std::string& text)
@@ -120,8 +114,8 @@ bool CloudGamingController::input(const std::string& text)
     LogTrace << "Cloud input: " << text;
 
     json::value body = {{"text", text}};
-    auto response = send_request(http::verb::post, "/input", body.dump());
-    return response.result() == http::status::ok;
+    auto response = send_request("POST", "/input", body.dumps());
+    return response.first == 200;
 }
 
 bool CloudGamingController::press_esc()
@@ -130,8 +124,8 @@ bool CloudGamingController::press_esc()
     LogTrace << "Cloud press_esc";
 
     json::value body = {{"keycode", "esc"}};
-    auto response = send_request(http::verb::post, "/key", body.dump());
-    return response.result() == http::status::ok;
+    auto response = send_request("POST", "/key", body.dumps());
+    return response.first == 200;
 }
 
 void CloudGamingController::back_to_home() noexcept
@@ -140,7 +134,7 @@ void CloudGamingController::back_to_home() noexcept
     LogTrace << "Cloud back_to_home";
 
     json::value body = {{"keycode", "home"}};
-    send_request(http::verb::post, "/key", body.dump());
+    send_request("POST", "/key", body.dumps());
 }
 
 std::pair<int, int> CloudGamingController::get_screen_res() const noexcept
@@ -150,37 +144,64 @@ std::pair<int, int> CloudGamingController::get_screen_res() const noexcept
 
 ControlFeat::Feat CloudGamingController::support_features() const noexcept
 {
-    return ControlFeat::Screencap | ControlFeat::Click | ControlFeat::Swipe | ControlFeat::Input;
+    return ControlFeat::PRECISE_SWIPE;
 }
 
-// Private helper to send HTTP requests
-http::response<http::dynamic_body>
-CloudGamingController::send_request(http::verb method, const std::string& target, const std::string& body, const std::string& content_type)
+// Private helper to send HTTP requests using pure boost::asio
+std::pair<unsigned int, std::string>
+CloudGamingController::send_request(const std::string& method, const std::string& target, const std::string& body, const std::string& content_type)
 {
-    http::response<http::dynamic_body> res;
     try {
-        http::request<http::string_body> req{method, target, 11};
-        req.set(http::field::host, m_host);
-        req.set(http::field::user_agent, "MAA-CloudGamingController");
+        tcp::socket socket(m_context);
+        tcp::resolver resolver(m_context);
+        net::connect(socket, resolver.resolve(m_host, m_port));
+
+        std::stringstream request_stream;
+        request_stream << method << " " << target << " HTTP/1.1\r\n";
+        request_stream << "Host: " << m_host << ":" << m_port << "\r\n";
+        request_stream << "User-Agent: MAA-CloudGamingController\r\n";
+        request_stream << "Accept: */*\r\n";
+        request_stream << "Connection: close\r\n";
         if (!body.empty()) {
-            req.set(http::field::content_type, content_type);
-            req.body() = body;
-            req.prepare_payload();
+            request_stream << "Content-Type: " << content_type << "\r\n";
+            request_stream << "Content-Length: " << body.length() << "\r\n";
+        }
+        request_stream << "\r\n";
+        if (!body.empty()) {
+            request_stream << body;
         }
 
-        http::write(m_stream, req);
-        http::read(m_stream, m_buffer, res);
+        net::write(socket, net::buffer(request_stream.str()));
+
+        net::streambuf response_buf;
+        boost::system::error_code ec;
+        net::read(socket, response_buf, ec);
+
+        if (ec && ec != boost::asio::error::eof) {
+            throw boost::system::system_error(ec);
+        }
+
+        std::istream response_stream(&response_buf);
+        std::string http_version;
+        unsigned int status_code;
+        std::string status_message;
+
+        response_stream >> http_version;
+        response_stream >> status_code;
+        std::getline(response_stream, status_message);
+
+        std::string header;
+        while (std::getline(response_stream, header) && header != "\r") {}
+
+        std::stringstream body_ss;
+        body_ss << response_stream.rdbuf();
+
+        return {status_code, body_ss.str()};
     }
     catch (const std::exception& e) {
         LogError << "HTTP request to " << target << " failed: " << e.what();
-        // In case of failure, reset the stream for the next attempt
-        beast::error_code ec;
-        m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
-        m_stream.close();
-        auto const results = tcp::resolver(m_context).resolve(m_host, m_port);
-        m_stream.connect(results);
+        return {500, ""};
     }
-    return res;
 }
 
 }
