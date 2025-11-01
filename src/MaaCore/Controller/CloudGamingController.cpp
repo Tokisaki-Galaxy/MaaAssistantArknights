@@ -1,10 +1,13 @@
 #include "CloudGamingController.h"
 #include "Utils/Logger.hpp"
 #include <meojson/json.hpp>
-#include "Utils/NoWarningCV.h"
+#include "MaaUtils/NoWarningCV.hpp"
+#include <algorithm>
+#include <cctype>
 #include <istream>
 #include <ostream>
 #include <sstream>
+#include <utility>
 
 namespace asst
 {
@@ -23,9 +26,67 @@ CloudGamingController::~CloudGamingController()
     LogTraceFunction;
 }
 
-bool CloudGamingController::connect(const std::string&, const std::string&, const std::string&)
+namespace
 {
+std::string trim_address(std::string address)
+{
+    address.erase(std::remove_if(address.begin(), address.end(), [](unsigned char c) { return std::isspace(c) != 0; }), address.end());
+    return address;
+}
+
+std::pair<std::string, std::string> parse_host_port(const std::string& address)
+{
+    if (address.empty()) {
+        return { "localhost", "22888" };
+    }
+
+    std::string trimmed = trim_address(address);
+
+    // Strip scheme if provided
+    auto scheme_pos = trimmed.find("://");
+    if (scheme_pos != std::string::npos) {
+        trimmed = trimmed.substr(scheme_pos + 3);
+    }
+
+    // Strip path/query fragment
+    auto path_pos = trimmed.find_first_of("/\?#");
+    if (path_pos != std::string::npos) {
+        trimmed = trimmed.substr(0, path_pos);
+    }
+
+    auto colon_pos = trimmed.rfind(':');
+    if (colon_pos == std::string::npos) {
+        return { trimmed.empty() ? "localhost" : trimmed, "22888" };
+    }
+
+    std::string host = trimmed.substr(0, colon_pos);
+    std::string port = trimmed.substr(colon_pos + 1);
+    if (host.empty()) {
+        host = "localhost";
+    }
+    if (port.empty()) {
+        port = "22888";
+    }
+
+    return { host, port };
+}
+}
+
+bool CloudGamingController::connect(const std::string&, const std::string& address, const std::string&)
+{
+    if (!address.empty()) {
+        auto [host, port] = parse_host_port(address);
+        m_host = std::move(host);
+        m_port = std::move(port);
+    }
+
     LogInfo << "Connecting to Cloud Gaming backend at " << m_host << ":" << m_port;
+
+    auto start_response = send_request("POST", "/start");
+    if (start_response.first != 200) {
+        LogError << "Failed to start Cloud Gaming session. Status: " << start_response.first;
+        return false;
+    }
 
     auto response = send_request("GET", "/info");
     if (response.first != 200) {

@@ -19,16 +19,18 @@ jobs:
       tag: ${{ steps.set_tag.outputs.tag }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.ref }}
-          fetch-depth: 0 # Fetch all history for git describe
+          fetch-depth: 0
           show-progress: false
 
       - name: Set tag
         id: set_tag
         run: |
-          echo tag=$(git describe --tags --match "v*" || git rev-parse --short HEAD) | tee -a $GITHUB_OUTPUT
+          # 尝试获取 tag，失败则使用 short sha
+          tag=$(git describe --tags --match "v*" 2>/dev/null || echo "v0.0.1-$(git rev-parse --short HEAD)")
+          echo "tag=${tag}" | tee -a $GITHUB_OUTPUT
 
   windows-core:
     needs: meta
@@ -40,20 +42,23 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.ref }}
           show-progress: false
 
       - name: Fetch submodules
         run: |
+          # 必须初始化 MaaUtils
+          git submodule update --init --depth 1 src/MaaUtils
           git submodule update --init --depth 1 3rdparty/EmulatorExtras
 
       - name: Cache MaaDeps
         id: cache-maadeps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
-          path: ./MaaDeps
+          # 注意：现在的路径在 src/MaaUtils 下
+          path: ./src/MaaUtils/MaaDeps
           key: ${{ runner.os }}-${{ matrix.arch }}-maadeps-${{ hashFiles('tools/maadeps-download.py') }}
 
       - name: Bootstrap MaaDeps
@@ -66,14 +71,28 @@ jobs:
       - name: Config cmake
         run: |
           mkdir -p build
-          cmake -B build ${{ matrix.arch == 'arm64' && '-A ARM64' }} -DCMAKE_BUILD_TYPE=Release -DMAADEPS_TRIPLET='maa-${{ matrix.arch }}-windows' -DMAA_HASH_VERSION='${{ needs.meta.outputs.tag }}' -DBUILD_WPF_GUI=OFF
+          # 补充了官方现在要求的 DINSTALL_RESOURCE 和 DINSTALL_PYTHON
+          cmake -B build `
+            ${{ matrix.arch == 'arm64' && '-A ARM64' || '' }} `
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+            -DMAADEPS_TRIPLET='maa-${{ matrix.arch }}-windows' `
+            -DINSTALL_RESOURCE=ON `
+            -DINSTALL_PYTHON=ON `
+            -DMAA_HASH_VERSION='${{ needs.meta.outputs.tag }}' `
+            -DBUILD_WPF_GUI=OFF
 
       - name: Build MaaCore
         run: |
-          cmake --build build --config Release --parallel $env:NUMBER_OF_PROCESSORS --target MaaCore
+          # 编译全部（由于只有 Core 及其依赖，所以不会编译 GUI）
+          cmake --build build --config RelWithDebInfo --parallel $env:NUMBER_OF_PROCESSORS
 
-      - name: Upload MaaCore.dll
-        uses: actions/upload-artifact@v4
+      - name: Install
+        run: |
+          # 使用 install 自动收集所有必须的 DLL (MaaCore.dll, MaaUtils.dll, opencv_world.dll 等)
+          cmake --install build --prefix install --config RelWithDebInfo
+
+      - name: Upload Core Artifacts
+        uses: actions/upload-artifact@v6
         with:
-          name: MAA-win-${{ matrix.arch }}
-          path: build/bin/Release/MaaCore.dll
+          name: MAA-Core-win-${{ matrix.arch }}
+          path: install/bin/

@@ -1498,6 +1498,7 @@ public class TaskQueueViewModel : Screen
     {
         string errMsg = string.Empty;
         bool connected = await Task.Run(() => Instances.AsstProxy.AsstConnect(ref errMsg));
+        bool usingCloudGaming = string.Equals(SettingsViewModel.ConnectSettings.TouchMode, "cloudgame", StringComparison.OrdinalIgnoreCase);
 
         if (!connected && SettingsViewModel.ConnectSettings.UseAttachWindow)
         {
@@ -1508,7 +1509,7 @@ public class TaskQueueViewModel : Screen
         }
 
         // 尝试启动模拟器
-        if (!connected && SettingsViewModel.ConnectSettings.RetryOnDisconnected)
+        if (!connected && !usingCloudGaming && SettingsViewModel.ConnectSettings.RetryOnDisconnected)
         {
             AddLog(LocalizationHelper.GetString("ConnectFailed") + "\n" + LocalizationHelper.GetString("TryToStartEmulator"));
 
@@ -1524,7 +1525,7 @@ public class TaskQueueViewModel : Screen
         }
 
         // 尝试断开连接, 然后重新连接
-        if (!connected)
+        if (!connected && !usingCloudGaming)
         {
             AddLog(LocalizationHelper.GetString("ConnectFailed") + "\n" + LocalizationHelper.GetString("TryToReconnectByAdb"));
             await Task.Run(() => SettingsViewModel.StartSettings.ReconnectByAdb());
@@ -1540,7 +1541,7 @@ public class TaskQueueViewModel : Screen
         }
 
         // 尝试重启 ADB
-        if (!connected && SettingsViewModel.ConnectSettings.AllowAdbRestart)
+        if (!connected && !usingCloudGaming && SettingsViewModel.ConnectSettings.AllowAdbRestart)
         {
             AddLog(LocalizationHelper.GetString("ConnectFailed") + "\n" + LocalizationHelper.GetString("RestartAdb"));
 
@@ -1556,7 +1557,7 @@ public class TaskQueueViewModel : Screen
         }
 
         // 尝试杀掉 ADB 进程
-        if (!connected && SettingsViewModel.ConnectSettings.AllowAdbHardRestart)
+        if (!connected && !usingCloudGaming && SettingsViewModel.ConnectSettings.AllowAdbHardRestart)
         {
             AddLog(LocalizationHelper.GetString("ConnectFailed") + "\n" + LocalizationHelper.GetString("HardRestartAdb"));
 

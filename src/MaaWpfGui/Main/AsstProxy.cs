@@ -639,7 +639,10 @@ public class AsstProxy
                     _runningState.SetIdle(false);
                 }
 
-                await Task.Run(() => SettingsViewModel.StartSettings.TryToStartEmulator(true));
+                if (!string.Equals(SettingsViewModel.ConnectSettings.TouchMode, "cloudgame", StringComparison.OrdinalIgnoreCase))
+                {
+                    await Task.Run(() => SettingsViewModel.StartSettings.TryToStartEmulator(true));
+                }
 
                 // 一般是点了“停止”按钮了
                 if (_runningState.GetStopping())
@@ -2408,6 +2411,10 @@ public class AsstProxy
     /// <returns>是否成功。</returns>
     public bool AsstConnect(ref string error)
     {
+        if (string.Equals(SettingsViewModel.ConnectSettings.TouchMode, "cloudgame", StringComparison.OrdinalIgnoreCase))
+        {
+            return ConnectCloudGaming(ref error);
+        }
         // 如果启用了 AttachWindow 模式，则使用窗口绑定而非 ADB 连接
         if (SettingsViewModel.ConnectSettings.UseAttachWindow)
         {
@@ -2654,6 +2661,71 @@ public class AsstProxy
         }
 
         return false;
+    }
+
+    private static string NormalizeCloudEndpoint(string address)
+    {
+        const int DefaultPort = 22888;
+
+        string normalized = string.IsNullOrWhiteSpace(address) ? "localhost:22888" : address.Trim();
+        if (!normalized.Contains("://", StringComparison.Ordinal))
+        {
+            normalized = "http://" + normalized;
+        }
+
+        if (!Uri.TryCreate(normalized, UriKind.Absolute, out var uri) || string.IsNullOrEmpty(uri.Host))
+        {
+            uri = new Uri("http://localhost:22888");
+        }
+
+        string host = string.IsNullOrEmpty(uri.Host) ? "localhost" : uri.Host;
+        int port = uri.IsDefaultPort ? DefaultPort : uri.Port;
+
+        return $"{host}:{port}";
+    }
+
+    private bool ConnectCloudGaming(ref string error)
+    {
+        var normalizedAddress = NormalizeCloudEndpoint(SettingsViewModel.ConnectSettings.ConnectAddress);
+
+        if (Connected && string.Equals(_connectedAddress, normalizedAddress, StringComparison.OrdinalIgnoreCase))
+        {
+            var actualConnectionStatus = CheckConnection(string.Empty, normalizedAddress);
+            if (!actualConnectionStatus)
+            {
+                Connected = false;
+                _logger.Information("Connection lost to cloud backend {Address}", normalizedAddress);
+                error = "Connection lost";
+            }
+            else
+            {
+                _logger.Information("Already connected to cloud backend {Address}", normalizedAddress);
+                if (!_forcedReloadResource)
+                {
+                    return true;
+                }
+
+                _logger.Information("Forced reload resource for cloud backend");
+                if (!LoadResource())
+                {
+                    error = "Load Resource Failed";
+                    return false;
+                }
+
+                ToastNotification.ShowDirect("Auto Reload");
+                return true;
+            }
+        }
+
+        bool ret = AsstConnect(_handle, "CloudGaming", normalizedAddress, SettingsViewModel.ConnectSettings.ConnectConfig);
+        if (!ret)
+        {
+            error = LocalizationHelper.GetString("ConnectFailed") + "\n" + LocalizationHelper.GetString("CheckSettings");
+            return false;
+        }
+
+        SettingsViewModel.ConnectSettings.ConnectAddress = normalizedAddress;
+        return ret;
     }
 
     private AsstTaskId AsstAppendTaskWithEncoding(AsstTaskType type, JObject? taskParams = null)
