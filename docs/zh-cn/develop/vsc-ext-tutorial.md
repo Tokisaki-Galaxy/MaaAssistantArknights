@@ -5,12 +5,21 @@ icon: iconoir:code-brackets
 
 # 专用 VSCode 插件教程
 
-- [插件商店](https://marketplace.visualstudio.com/items?itemName=nekosu.maa-support)
-- [仓库](https://github.com/neko-para/maa-support-extension)
+该插件针对 MaaAssistantArknights/MaaFramework 提供了一系列方便开发的能力，包括但不限于以下功能：
+
+- tasks.json 支持，包含 `template 预览`，`next 跳转`，`任务引用` 等等
+- 截取/裁剪图片
+
+具体内容可以前往 [插件商店](https://marketplace.visualstudio.com/items?itemName=nekosu.maa-support) 或是 [仓库](https://github.com/neko-para/maa-support-extension) 查看
 
 ## 安装
 
-推荐直接在 VSCode 的插件列表中搜索 `Maa` 来安装.
+推荐直接在 VSCode 的插件列表中搜索 `Maa` 来安装
+
+::: tip
+首次使用时, 插件会自动下载预设版本的资源
+搜索命令 `Maa: 选择下载源`, 可切换下载源 (npm / cnpm)
+:::
 
 ## 功能
 
@@ -37,6 +46,8 @@ icon: iconoir:code-brackets
 插件支持跳转到定义, 跳转到引用, 查看任务定义.
 
 开启 `Maa` 兼容模式时, 可以解析 `模板任务`, 支持联动基类查询任务定义和引用; 悬停任务定义, 可以查看同名图片.
+
+使用 `Ctrl+T` 快捷键, 可以快速查询并跳转任务定义.
 
 #### 查询/打开图片
 
@@ -77,7 +88,7 @@ icon: iconoir:code-brackets
 
 通过控制面板, 可以扫描并选择控制器, 选择资源, 添加并管理任务, 以及执行任务.
 
-### 截图裁剪功能
+### 截图裁剪 / 快速识别
 
 在 VSCode 的命令面板中搜索执行 `Maa: 打开截图工具`, 可打开 `截图 / 裁剪` 面板.
 
@@ -88,17 +99,33 @@ icon: iconoir:code-brackets
 - 按住 `Ctrl` 键, 框选需要裁剪的区域
 - 使用滚轮可进行缩放
 - 裁剪完成后, 使用 `下载` 按钮, 可自动将裁剪结果保存到激活资源的最顶层的图片目录
+- 使用 `复制` 按钮，可将ROI以数组的形式复制到剪贴板
+- 按下 `工具` 按钮，将打开识别工具面板，可以直接对当前图片进行识别测试
+
+::: warning
+
+如果 OCR 的识别结果为空, 请检查[OCR模型](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/1.1-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B.md#%E6%96%87%E5%AD%97%E8%AF%86%E5%88%AB%E6%A8%A1%E5%9E%8B%E6%96%87%E4%BB%B6)是否正确配置.
+
+对于 MAA, 插件将自动维护使用的模型, 只需要选择正确的资源即可.
+
+:::
+
+### 日志查看功能
+
+#### MaaFramework日志
+
+在 VSCode 的命令面板中搜索执行 `Maa: 打开maa日志`, 可查看调试期间产生的`maa.log`日志.
+
+#### Maa Pipeline Support扩展日志
+
+在 VSCode 的命令面板中搜索执行 `Maa: 打开插件日志`, 可查看调试期间产生的`mse.log`日志.
 
 ### 底部状态栏
 
-#### MaaSupport \[插件版本\]
+#### MaaSupport <插件版本>
 
 点击可聚焦控制面板
 
-#### MaaFramework \[MaaFw版本\]
+#### MaaFramework <MaaFw版本>
 
-点击可切换插件使用的 `MaaFramework` 版本
-
-> 首次使用时, 插件会自动下载预设版本.
->
-> 搜索命令 `Maa: 选择下载源`, 可切换下载源 (npm / cnpm)
+点击可切换插件使用的 `MaaFramework` 版本。其中，可选择的版本被限制为当前插件所支持的版本，如果列表中没有你需要的版本，请考虑更换插件版本。

@@ -6,6 +6,10 @@ script_root="$(dirname "$(realpath "$0")")"
 pushd . > /dev/null
 
 cd "$script_root"
+
+# Create and navigate to build/bin/Release directory
+mkdir -p "build/bin/Release"
+cd "build/bin/Release"
 work_dir="$(pwd)"
 
 # Clean up existing directories
@@ -73,8 +77,8 @@ pids+=($!)
     echo -e "\narknights-toolbox-update - Taiwan"
     mkdir -p Overseas/tw/gamedata/excel
     cd Overseas/tw/gamedata/excel
-    git clone --filter=blob:none --no-checkout --depth 1 -b data-tw \
-        "https://github.com/arkntools/arknights-toolbox-update" .
+    git clone --filter=blob:none --no-checkout --depth 1 -b main \
+        "https://github.com/arkntools/arknights-data-tw-for-maa" .
     git checkout
 } &
 pids+=($!)

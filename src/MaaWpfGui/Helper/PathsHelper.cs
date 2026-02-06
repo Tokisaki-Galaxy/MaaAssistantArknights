@@ -44,6 +44,13 @@ public static class PathsHelper
     /// </summary>
     public static string CacheDir => _cache ??= Path.Combine(BaseDir, "cache");
 
+    private static string? _cacheResource;
+
+    /// <summary>
+    /// Gets the full path to the directory used for caching resource files.
+    /// </summary>
+    public static string CacheResourceDir => _cacheResource ??= Path.Combine(CacheDir, "resource");
+
     private static string? _config;
 
     /// <summary>
@@ -69,4 +76,14 @@ public static class PathsHelper
     /// named "data". This property returns the resolved path, creating the directory if it does not exist is the
     /// responsibility of the caller.</remarks>
     public static string DataDir => _data ??= Path.Combine(BaseDir, "data");
+
+    private static string? _reports;
+
+    /// <summary>
+    /// Gets the full path to the application's reports directory.
+    /// </summary>
+    /// <remarks>The reports directory is located within the application's base directory under a folder
+    /// named "_reports". This property returns the resolved path, creating the directory if it does not exist is the
+    /// responsibility of the caller.</remarks>
+    public static string ReportsDir => _reports ??= Path.Combine(BaseDir, "reports");
 }

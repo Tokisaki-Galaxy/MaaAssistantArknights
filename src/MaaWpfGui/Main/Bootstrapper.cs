@@ -41,7 +41,7 @@ using MaaWpfGui.States;
 using MaaWpfGui.Utilities;
 using MaaWpfGui.ViewModels.UI;
 using MaaWpfGui.ViewModels.UserControl.Settings;
-using MaaWpfGui.Views.UI;
+using MaaWpfGui.Views.Dialogs;
 using MaaWpfGui.WineCompat;
 using Microsoft.Win32;
 using Serilog;
@@ -81,6 +81,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             // 因为经常有人把 MAA 和别的东西解压到一起然后发生 DLL 劫持然后报错，遂检测
             var maaDlls = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
+                "libloader.dll",
                 "DirectML.dll",
                 "fastdeploy_ppocr.dll",
                 "MaaCore.dll",
@@ -140,6 +141,49 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         }
     }
 
+    public static bool IsRunningInTempDirectory()
+    {
+        try
+        {
+            var currentPath = Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var tempPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                Path.GetFullPath(Path.GetTempPath()),
+            };
+
+            var envVars = new[] { "TEMP", "TMP", "TMPDIR" };
+            foreach (var envVar in envVars)
+            {
+                var envValue = Environment.GetEnvironmentVariable(envVar);
+                if (!string.IsNullOrEmpty(envValue))
+                {
+                    try
+                    {
+                        tempPaths.Add(Path.GetFullPath(envValue));
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+
+            foreach (var tempPath in tempPaths)
+            {
+                if (currentPath.StartsWith(tempPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public static void ParseCrashLog()
     {
         var crashFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash.log");
@@ -150,6 +194,34 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         try
         {
+            var localAppData = Environment.GetEnvironmentVariable("LocalAppData");
+            if (localAppData is not null && Directory.Exists($"{localAppData}/CrashDumps"))
+            {
+                var crashDumpsSource = Path.Combine(localAppData, "CrashDumps");
+                var dumpDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug", "dumps");
+                if (Directory.Exists(dumpDir))
+                {
+                    Directory.Delete(dumpDir, true);
+                }
+                Directory.CreateDirectory(dumpDir);
+
+                var time = File.GetLastWriteTime(crashFile);
+                bool foundDump = false;
+                foreach (var file in new DirectoryInfo(crashDumpsSource).EnumerateFiles("MAA.exe.*.dmp"))
+                {
+                    if (file.LastWriteTime >= time.AddMinutes(-10) && file.LastWriteTime <= time.AddMinutes(10))
+                    {
+                        _logger.Information("Found crash dump file: {CrashDumpFile}", file.FullName);
+                        File.Copy(file.FullName, Path.Combine(dumpDir, file.Name), true);
+                        foundDump = true;
+                    }
+                }
+                if (foundDump)
+                {
+                    _logger.Information("Crash dumps are copied to {DumpDir}", dumpDir);
+                }
+            }
+
             string[] lines = File.ReadAllLines(crashFile, Encoding.UTF8);
 
             StringBuilder message = new StringBuilder();
@@ -193,20 +265,22 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
                 message.AppendLine();
                 message.AppendLine(LocalizationHelper.GetString("ErrorCrashMessageHelpTip"));
 
+                _logger.Warning(message.ToString());
+
                 MessageBoxHelper.Show(
                     message.ToString(),
                     LocalizationHelper.GetString("ErrorCrashDialogTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
+            }
 
-                try
-                {
-                    File.Delete(crashFile);
-                }
-                catch
-                {
-                    // ignored
-                }
+            try
+            {
+                File.Delete(crashFile);
+            }
+            catch
+            {
+                // ignored
             }
         }
         catch
@@ -247,7 +321,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             .Enrich.WithThreadName();
 
         var uiVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "0.0.1";
-        uiVersion = uiVersion == "0.0.1" ? "DEBUG VERSION" : uiVersion;
+        uiVersion = uiVersion == "0.0.1" ? "DEBUG_VERSION" : uiVersion;
         var builtDate = Assembly.GetExecutingAssembly().GetCustomAttribute<BuildDateTimeAttribute>()?.BuildDateTime ?? DateTime.MinValue;
         var maaEnv = Environment.GetEnvironmentVariable("MAA_ENVIRONMENT") == "Debug"
             ? "Debug"
@@ -294,8 +368,15 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         _logger.Information("===================================");
 
         ConfigurationHelper.Load();
+        ConfigConverter.ConvertConfig();
         LocalizationHelper.Load();
         ETagCache.Load();
+
+        if (ConfigFactory.Root.GUI.IgnoreBadModulesAndUseSoftwareRendering)
+        {
+            RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+            _logger.Information("Using software rendering mode due to user preference (bad modules detected)");
+        }
 
         // 检查 MaaCore.dll 是否存在
         if (!File.Exists("MaaCore.dll"))
@@ -337,8 +418,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
                 cancel: LocalizationHelper.GetString("Cancel"));
             if (ret == MessageBoxResult.OK)
             {
-                var startInfo = new ProcessStartInfo
-                {
+                var startInfo = new ProcessStartInfo {
                     FileName = "DependencySetup_依赖库安装.bat",
                     WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory, // 设置工作目录
                     WindowStyle = ProcessWindowStyle.Normal, // 显示窗口让用户看到进度
@@ -347,6 +427,17 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
                 Process.Start(startInfo);
             }
 
+            Shutdown();
+            return;
+        }
+
+        if (IsRunningInTempDirectory())
+        {
+            MessageBoxHelper.Show(
+                LocalizationHelper.GetString("RunningInTempDirectoryError"),
+                LocalizationHelper.GetString("Error"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
             Shutdown();
             return;
         }
@@ -478,6 +569,8 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
         builder.Bind<IHttpService>().To<HttpService>().InSingletonScope();
         builder.Bind<IMaaApiService>().To<MaaApiService>().InSingletonScope();
+
+        builder.Bind<OverlayViewModel>().ToSelf().InSingletonScope();
     }
 
     protected override void Configure()
@@ -494,13 +587,13 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             return;
         }
 
-        bool wasFirstBoot = Instances.VersionUpdateViewModel.IsFirstBootAfterUpdate;
+        bool wasFirstBoot = Instances.VersionUpdateDialogViewModel.IsFirstBootAfterUpdate;
 
         Instances.WindowManager.ShowWindow(rootViewModel);
         Instances.InstantiateOnRootViewDisplayed(Container);
 
         // 如果 IsFirstBootAfterUpdate 从 false 变为 true，说明这次启动只是解压更新包，不用执行后续逻辑
-        if (!wasFirstBoot && Instances.VersionUpdateViewModel.IsFirstBootAfterUpdate)
+        if (!wasFirstBoot && Instances.VersionUpdateDialogViewModel.IsFirstBootAfterUpdate)
         {
             return;
         }
@@ -523,7 +616,7 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
         // MessageBox.Show("O(∩_∩)O 拜拜");
         try
         {
-            Instances.TaskQueueViewModel.ResetAllTemporaryVariable();
+            Instances.TaskQueueViewModel.ResetAllTemporaryVariable(false);
         }
         catch
         {
@@ -547,15 +640,26 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
             { // ignored
             }
 
-            foreach (var file in new DirectoryInfo(".").GetFiles("*.old"))
+            foreach (var file in new DirectoryInfo(".").EnumerateFiles("*.old"))
             {
                 try
                 {
                     file.Delete();
                 }
                 catch (Exception)
+                { // ignored
+                }
+            }
+
+            // 清理残留的 OTA 更新包临时文件
+            foreach (var file in new DirectoryInfo(".").EnumerateFiles("MAAComponent-OTA*.temp"))
+            {
+                try
                 {
-                    // ignored
+                    file.Delete();
+                }
+                catch (Exception)
+                { // ignored
                 }
             }
         }
@@ -657,15 +761,14 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
 
     private static void ShowErrorDialog(Exception exception)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
+        Application.Current.Dispatcher.Invoke(() => {
             // DragDrop.DoDragSourceMove 会导致崩溃，但不需要退出程序
             // 这是一坨屎，但是没办法，只能这样了
             var isDragDropException = exception is COMException && exception.ToString()!.Contains("DragDrop.DoDragSourceMove");
 
             var shouldExit = !isDragDropException;
 
-            var errorView = new ErrorView(exception, shouldExit);
+            var errorView = new ErrorDialogView(exception, shouldExit);
             errorView.ShowDialog();
         });
     }
@@ -725,6 +828,6 @@ public class Bootstrapper : Bootstrapper<RootViewModel>
     {
         // 配置名可能就包在引号中，需要转义符，如 \"a\"
         string currentConfig = ConfigurationHelper.GetCurrentConfiguration();
-        return currentConfig != desiredConfig && ConfigurationHelper.SwitchConfiguration(desiredConfig);
+        return currentConfig != desiredConfig && ConfigurationHelper.SwitchConfiguration(desiredConfig) && ConfigFactory.SwitchConfig(desiredConfig);
     }
 }

@@ -7,10 +7,10 @@
     xmlns:hc="https://handyorg.github.io/handycontrol"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:s="https://github.com/canton7/Stylet"
-    xmlns:taskQueue="clr-namespace:MaaWpfGui.ViewModels.UserControl.TaskQueue"
+    xmlns:taskQueue_vms="clr-namespace:MaaWpfGui.ViewModels.UserControl.TaskQueue"
     MaxWidth="220"
     d:Background="White"
-    d:DataContext="{d:DesignInstance {x:Type taskQueue:CustomSettingsUserControlModel}}"
+    d:DataContext="{d:DesignInstance {x:Type taskQueue_vms:CustomSettingsUserControlModel}}"
     d:DesignWidth="220"
     s:View.ActionTarget="{Binding}"
     mc:Ignorable="d">
@@ -28,7 +28,7 @@
             xml:space="preserve"
             FontSize="12"
             Foreground="{DynamicResource TraceLogBrush}"
-            Text="Input Rules:&#10;• Comma &quot;,&quot; separated list: Executes first matching task.&#10;• Semicolon &quot;;&quot; separated groups: Executes each group sequentially.&#10;&#10;Examples:&#10;• 'TaskA, TaskB' → Runs TaskA (or TaskB if TaskA doesn't match)&#10;• 'TaskA; TaskB' → Runs both TaskA and TaskB&#10;• 'TaskA, TaskB; TaskC' → First runs TaskA/TaskB, then TaskC"
+            Text="Input Rules:&#10;• Comma &quot;,&quot; separated list: Executes first matching task.&#10;&#10;&#10;Examples:&#10;• 'TaskA, TaskB' → Runs TaskA (or TaskB if TaskA doesn't match)&#10;"
             TextAlignment="Left"
             TextWrapping="Wrap" />
     </StackPanel>

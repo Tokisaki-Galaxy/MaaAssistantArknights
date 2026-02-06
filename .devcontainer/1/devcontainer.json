@@ -25,8 +25,7 @@
                 "xaver.clang-format",
                 "llvm-vs-code-extensions.vscode-clangd",
                 "ms-python.python",
-                "ms-python.black-formatter",
-                "ms-python.isort",
+                "charliermarsh.ruff",
                 "esbenp.prettier-vscode",
                 "DavidAnson.vscode-markdownlint",
                 "yzhang.markdown-all-in-one",
@@ -34,13 +33,16 @@
                 "mkxml.vscode-filesize"
             ],
             "settings": {
+                // Color theme
+                "workbench.colorTheme": "Default Dark Modern",
+
                 // Editor formatting
                 "editor.formatOnSave": true,
                 "editor.defaultFormatter": "esbenp.prettier-vscode",
 
                 // Language-specific formatting
                 "[python]": {
-                    "editor.defaultFormatter": "ms-python.black-formatter",
+                    "editor.defaultFormatter": "charliermarsh.ruff",
                     "editor.codeActionsOnSave": {
                         "source.organizeImports": "explicit"
                     }
@@ -52,18 +54,15 @@
                     "editor.defaultFormatter": "xaver.clang-format"
                 },
 
-                // Python formatting and linting
-                "isort.args": ["--profile", "black"],
-
                 // Python runtime
                 "python.terminal.launchArgs": ["-u"],
-                "python.defaultInterpreterPath": "/home/vscode/miniconda/envs/maa/bin/python",
+                "python.defaultInterpreterPath": "/home/vscode/.venv/maa/bin/python",
                 "python.terminal.activateEnvironment": false,
 
                 // CMake settings
                 "cmake.configureSettings": {
                     "BUILD_DEBUG_DEMO": "ON",
-                    "CMAKE_TOOLCHAIN_FILE": "MaaDeps/cmake/maa-x64-linux-toolchain.cmake"
+                    "CMAKE_TOOLCHAIN_FILE": "src/MaaUtils/MaaDeps/cmake/maa-x64-linux-toolchain.cmake"
                 },
                 "cmake.configureOnOpen": false,
 

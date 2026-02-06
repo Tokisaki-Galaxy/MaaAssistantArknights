@@ -8,22 +8,13 @@
 #include "Config/Miscellaneous/SSSCopilotConfig.h"
 #include "Config/TaskData.h"
 #include "Controller/Controller.h"
+#include "MaaUtils/ImageIo.h"
 #include "Task/ProcessTask.h"
-#include "UseSupportUnitTaskPlugin.h"
-#include "Utils/ImageIo.hpp"
 #include "Utils/Logger.hpp"
+#include "Vision/Matcher.h"
 #include "Vision/Miscellaneous/OperNameAnalyzer.h"
 #include "Vision/MultiMatcher.h"
 #include "Vision/RegionOCRer.h"
-
-asst::BattleFormationTask::BattleFormationTask(
-    const AsstCallback& callback,
-    Assistant* inst,
-    std::string_view task_chain) :
-    AbstractTask(callback, inst, task_chain),
-    m_use_support_unit_task_ptr(std::make_shared<UseSupportUnitTaskPlugin>(callback, inst, task_chain))
-{
-}
 
 bool asst::BattleFormationTask::set_specific_support_unit(const std::string& name)
 {
@@ -55,10 +46,11 @@ bool asst::BattleFormationTask::_run()
         return true; // 编队不可用，直接返回，常见于TR关卡
     }
 
+    m_used_support_unit = false;
     if (!parse_formation()) {
         return false;
     }
-    else if (compare_formation()) {
+    else if (compare_formation()) { // 与上一个作业的编队进行对比，相同则跳过
         Log.info(__FUNCTION__, "| Formation is the same as last time, skip");
         for (auto& [name, opers] : m_formation | std::views::values | std::views::join) {
             const auto& pair_it =
@@ -104,21 +96,20 @@ bool asst::BattleFormationTask::_run()
     }
 
     // 记录缺失干员组的数量
-    int missing_numbers = (int)std::ranges::count_if(
-        m_formation | std::views::transform([&](const auto& pair) { return pair.second; }) | std::views::join,
-        [&](const OperGroup& group) { return !has_oper_selected(group.second); });
+    auto missing_groups = std::ranges::views::filter(
+        m_formation | std::views::values /* 剔除职业 */ | std::views::join,
+        [&](const OperGroup& group) { return !has_oper_selected(group.second); }); // 拿到缺干员的组
+
+    int missing_numbers = (int)std::ranges::distance(missing_groups);
     // 在有且仅有一个缺失干员组时尝试寻找助战干员补齐编队
     if (use_suppprt_unit_when_needed() && missing_numbers == 1 && !m_used_support_unit) {
         // 之后再重构数据结构，先凑合用
         std::vector<battle::RequiredOper> required_opers;
+        const auto& missing_group = missing_groups.begin(); // 只有一个缺失干员组，直接取第一个
         for (const battle::OperUsage& oper :
-             m_formation | std::views::transform([&](const auto& pair) { return pair.second; }) /* 剔除职业 */ |
-                 std::views::join | /* 拿到缺干员的组 */ std::views::filter([&](const OperGroup& group) {
-                     return std::ranges::any_of(group.second, [&](const battle::OperUsage& oper) {
-                         return oper.status == battle::OperStatus::Missing;
-                     });
-                 }) |
-                 std::views::transform([&](const OperGroup& pair) { return pair.second; }) | std::views::join) {
+             missing_group->second | std::views::filter([&](const battle::OperUsage& oper) {
+                 return oper.status == battle::OperStatus::Missing || oper.status == battle::OperStatus::Unavailable;
+             })) {
             // 如果指定助战干员正好可以补齐编队，则只招募指定助战干员就好了，记得再次确认一下 skill
             // 如果编队里正好有【艾雅法拉 - 2】和 【艾雅法拉 - 3】呢？
             if (oper.name == m_specific_support_unit.name) {
@@ -127,17 +118,19 @@ bool asst::BattleFormationTask::_run()
                 required_opers.emplace_back(m_specific_support_unit);
                 break;
             }
-            required_opers.emplace_back(BattleData.get_role(oper.name), oper.name, oper.skill);
+            required_opers.emplace_back(
+                RequiredOper { .role = BattleData.get_role(oper.name), .name = oper.name, .skill = oper.skill });
         }
 
         // 先退出去招募助战再回来，好蠢
         confirm_selection();
         Log.info(__FUNCTION__, "| Left quick formation scene");
-        if (m_use_support_unit_task_ptr->try_add_support_unit(required_opers, 5, true)) {
+        if (auto opt = add_support_unit(required_opers)) {
             m_used_support_unit = true;
+            m_opers_in_formation->emplace(*opt, missing_group->first);
         }
         // 再到快速编队页面
-        if (!enter_selection_page()) {
+        if (!ProcessTask(*this, { "Formation-EnterQuickFormation" }).set_retry_times(3).run()) {
             save_img(utils::path("debug") / utils::path("other"));
             return false;
         }
@@ -145,10 +138,10 @@ bool asst::BattleFormationTask::_run()
     }
 
     // 在尝试补齐编队后依然有缺失干员，自动编队失败
-    bool has_missing = std::ranges::any_of(m_formation, [&](const auto& pair) {
-        return std::ranges::any_of(pair.second /* role, groups */, [&](const OperGroup& group) {
-            return !has_oper_selected(group.second);
-        });
+    bool has_missing = std::ranges::any_of(missing_groups, [&](const auto& pair) {
+        // 缺失组未被助战补齐干员
+        return std::ranges::find_if(*m_opers_in_formation, [&](const auto& p) { return p.second == pair.first; }) ==
+               m_opers_in_formation->end();
     });
     if (has_missing) {
         report_missing_operators();
@@ -158,7 +151,7 @@ bool asst::BattleFormationTask::_run()
     // 对于有在干员组中存在的自定干员，无法提前得知是否成功编入，故不提前加入编队
     if (!m_user_additional.empty()) {
         std::unordered_map<battle::Role, std::vector<OperGroup>> user_formation; // 解析后用户自定编队
-        auto limit = 12 - (int)m_opers_in_formation->size();
+        auto limit = 12 + m_used_support_unit - (int)m_opers_in_formation->size();
         for (const auto& [name, skill] : m_user_additional) {
             if (m_opers_in_formation->contains(name)) {
                 continue;
@@ -191,10 +184,10 @@ bool asst::BattleFormationTask::_run()
     confirm_selection();
 
     if (m_support_unit_usage == SupportUnitUsage::Specific && !m_used_support_unit) { // 使用指定助战干员
-        m_used_support_unit = m_use_support_unit_task_ptr->try_add_support_unit({ m_specific_support_unit }, 5, true);
+        m_used_support_unit = add_support_unit({ m_specific_support_unit }).has_value();
     }
     else if (m_support_unit_usage == SupportUnitUsage::Random && !m_used_support_unit) { // 使用随机助战干员
-        m_used_support_unit = m_use_support_unit_task_ptr->try_add_support_unit({}, 5, false);
+        m_used_support_unit = add_support_unit().has_value();
     }
 
     return true;
@@ -294,13 +287,14 @@ bool asst::BattleFormationTask::add_formation(battle::Role role, const std::vect
             has_error = false;
         }
         else {
-            if (overall_swipe_times == m_missing_retry_times) {
+            if (overall_swipe_times >= m_missing_retry_times) {
                 for (auto& group : oper_group) {
                     if (has_oper_selected(group->second)) {
                         continue;
                     }
                     for (auto& oper : group->second) {
-                        if (oper.status == battle::OperStatus::Unchecked) {
+                        if (oper.status == battle::OperStatus::Unchecked &&
+                            !m_opers_in_formation->contains(oper.name)) {
                             oper.status = battle::OperStatus::Missing;
                         }
                     }
@@ -373,7 +367,7 @@ bool asst::BattleFormationTask::add_trust_operators()
     }
 
     // 需要追加的信赖干员数量
-    int append_count = 12 - (int)m_opers_in_formation->size();
+    int append_count = 12 + m_used_support_unit - (int)m_opers_in_formation->size();
     if (append_count == 0) {
         return true;
     }
@@ -482,7 +476,6 @@ std::vector<asst::BattleFormationTask::QuickFormationOper>
 {
     const auto& ocr_replace = Task.get<OcrTaskInfo>("CharsNameOcrReplace");
     std::vector<asst::BattleFormationTask::QuickFormationOper> opers_result;
-    cv::Mat select;
     for (int i = 0; i < 8; ++i) {
         std::string task_name = "BattleQuickFormation-OperNameFlag" + std::to_string(i);
 
@@ -492,7 +485,8 @@ std::vector<asst::BattleFormationTask::QuickFormationOper>
         if (!multi.analyze()) [[unlikely]] {
             continue;
         }
-        for (const auto& flag : multi.get_result()) {
+        const auto& multi_result = multi.get_result();
+        for (const auto& flag : multi_result) {
             OperNameAnalyzer region(image);
             region.set_task_info(ocr_task);
             region.set_roi(flag.rect.move(ocr_task->rect_move));
@@ -514,6 +508,7 @@ std::vector<asst::BattleFormationTask::QuickFormationOper>
             res.score = ocr_result.score;
             res.flag_rect = flag.rect;
             res.flag_score = flag.score;
+            res.role = Roles[i];
 
             constexpr int kMinDistance = 5;
             auto find_it =
@@ -524,9 +519,12 @@ std::vector<asst::BattleFormationTask::QuickFormationOper>
             if (find_it != opers_result.end() || res.text.empty()) {
                 continue;
             }
-            select = make_roi(image, res.flag_rect.move({ 0, -10, 5, 4 }));
-            cv::inRange(select, cv::Scalar(200, 140, 0), cv::Scalar(255, 180, 100), select);
-            res.is_selected = cv::hasNonZero(select);
+
+            // 判断是否已被选中
+            cv::Mat selected_image = make_roi(image, res.flag_rect.move({ 0, -10, 5, 4 }));
+            cv::inRange(selected_image, cv::Scalar(200, 140, 0), cv::Scalar(255, 180, 100), selected_image);
+            res.is_selected = cv::hasNonZero(selected_image);
+
             opers_result.emplace_back(std::move(res));
         }
     }
@@ -547,13 +545,8 @@ bool asst::BattleFormationTask::enter_selection_page(const cv::Mat& img)
 
 bool asst::BattleFormationTask::select_opers_in_cur_page(const std::vector<OperGroup*>& groups)
 {
-    const auto& opers_result = analyzer_opers(ctrler()->get_image());
-
-    static const std::array<Rect, 3> SkillRectArray = {
-        Task.get("BattleQuickFormationSkill1")->specific_rect,
-        Task.get("BattleQuickFormationSkill2")->specific_rect,
-        Task.get("BattleQuickFormationSkill3")->specific_rect,
-    };
+    const auto& image = ctrler()->get_image();
+    const auto& opers_result = analyzer_opers(image);
 
     if (!opers_result.empty()) {
         if (m_last_oper_name == opers_result.back().text) {
@@ -586,18 +579,36 @@ bool asst::BattleFormationTask::select_opers_in_cur_page(const std::vector<OperG
             continue;
         }
         else if (!oper) {
-            Log.error(__FUNCTION__, "| Oper was founded, but pointer is null");
+            LogError << __FUNCTION__ << "| Oper was founded, but pointer is null";
+            continue;
         }
 
+        if (!check_oper_level(
+                image,
+                res.flag_rect,
+                res.text,
+                oper->requirements.elite,
+                oper->requirements.level,
+                m_ignore_requirements)) {
+            // 继续检查同组其他干员
+            oper->status = battle::OperStatus::Unavailable;
+            continue;
+        }
         ctrler()->click(res.flag_rect);
         sleep(delay);
-        if (1 <= oper->skill && oper->skill <= 3) {
-            if (oper->skill == 3) {
-                ProcessTask(*this, { "BattleQuickFormationSkill-SwipeToTheDown" }).run();
-            }
-            ctrler()->click(SkillRectArray.at(oper->skill - 1ULL));
+        if (!check_and_select_skill(
+                res.text,
+                oper->skill,
+                oper->requirements.skill_level,
+                m_ignore_requirements,
+                delay)) {
+            ctrler()->click(res.flag_rect); // 选择技能失败时反选干员
             sleep(delay);
+            // 继续检查同组其他干员
+            oper->status = battle::OperStatus::Unavailable;
+            continue;
         }
+
         if (oper->requirements.module >= 0 && oper->requirements.module <= 4) {
             ret = ProcessTask(*this, { "BattleQuickFormationModulePage" }).run();
             ret =
@@ -637,6 +648,294 @@ bool asst::BattleFormationTask::select_opers_in_cur_page(const std::vector<OperG
     }
 
     return true;
+}
+
+bool asst::BattleFormationTask::check_oper_level(
+    const cv::Mat& image,
+    asst::Rect flag,
+    const std::string& name,
+    int elite,
+    int level,
+    bool ignore)
+{
+    const auto& level_task = Task.get<OcrTaskInfo>("BattleQuickFormation-Level");
+    const auto& elite_task = Task.get<MatchTaskInfo>("BattleQuickFormation-Elite");
+
+    int _elite = 0;
+    int _level = 0;
+
+    // 识别精二
+    Matcher elite_analyzer(image);
+    elite_analyzer.set_task_info(elite_task);
+    Rect roi = flag.move(elite_task->rect_move);
+    elite_analyzer.set_roi(roi);
+    if (!elite_analyzer.analyze()) {
+        LogError << __FUNCTION__ << "| failed to analyze elite of oper:" << name;
+    }
+    else {
+        auto elite_str = elite_analyzer.get_result().templ_name;
+        elite_str = elite_str.substr(elite_str.size() - 5, 1);
+        if (!utils::chars_to_number(elite_str, _elite)) {
+            LogError << __FUNCTION__ << "| failed to parse elite from template:" << elite_str;
+        }
+    }
+
+    // 识别等级
+    RegionOCRer level_ocrer(image);
+    level_ocrer.set_task_info(level_task);
+    level_ocrer.set_roi(flag.move(level_task->rect_move));
+    if (!level_ocrer.analyze()) {
+        LogError << __FUNCTION__ << "| failed to analyze level of oper:" << name;
+    }
+    else if (!utils::chars_to_number(level_ocrer.get_result().text, _level)) {
+        LogError << __FUNCTION__ << "| failed to parse level from text:" << level_ocrer.get_result().text;
+    }
+
+    if (_level < level || _elite < elite) {
+        LogWarn << __FUNCTION__ << "| Elite" << _elite << "level" << _level << ", require:" << elite << level;
+        json::value info = basic_info_with_what("BattleFormationOperUnavailable");
+        info["details"]["oper_name"] = name;
+        info["details"]["requirement_type"] = "level";
+        callback(AsstMsg::SubTaskExtraInfo, info);
+        if (!ignore) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool asst::BattleFormationTask::check_and_select_skill(
+    const std::string& name,
+    int skill,
+    int level_required,
+    bool ignore,
+    int delay)
+{
+    if (skill < 1 || skill > 3) {
+        return true;
+    }
+
+    /*
+    static const std::array<Rect, 3> SkillRectArray = {
+        Task.get("BattleQuickFormationSkill1")->specific_rect,
+        Task.get("BattleQuickFormationSkill2")->specific_rect,
+        Task.get("BattleQuickFormationSkill3")->specific_rect,
+    };
+
+    if (level_required <= 0 || level_required > 10) { // skill level 不需要检查
+        if (skill == 3) {
+            ProcessTask(*this, { "BattleQuickFormationSkill-SwipeToTheDown" }).run();
+        }
+        ctrler()->click(SkillRectArray.at(skill - 1ULL));
+        sleep(delay);
+        return true;
+    }*/
+
+    const auto& base_task = Task.get("BattleQuickFormationSkillLevel-Base");
+    const auto& check_task = Task.get("BattleQuickFormationSkillLevel-Check");
+    const auto& swipe_task = Task.get("BattleQuickFormationSkillLevel-Swipe");
+
+    const auto check_level = [&](int level) {
+        if (level < level_required) {
+            LogWarn << __FUNCTION__ << "| Skill" << skill << "level" << level << ", require:" << level_required;
+            json::value info = basic_info_with_what("BattleFormationOperUnavailable");
+            info["details"]["oper_name"] = name;
+            info["details"]["requirement_type"] = "skill_level";
+            callback(AsstMsg::SubTaskExtraInfo, info);
+            if (!ignore) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    cv::Mat image, roi_image;
+    if (skill == 1 || skill == 2) {
+        image = ctrler()->get_image();
+        roi_image = make_roi(image, make_rect<cv::Rect>(base_task->roi));
+        auto result = find_skill(roi_image, skill, false, level_required == 0);
+        if (result) { // 提前找到快速返回, 否则回退到图片合并及滑动
+            if (!check_level(result->second)) {
+                return false;
+            }
+            ctrler()->click(base_task->roi.move(result->first));
+            sleep(delay);
+            return true;
+        }
+    }
+    else {
+        ProcessTask(*this, { "BattleQuickFormationSkill-SwipeToTheDown" }).run();
+        image = ctrler()->get_image();
+        roi_image = make_roi(image, make_rect<cv::Rect>(base_task->roi));
+        auto result = find_skill(roi_image, skill, true, level_required == 0);
+        if (result) { // 提前找到快速返回, 否则回退到图片合并及滑动
+            if (!check_level(result->second)) {
+                return false;
+            }
+            ctrler()->click(base_task->roi.move(result->first));
+            sleep(delay);
+            return true;
+        }
+        ProcessTask(*this, { "BattleQuickFormationSkill-SwipeToTheUp" }).run();
+        image = ctrler()->get_image(); // 一般不会走到这里, 翻回顶部走通用逻辑
+        roi_image = make_roi(image, make_rect<cv::Rect>(base_task->roi));
+    }
+
+    int retry = 0;
+    int last_y = -1;
+    cv::Mat stitched_image = roi_image;
+    while (!need_exit() && retry < 3) {
+        ctrler()->swipe(swipe_task->specific_rect, swipe_task->rect_move, 300, true, 3.7, 0.1);
+        sleep(swipe_task->post_delay);
+
+        image = ctrler()->get_image();
+        auto roi_image_new = make_roi(image, make_rect<cv::Rect>(base_task->roi));
+
+        // 使用模板匹配检测重叠区域
+        Matcher match(stitched_image);
+        match.set_templ(make_roi(roi_image_new, cv::Rect { 0, 0, roi_image_new.cols, 30 }));
+        match.set_method(MatchMethod::Ccoeff);
+        match.set_threshold(0.8);
+        if (!match.analyze()) {
+            retry++;
+            continue;
+        }
+
+        int current_y = match.get_result().rect.y;
+        if (last_y != -1 && std::abs(current_y - last_y) < 5) { // 检测是否已经滑动到末端
+            LogInfo << __FUNCTION__ << "| Reached the end of skill list, y offset unchanged: " << current_y;
+            break;
+        }
+
+        last_y = current_y;
+
+        // 即时拼接图片：保留新图片中未重叠的部分
+        int overlap_height = stitched_image.rows - current_y;
+        if (overlap_height > 0 && overlap_height < roi_image_new.rows) {
+            cv::Mat non_overlap_part =
+                roi_image_new(cv::Rect(0, overlap_height, roi_image_new.cols, roi_image_new.rows - overlap_height));
+
+            cv::vconcat(stitched_image, non_overlap_part, stitched_image); // 立即拼接到已有图片
+            LogInfo << __FUNCTION__ << "| Stitched image updated, current size: " << stitched_image.cols << "x"
+                    << stitched_image.rows;
+        }
+        else {
+            LogWarn << __FUNCTION__ << "| Invalid overlap detected, overlap_height: " << overlap_height;
+            retry++;
+            continue;
+        }
+
+        retry = 0; // 成功拼接，重置重试计数
+        // 短路检测, 在已拼接的图片上尝试查找目标技能
+        auto result = find_skill(stitched_image, skill, false, level_required == 0);
+        if (result) {
+            if (!check_level(result->second)) {
+                return false;
+            }
+
+            // 需要将拼接图片中的坐标转换回实际点击坐标
+            Rect rect { result->first.x,
+                        result->first.y + current_y - base_task->roi.y,
+                        result->first.width,
+                        result->first.height };
+            ctrler()->click(VisionHelper::correct_rect(rect.move(check_task->rect_move), Rect { 0, 0, 1280, 720 }));
+            sleep(delay);
+            return true;
+        }
+    }
+
+    auto result = find_skill(stitched_image, skill, false, level_required == 0);
+    if (result) {
+        if (!check_level(result->second)) {
+            return false;
+        }
+
+        // 需要将拼接图片中的坐标转换回实际点击坐标
+        Rect rect { result->first.x,
+                    result->first.y + last_y - base_task->roi.y,
+                    result->first.width,
+                    result->first.height };
+        ctrler()->click(VisionHelper::correct_rect(rect.move(check_task->rect_move), Rect { 0, 0, 1280, 720 }));
+        sleep(delay);
+        return true;
+    }
+    return false;
+}
+
+std::optional<std::pair<asst::Rect, int>>
+    asst::BattleFormationTask::find_skill(const cv::Mat& image, int skill, bool reverse, bool skip_check)
+{
+    const auto& base_task = Task.get("BattleQuickFormationSkillLevel-Base");
+    const auto& check_task = Task.get("BattleQuickFormationSkillLevel-Check");
+    const auto& ocr_task = Task.get("BattleQuickFormationSkillLevel-OCR");
+
+    const auto match_skill = [&](asst::Rect rect) -> std::optional<std::pair<asst::Rect, int>> {
+        if (skip_check) {
+            return std::make_pair(rect.move(base_task->rect_move), 0);
+        }
+        Matcher level_matcher(image);
+        level_matcher.set_task_info(check_task);
+        level_matcher.set_roi(rect.move(base_task->rect_move));
+        if (level_matcher.analyze()) {
+            int level;
+            auto pos = level_matcher.get_result().templ_name.find_last_of('-');
+            if (pos != std::string::npos &&
+                utils::chars_to_number<int>(level_matcher.get_result().templ_name.substr(pos + 1, 2), level)) {
+                LogDebug << __FUNCTION__ << "| skill" << skill << "level:" << level;
+                return std::make_pair(rect.move(base_task->rect_move), level);
+            }
+            else {
+                LogError << __FUNCTION__ << "| skill" << skill
+                         << "level parsing failed from template name:" << level_matcher.get_result().templ_name;
+            }
+        }
+
+        RegionOCRer ocrer(image);
+        ocrer.set_task_info(ocr_task);
+        ocrer.set_roi(rect.move(ocr_task->roi));
+        if (ocrer.analyze()) {
+            int level;
+            if (utils::chars_to_number<int>(ocrer.get_result().text, level)) {
+                LogDebug << __FUNCTION__ << "| skill" << skill << "level:" << level;
+                return std::make_pair(rect.move(ocr_task->roi), level);
+            }
+            else {
+                LogError << __FUNCTION__ << "| skill" << skill
+                         << "level parsing failed from OCR text:" << ocrer.get_result().text;
+            }
+        }
+
+        LogError << __FUNCTION__ << "| skill" << skill << "level not found";
+        save_img(utils::path("debug/copilot/formation"));
+        return std::nullopt;
+    };
+
+    int index = 0;
+
+    MultiMatcher matcher(image);
+    matcher.set_templ("BattleQuickFormationSkillLevel-Base.png");
+    matcher.set_threshold(0.8);
+    matcher.set_method(MatchMethod::Ccoeff);
+    if (matcher.analyze()) { // 匹配成功, 检查技能等级
+        if (reverse && skill == 3) {
+            auto results = matcher.get_result();
+            if (!results.empty()) {
+                return match_skill(results.back().rect);
+            }
+        }
+        else if (reverse) {
+            LogError << __FUNCTION__ << "| Only skill 3 can be reverse matched";
+        }
+
+        for (const auto& match : matcher.get_result()) {
+            if (need_exit() || ++index != skill) {
+                continue;
+            }
+            return match_skill(match.rect);
+        }
+    }
+
+    return std::nullopt;
 }
 
 void asst::BattleFormationTask::swipe_page()
@@ -682,6 +981,7 @@ bool asst::BattleFormationTask::click_role_table(battle::Role role)
 
 bool asst::BattleFormationTask::parse_formation()
 {
+    std::set<std::string> group_names;
     json::value info = basic_info_with_what("BattleFormation");
     auto& details = info["details"];
     auto& formation = details["formation"];
@@ -700,6 +1000,10 @@ bool asst::BattleFormationTask::parse_formation()
             continue;
         }
         formation.emplace(name);
+        if (!group_names.emplace(name).second) {
+            callback(AsstMsg::SubTaskExtraInfo, basic_info_with_what("BattleFormationParseFailed"));
+            return false;
+        }
 
         // 判断干员/干员组的职业，放进对应的分组
         bool same_role = true;
@@ -765,10 +1069,10 @@ bool asst::BattleFormationTask::select_formation(int select_index, const cv::Mat
     // 第二组是名字最左边和最右边的一块区域
     // 右边比左边窄，暂定为左边 10*58
 
-    static const std::array<std::string, 4> select_formation_task = { "BattleSelectFormation1",
-                                                                      "BattleSelectFormation2",
-                                                                      "BattleSelectFormation3",
-                                                                      "BattleSelectFormation4" };
+    static const std::array<std::string, 4> select_formation_task { "BattleSelectFormation1",
+                                                                    "BattleSelectFormation2",
+                                                                    "BattleSelectFormation3",
+                                                                    "BattleSelectFormation4" };
 
     return ProcessTask { *this, { select_formation_task[select_index - 1] } }.set_reusable_image(img).run();
 }
@@ -779,4 +1083,136 @@ bool asst::BattleFormationTask::is_formation_valid(const cv::Mat& img) const
     ProcessTask task(*this, { "BattleFormationInvalid", valid_task });
     task.set_reusable_image(img);
     return task.run() && task.get_last_task_name() == valid_task;
+}
+
+std::optional<std::string> asst::BattleFormationTask::add_support_unit(
+    const std::vector<RequiredOper>& required_opers,
+    const size_t max_refresh_times,
+    const Friendship friendship)
+{
+    LogTraceFunction;
+
+    // 通过点击编队界面右上角 <助战单位> 文字左边的 Icon 进入助战干员选择界面
+    if (!ProcessTask(*this, { "Formation-AddSupportUnit-EnterSupportList" }).set_retry_times(20).run()) {
+        return std::nullopt;
+    }
+
+    SupportList support_list(m_callback, m_inst, m_task_chain);
+
+    if (required_opers.empty()) { // 随机模式
+        for (size_t refresh_times = 0; refresh_times <= max_refresh_times && !need_exit(); ++refresh_times) {
+            if (auto opt = add_support_unit_from_support_list(support_list, required_opers, friendship)) {
+                return opt;
+            }
+            if (refresh_times < max_refresh_times) {
+                support_list.refresh_list();
+            }
+        }
+    }
+    else { // 非随机模式
+        Role last_selected_role = Role::Unknown;
+        for (size_t i = 0; i < 3; ++i) {
+            if (i >= required_opers.size()) {
+                break;
+            }
+            const Role role = required_opers[i].role;
+            if (role != last_selected_role) {
+                support_list.select_role(role);
+            }
+            else {
+                support_list.refresh_list();
+            }
+            last_selected_role = role;
+
+            auto filtered_view =
+                required_opers | std::views::take(i + 1) |
+                std::views::filter([role](const RequiredOper& required_oper) { return required_oper.role == role; });
+            const std::vector<RequiredOper> filtered_required_opers(filtered_view.begin(), filtered_view.end());
+
+            for (size_t refresh_times = 0; refresh_times <= max_refresh_times && !need_exit(); ++refresh_times) {
+                if (auto opt = add_support_unit_from_support_list(support_list, filtered_required_opers, friendship)) {
+                    return opt;
+                }
+                if (refresh_times < max_refresh_times) {
+                    support_list.refresh_list();
+                }
+            }
+        }
+    }
+
+    // 未找到符合要求的助战干员，手动退出助战列表
+    Log.info(__FUNCTION__, "| Fail to find any qualified support operator");
+    ProcessTask(*this, { "Formation-AddSupportUnit-LeaveSupportList" }).run();
+    return std::nullopt;
+}
+
+std::optional<std::string> asst::BattleFormationTask::add_support_unit_from_support_list(
+    SupportList& support_list,
+    const std::vector<RequiredOper>& required_opers,
+    const Friendship friendship)
+{
+    LogTraceFunction;
+
+    using SupportUnit = battle::SupportUnit;
+
+    support_list.update();
+    const std::vector<SupportUnit> support_units = support_list.get_list();
+
+    if (required_opers.empty()) {
+        auto it = std::ranges::find_if(support_units, [friendship](const SupportUnit& support_unit) {
+            return static_cast<int>(support_unit.friendship) >= static_cast<int>(friendship);
+        });
+        if (it == support_units.end()) {
+            return std::nullopt;
+        }
+
+        const size_t support_unit_index = std::distance(support_units.begin(), it);
+        if (!support_list.select_support_unit(support_unit_index)) {
+            return std::nullopt;
+        }
+
+        if (!support_list.confirm_to_use_support_unit()) {
+            support_list.leave_support_unit_detail_panel();
+            return std::nullopt;
+        }
+
+        return it->name;
+    }
+
+    for (const RequiredOper& required_oper : required_opers) {
+        auto it = std::ranges::find_if(support_units, [friendship, &required_oper](const SupportUnit& support_unit) {
+            return support_unit.name == battle::canonical_oper_name(required_oper.role, required_oper.name) &&
+                   (support_unit.elite > required_oper.elite ||
+                    (support_unit.elite == required_oper.elite && support_unit.level >= required_oper.level)) &&
+                   support_unit.potential >= required_oper.potential &&
+                   (required_oper.module == OperModule::Unspecified || required_oper.module == OperModule::Original ||
+                    support_unit.module_enabled) &&
+                   static_cast<int>(support_unit.friendship) >= static_cast<int>(friendship);
+        });
+        if (it != support_units.end()) {
+            const size_t support_unit_index = std::distance(support_units.begin(), it);
+            const SupportUnit& support_unit = *it;
+            if (!support_list.select_support_unit(support_unit_index)) {
+                continue;
+            }
+            if (required_oper.skill != 0 &&
+                !support_list.select_skill(required_oper.skill, required_oper.skill_level)) {
+                support_list.leave_support_unit_detail_panel();
+                continue;
+            }
+            if (required_oper.module != OperModule::Unspecified && support_unit.module_enabled &&
+                !support_list.select_module(required_oper.module, required_oper.module_level)) {
+                support_list.leave_support_unit_detail_panel();
+                continue;
+            }
+            if (!support_list.confirm_to_use_support_unit()) {
+                support_list.leave_support_unit_detail_panel();
+                continue;
+            }
+
+            return it->name;
+        }
+    }
+
+    return std::nullopt;
 }

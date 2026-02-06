@@ -21,8 +21,8 @@
 #include "Common/AsstMsg.h"
 #include "Common/AsstTypes.h"
 #include "InstHelper.h"
-#include "Utils/NoWarningCVMat.h"
-#include "Utils/SingletonHolder.hpp"
+#include "MaaUtils/NoWarningCVMat.hpp"
+#include "MaaUtils/SingletonHolder.hpp"
 #include "adb-lite/client.hpp"
 
 namespace asst
@@ -45,6 +45,13 @@ public:
         PlatformType platform_type) const;
 
     bool connect(const std::string& adb_path, const std::string& address, const std::string& config);
+#ifdef _WIN32
+    bool attach_window(
+        void* hwnd,
+        Win32ScreencapMethod screencap_method,
+        Win32InputMethod mouse_method,
+        Win32InputMethod keyboard_method);
+#endif
     bool inited() noexcept;
     void set_touch_mode(const TouchMode& mode) noexcept;
     void set_swipe_with_pause(bool enable) noexcept;
@@ -108,8 +115,6 @@ private:
     void sync_params();
 
     AsstCallback m_callback = nullptr;
-
-    std::minstd_rand m_rand_engine;
 
     PlatformType m_platform_type = PlatformType::Native;
 

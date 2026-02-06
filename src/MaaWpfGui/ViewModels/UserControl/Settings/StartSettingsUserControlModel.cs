@@ -62,8 +62,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public bool StartSelf
     {
         get => _startSelf;
-        set
-        {
+        set {
             if (!AutoStart.SetStart(value, out var error))
             {
                 _logger.Error("Failed to set startup: {Error}", error);
@@ -72,6 +71,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
             }
 
             SetAndNotify(ref _startSelf, value);
+            AchievementTrackerHelper.Instance.Unlock(AchievementIds.StartupBoot);
         }
     }
 
@@ -83,8 +83,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public bool RunDirectly
     {
         get => _runDirectly;
-        set
-        {
+        set {
             SetAndNotify(ref _runDirectly, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.RunDirectly, value.ToString());
         }
@@ -98,8 +97,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public bool MinimizeDirectly
     {
         get => _minimizeDirectly;
-        set
-        {
+        set {
             SetAndNotify(ref _minimizeDirectly, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.MinimizeDirectly, value.ToString());
         }
@@ -113,8 +111,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public bool OpenEmulatorAfterLaunch
     {
         get => _openEmulatorAfterLaunch;
-        set
-        {
+        set {
             if (string.IsNullOrEmpty(SettingsViewModel.StartSettings.EmulatorPath))
             {
                 MessageBoxHelper.Show(
@@ -142,8 +139,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public string EmulatorPath
     {
         get => _emulatorPath;
-        set
-        {
+        set {
             value = value.Trim();
 
             // 这里不用 SetAndNotify 判断
@@ -198,8 +194,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public string EmulatorAddCommand
     {
         get => _emulatorAddCommand;
-        set
-        {
+        set {
             SetAndNotify(ref _emulatorAddCommand, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.EmulatorAddCommand, value);
         }
@@ -213,8 +208,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public string EmulatorWaitSeconds
     {
         get => _emulatorWaitSeconds;
-        set
-        {
+        set {
             SetAndNotify(ref _emulatorWaitSeconds, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.EmulatorWaitSeconds, value);
         }
@@ -225,8 +219,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public bool BlockSleep
     {
         get => _blockSleep;
-        set
-        {
+        set {
             SetAndNotify(ref _blockSleep, value);
             SleepManagement.SetBlockSleep(value);
             ConfigurationHelper.SetValue(ConfigurationKeys.BlockSleep, value.ToString());
@@ -238,8 +231,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     public bool BlockSleepWithScreenOn
     {
         get => _blockSleepWithScreenOn;
-        set
-        {
+        set {
             SetAndNotify(ref _blockSleepWithScreenOn, value);
             SleepManagement.SetBlockSleepWithScreenOn(value);
             ConfigurationHelper.SetValue(ConfigurationKeys.BlockSleepWithScreenOn, value.ToString());
@@ -334,10 +326,8 @@ public class StartSettingsUserControlModel : PropertyChangedBase
         try
         {
             var (fileName, arguments) = ResolveShortcut(EmulatorPath);
-            Process process = new Process
-            {
-                StartInfo = new ProcessStartInfo(fileName, arguments)
-                {
+            Process process = new Process {
+                StartInfo = new ProcessStartInfo(fileName, arguments) {
                     UseShellExecute = false,
                 },
             };
@@ -397,8 +387,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
             return;
         }
 
-        ProcessStartInfo processStartInfo = new ProcessStartInfo
-        {
+        ProcessStartInfo processStartInfo = new ProcessStartInfo {
             FileName = "cmd.exe",
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -406,14 +395,13 @@ public class StartSettingsUserControlModel : PropertyChangedBase
             UseShellExecute = false,
         };
 
-        Process process = new Process
-        {
+        Process process = new Process {
             StartInfo = processStartInfo,
         };
 
         process.Start();
-        process.StandardInput.WriteLine($"{adbPath} kill-server");
-        process.StandardInput.WriteLine($"{adbPath} start-server");
+        process.StandardInput.WriteLine($"\"{adbPath}\" kill-server");
+        process.StandardInput.WriteLine($"\"{adbPath}\" start-server");
         process.StandardInput.WriteLine("exit");
         process.WaitForExit();
     }
@@ -431,8 +419,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
             return;
         }
 
-        ProcessStartInfo processStartInfo = new ProcessStartInfo
-        {
+        ProcessStartInfo processStartInfo = new ProcessStartInfo {
             FileName = "cmd.exe",
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -443,7 +430,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
         Process process = new Process { StartInfo = processStartInfo, };
 
         process.Start();
-        process.StandardInput.WriteLine($"{adbPath} disconnect {address}");
+        process.StandardInput.WriteLine($"\"{adbPath}\" disconnect {address}");
         process.StandardInput.WriteLine("exit");
         process.WaitForExit();
     }
@@ -510,8 +497,7 @@ public class StartSettingsUserControlModel : PropertyChangedBase
     [UsedImplicitly]
     public void SelectEmulatorExec()
     {
-        var dialog = new OpenFileDialog
-        {
+        var dialog = new OpenFileDialog {
             Filter = LocalizationHelper.GetString("Executable") + "|*.exe;*.bat;*.lnk",
         };
 

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "MaaUtils/SingletonHolder.hpp"
 #include "Platform.hpp"
-#include "SingletonHolder.hpp"
 
 namespace asst
 {
@@ -12,19 +12,20 @@ enum class WorkingDirType
 };
 
 template <WorkingDirType type>
-class WorkingDir : public SingletonHolder<WorkingDir<type>>
+class WorkingDir : public MAA_NS::SingletonHolder<WorkingDir<type>>
 {
 public:
     bool empty() const noexcept { return dir_.empty(); }
 
     const std::filesystem::path& get() const noexcept { return dir_; }
 
-    bool set(std::filesystem::path dir)
+    bool set(const std::filesystem::path& dir)
     {
-        if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
+        auto norm_dir = dir.lexically_normal();
+        if (!std::filesystem::exists(norm_dir) || !std::filesystem::is_directory(norm_dir)) {
             return false;
         }
-        dir_ = std::move(dir);
+        dir_ = std::move(norm_dir);
         return true;
     }
 

@@ -3,8 +3,10 @@
 #include "Config/GeneralConfig.h"
 #include "Config/TaskData.h"
 #include "Controller/Controller.h"
+#include "MaaUtils/ImageIo.h"
+#include "MaaUtils/NoWarningCV.hpp"
 #include "Task/ProcessTask.h"
-#include "Utils/NoWarningCV.h"
+#include "Utils/DebugImageHelper.hpp"
 #include "Vision/Matcher.h"
 #include "Vision/MultiMatcher.h"
 #include "Vision/RegionOCRer.h"
@@ -43,7 +45,7 @@ bool asst::FightTimesTaskPlugin::_run()
     LogTraceFunction;
     json::value sanity_info = basic_info_with_what("SanityBeforeStage");
     json::value fight = basic_info_with_what("FightTimes");
-    sanity_info["details"]["report_time"] = utils::format_now();
+    sanity_info["details"]["report_time"] = MAA_NS::format_now();
     // {"sanity_current": 100, "sanity_max": 135, "report_time": "2023-09-01 09:31:53.527"}
     auto image = ctrler()->get_image();
     auto sanity = analyze_sanity_remain(image);
@@ -61,6 +63,7 @@ bool asst::FightTimesTaskPlugin::_run()
     if (m_fight_times >= m_fight_times_max) {
         m_task_ptr->set_enable(false); // 战斗次数已达上限
         Log.info(__FUNCTION__, "fight times reached max");
+        fight["details"]["finished"] = true;
         callback(AsstMsg::SubTaskExtraInfo, fight);
         return true;
     }
@@ -108,18 +111,31 @@ bool asst::FightTimesTaskPlugin::_run()
     m_series_current = *series;
     fight["details"]["series"] = *series;
     fight["details"]["sanity_cost"] = *sanity_cost;
-    callback(AsstMsg::SubTaskExtraInfo, fight);
 
     if (m_fight_times + *series > m_fight_times_max) {
         m_task_ptr->set_enable(false); // 战斗次数超过上限
         Log.info(__FUNCTION__, "fight times reached max");
+        fight["details"]["finished"] = true;
     }
+    callback(AsstMsg::SubTaskExtraInfo, fight);
     return true;
 }
 
 bool asst::FightTimesTaskPlugin::open_series_list(const cv::Mat& image)
 {
-    return ProcessTask(*this, { "FightSeries-Opened", "FightSeries-Open" }).set_reusable_image(image).run();
+    if (!ProcessTask(*this, { "FightSeries-Opened", "FightSeries-Open" })
+             .set_reusable_image(image)
+             .set_retry_times(10)
+             .run()) {
+        Log.error(__FUNCTION__, "unable to open series list");
+        const auto relative_dir = utils::path("debug") / utils::path("fightSeries");
+        utils::save_debug_image(image, relative_dir, true, "reusable image");
+        utils::save_debug_image(ctrler()->get_image(), relative_dir, true, "current screenshot");
+
+        return false;
+    }
+
+    return true;
 }
 
 void asst::FightTimesTaskPlugin::close_series_list(const cv::Mat& image)
@@ -145,7 +161,7 @@ std::optional<int> asst::FightTimesTaskPlugin::change_series(int sanity_current,
     }
 
     auto ret = select_series(true);
-    if (!ret && m_is_medicine_exhausted) { // 药品用完, 且没有次数可用, 刷理智结束
+    if (!ret && m_is_medicine_exhausted) { // 药品用完, 且没有次数可用, 理智作战结束
         m_task_ptr->set_enable(false);
     }
     else if (!ret) {
@@ -157,7 +173,6 @@ std::optional<int> asst::FightTimesTaskPlugin::change_series(int sanity_current,
 std::optional<int> asst::FightTimesTaskPlugin::select_series(bool available_only)
 {
     if (!open_series_list()) {
-        Log.error(__FUNCTION__, "unable to open series list");
         return std::nullopt;
     }
     int fight_times_remain = std::min(m_fight_times_max - m_fight_times, 6);
@@ -187,7 +202,6 @@ std::optional<int> asst::FightTimesTaskPlugin::select_series(bool available_only
 bool asst::FightTimesTaskPlugin::select_series(int times)
 {
     if (!open_series_list()) {
-        Log.error(__FUNCTION__, "unable to open series list");
         return false;
     }
 

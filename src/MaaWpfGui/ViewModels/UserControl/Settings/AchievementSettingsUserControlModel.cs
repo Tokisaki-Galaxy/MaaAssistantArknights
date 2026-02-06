@@ -16,15 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
-using System.Windows.Media;
 using HandyControl.Controls;
 using HandyControl.Data;
 using MaaWpfGui.Constants;
 using MaaWpfGui.Helper;
 using MaaWpfGui.Models;
-using MaaWpfGui.Views.UI;
+using MaaWpfGui.Views.Dialogs;
 using Stylet;
-using Application = System.Windows.Application;
 using Window = System.Windows.Window;
 using WindowManager = MaaWpfGui.Helper.WindowManager;
 
@@ -56,8 +54,7 @@ public class AchievementSettingsUserControlModel : PropertyChangedBase
 
         if (success)
         {
-            var growlInfo = new GrowlInfo
-            {
+            var growlInfo = new GrowlInfo {
                 IsCustom = true,
                 Message = $"{LocalizationHelper.GetString("AchievementBackupSuccess")} {Path.Combine(selectedPath, fileName)}.json",
                 StaysOpen = true,
@@ -72,8 +69,7 @@ public class AchievementSettingsUserControlModel : PropertyChangedBase
 
     public void RestoreAchievements()
     {
-        var dlg = new Microsoft.Win32.OpenFileDialog
-        {
+        var dlg = new Microsoft.Win32.OpenFileDialog {
             Filter = "JSON|*.json",
             InitialDirectory = PathsHelper.BaseDir,
         };
@@ -115,13 +111,11 @@ public class AchievementSettingsUserControlModel : PropertyChangedBase
     {
         if (_achievementsWindow is null)
         {
-            _achievementsWindow = new AchievementListWindow();
-            _achievementsWindow.Loaded += (_, _) =>
-            {
+            _achievementsWindow = new AchievementListDialogView();
+            _achievementsWindow.Loaded += (_, _) => {
                 WindowManager.MoveWindowToRootCenter(_achievementsWindow);
             };
-            _achievementsWindow.Closed += (_, _) =>
-            {
+            _achievementsWindow.Closed += (_, _) => {
                 _achievementsWindow = null;
             };
         }
@@ -142,7 +136,7 @@ public class AchievementSettingsUserControlModel : PropertyChangedBase
             return;
         }
 
-        if (Instances.VersionUpdateViewModel.IsDebugVersion())
+        if (Instances.VersionUpdateDialogViewModel.IsDebugVersion())
         {
             EnableDebugMode();
             return;
@@ -212,8 +206,7 @@ public class AchievementSettingsUserControlModel : PropertyChangedBase
     public bool AchievementPopupDisabled
     {
         get => _achievementPopupDisabled;
-        set
-        {
+        set {
             SetAndNotify(ref _achievementPopupDisabled, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.AchievementPopupDisabled, value.ToString());
         }
@@ -227,8 +220,7 @@ public class AchievementSettingsUserControlModel : PropertyChangedBase
     public bool AchievementPopupAutoClose
     {
         get => _achievementPopupAutoClose;
-        set
-        {
+        set {
             SetAndNotify(ref _achievementPopupAutoClose, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.AchievementPopupAutoClose, value.ToString());
         }

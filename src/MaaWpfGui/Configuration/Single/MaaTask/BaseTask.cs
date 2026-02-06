@@ -19,6 +19,7 @@ using static MaaWpfGui.Main.AsstProxy;
 
 namespace MaaWpfGui.Configuration.Single.MaaTask;
 
+// [JsonDerivedType(typeof(VideoRecognition), typeDiscriminator: nameof(VideoRecognition))]
 [JsonDerivedType(typeof(StartUpTask), typeDiscriminator: nameof(StartUpTask))]
 [JsonDerivedType(typeof(CloseDownTask), typeDiscriminator: nameof(CloseDownTask))]
 [JsonDerivedType(typeof(FightTask), typeDiscriminator: nameof(FightTask))]
@@ -30,7 +31,6 @@ namespace MaaWpfGui.Configuration.Single.MaaTask;
 [JsonDerivedType(typeof(CopilotTask), typeDiscriminator: nameof(CopilotTask))]
 [JsonDerivedType(typeof(SSSCopilotTask), typeDiscriminator: nameof(SSSCopilotTask))]
 [JsonDerivedType(typeof(SingleStepTask), typeDiscriminator: nameof(SingleStepTask))]
-[JsonDerivedType(typeof(VideoRecognition), typeDiscriminator: nameof(VideoRecognition))]
 [JsonDerivedType(typeof(DepotTask), typeDiscriminator: nameof(DepotTask))]
 [JsonDerivedType(typeof(OperBoxTask), typeDiscriminator: nameof(OperBoxTask))]
 [JsonDerivedType(typeof(ReclamationTask), typeDiscriminator: nameof(ReclamationTask))]
@@ -41,13 +41,7 @@ public class BaseTask : INotifyPropertyChanged
 
     public string Name { get; set; } = string.Empty;
 
-    public bool? IsEnable { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets 任务id，默认为0，添加后任务id应 > 0；执行后应置为0
-    /// </summary>
-    [JsonIgnore]
-    public int TaskId { get; set; }
+    public bool? IsEnable { get; set; } = true;
 
     /// <summary>
     /// Gets 任务类型，用于添加任务时使用
@@ -75,10 +69,6 @@ public class SSSCopilotTask : BaseTask
 }
 
 public class SingleStepTask : BaseTask
-{
-}
-
-public class VideoRecognition : BaseTask
 {
 }
 

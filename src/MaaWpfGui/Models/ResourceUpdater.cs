@@ -28,7 +28,7 @@ using MaaWpfGui.ViewModels.UserControl.Settings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
-using static MaaWpfGui.ViewModels.UI.VersionUpdateViewModel;
+using static MaaWpfGui.ViewModels.Dialogs.VersionUpdateDialogViewModel;
 
 namespace MaaWpfGui.Models;
 
@@ -68,11 +68,11 @@ public static class ResourceUpdater
             return false;
         }
 
-        // 把 \MaaResource-main 中的 cache 和 resource 文件夹复制到当前目录
+        // 把 \MaaResource-main 中的 resource 文件夹复制到当前目录
         try
         {
             string basePath = Path.Combine(ExtractFolder, "MaaResource-main");
-            foreach (var folder in new[] { "cache", "resource" })
+            foreach (var folder in new[] { "resource" })
             {
                 DirectoryMerge(
                     Path.Combine(basePath, folder),
@@ -98,7 +98,10 @@ public static class ResourceUpdater
         }
 
         SettingsViewModel.VersionUpdateSettings.NewResourceFoundInfo = string.Empty;
-        OutputDownloadProgress(downloading: false, output: LocalizationHelper.GetString("GameResourceUpdated"));
+        OutputDownloadProgress(
+            downloading: false,
+            output: LocalizationHelper.GetString("GameResourceUpdated"),
+            toolTip: LocalizationHelper.GetString("ResourceUpdateTip"));
         return true;
 
         static void Fail()
@@ -328,7 +331,10 @@ public static class ResourceUpdater
 
         SettingsViewModel.VersionUpdateSettings.NewResourceFoundInfo = string.Empty;
         AchievementTrackerHelper.Instance.Unlock(AchievementIds.MirrorChyanFirstUse);
-        OutputDownloadProgress(downloading: false, output: LocalizationHelper.GetString("GameResourceUpdated"));
+        OutputDownloadProgress(
+            downloading: false,
+            output: LocalizationHelper.GetString("GameResourceUpdated"),
+            toolTip: LocalizationHelper.GetString("ResourceUpdateTip"));
 
         return true;
 
@@ -393,7 +399,7 @@ public static class ResourceUpdater
         var ret = await CheckAndDownloadResourceUpdate();
         if (ret == CheckUpdateRetT.OnlyGameResourceUpdated)
         {
-            ResourceReload();
+            _ = ResourceReloadWhenIdleAsync();
         }
     }
 
@@ -403,6 +409,24 @@ public static class ResourceUpdater
         DataHelper.Reload();
         SettingsViewModel.VersionUpdateSettings.ResourceInfoUpdate();
         ToastNotification.ShowDirect(LocalizationHelper.GetString("GameResourceUpdated"));
+    }
+
+    private static bool _isReloading = false;
+
+    public static async Task ResourceReloadWhenIdleAsync()
+    {
+        if (_isReloading)
+        {
+            _logger.Information("Resource is already reloading, skip this request.");
+            return;
+        }
+
+        _isReloading = true;
+        await Instances.AsstProxy.LoadResourceWhenIdleAsync();
+        DataHelper.Reload();
+        SettingsViewModel.VersionUpdateSettings.ResourceInfoUpdate();
+        ToastNotification.ShowDirect(LocalizationHelper.GetString("GameResourceUpdated"));
+        _isReloading = false;
     }
 
     private static async Task<bool> DownloadFullPackageAsync(string url, string saveTo, bool globalSource)
@@ -437,6 +461,11 @@ public static class ResourceUpdater
         FileInfo[] files = dir.GetFiles();
         foreach (FileInfo file in files)
         {
+            if (file.Name == ".gitignore")
+            {
+                continue;
+            }
+
             string tempPath = Path.Combine(destDirName, file.Name);
             file.CopyTo(tempPath, true); // 覆盖现有文件
         }

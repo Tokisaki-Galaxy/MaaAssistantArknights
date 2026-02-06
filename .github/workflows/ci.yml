@@ -1,4 +1,4 @@
-name: ci
+name: Release Pipeline
 
 on:
   push:
@@ -7,79 +7,74 @@ on:
     branches-ignore:
       - "master"
     paths:
+      - ".github/workflows/ci.yml"
       - "3rdparty/include/**"
-      - "include/**"
-      - "src/**"
       - "cmake/**"
       - "CMakeLists.txt"
-      - ".github/workflows/ci.yml"
-      - "!**/*.md"
+      - "include/**"
+      - "src/**"
       - "tools/maadeps-download.py"
+      - "!**/*.md"
   pull_request:
     branches:
       - "dev"
     paths:
+      - ".github/workflows/ci.yml"
       - "3rdparty/include/**"
-      - "include/**"
-      - "src/**"
       - "cmake/**"
       - "CMakeLists.txt"
-      - "!**/*.md"
+      - "include/**"
+      - "src/**"
       - "tools/maadeps-download.py"
+      - "!**/*.md"
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}${{ github.ref == 'refs/heads/dev' && format('-{0}', github.sha) || '' }}
   cancel-in-progress: true
 
 jobs:
   meta:
-    # Prevent duplicate runs on organization branches with PRs
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
-
+    name: Gather Meta Information
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.set_tag.outputs.tag }}
       prerelease: ${{ steps.set_pre.outputs.prerelease }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          path: temp
-          show-progress: false
-
-      - name: Fetch history
-        if: ${{ !startsWith(github.ref, 'refs/pull/') }}
+      - name: Show concurrency group
         run: |
-          git init
-          cp $GITHUB_WORKSPACE/temp/.git/config ./.git
-          rm -rf $GITHUB_WORKSPACE/temp
-          # git config remote.origin.fetch '+refs/*:refs/*'
-          git fetch --filter=tree:0 # --update-head-ok
-          git reset --hard origin/$(git branch --show-current) || true
-          git checkout ${{ github.ref_name }}
+          echo "Concurrency Group: ${{ github.workflow }}-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}${{ github.ref == 'refs/heads/dev' && format('-{0}', github.sha) || '' }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          show-progress: false
 
       - name: Set tag
         id: set_tag
         run: |
-          ${{ startsWith(github.ref, 'refs/pull/') && 'cd temp' || '' }}
-          echo tag=$(git describe --tags --match "v*" ${{ github.ref }} || git rev-parse --short HEAD) | tee -a $GITHUB_OUTPUT
-          exit ${PIPESTATUS[0]}
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # For tag pushes, use the tag name
+            tag="${{ github.ref_name }}"
+          else
+            # For PRs and branch pushes, use git describe or fallback
+            tag=$(git describe --tags --match "v*" HEAD 2>/dev/null || echo "v0.0.1-$(git rev-parse --short HEAD)")
+          fi
+          echo "tag=${tag}" | tee -a $GITHUB_OUTPUT
 
-      - name: Judge pre-release
+      - name: Check if it is a pre-release
         id: set_pre
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           if [[ '${{ steps.set_tag.outputs.tag }}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo prerelease=false | tee -a $GITHUB_OUTPUT
+            echo "prerelease=false" | tee -a $GITHUB_OUTPUT
           else
-            echo prerelease=true | tee -a $GITHUB_OUTPUT
+            echo "prerelease=true" | tee -a $GITHUB_OUTPUT
           fi
 
-      - name: Generate changelog
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Finalize changelog
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           this_tag=${{ steps.set_tag.outputs.tag }}
           if [[ '${{ steps.set_pre.outputs.prerelease }}' != 'false' ]]; then
@@ -92,19 +87,15 @@ jobs:
           echo >> CHANGELOG.md
           echo "[已有 Mirror酱 CDK？前往 Mirror酱 高速下载](https://mirrorchyan.com/zh/projects?rid=MAA&source=maagh-release)" >> CHANGELOG.md
 
-      - name: Upload changelog to Github
-        uses: actions/upload-artifact@v4
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Upload changelog to GitHub
+        uses: actions/upload-artifact@v6
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: changelog
           path: CHANGELOG.md
 
   windows:
-    # Prevent duplicate runs on organization branches with PRs
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
-
+    name: Build for Windows
     needs: meta
     strategy:
       matrix:
@@ -113,21 +104,23 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           show-progress: false
 
       - name: Fetch submodules
         run: |
+          git submodule update --init --depth 1 src/MaaUtils
           git submodule update --init --depth 1 3rdparty/EmulatorExtras
 
       - name: Cache MaaDeps
         id: cache-maadeps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
+        continue-on-error: true
         with:
           path: |
-            ./MaaDeps
+            ./src/MaaUtils/MaaDeps
           key: ${{ runner.os }}-${{ matrix.arch }}-maadeps-${{ hashFiles('tools/maadeps-download.py') }}
 
       - name: Bootstrap MaaDeps
@@ -140,20 +133,36 @@ jobs:
       - name: Config cmake
         run: |
           mkdir -p build
-          cmake -B build ${{ matrix.arch == 'arm64' && '-A ARM64' }} -DCMAKE_BUILD_TYPE=Release -DMAADEPS_TRIPLET='maa-${{ matrix.arch }}-windows' -DINSTALL_RESOURCE=ON -DINSTALL_PYTHON=ON -DMAA_HASH_VERSION='${{ needs.meta.outputs.tag }}' -DBUILD_WPF_GUI=OFF
+          cmake -B build ${{ matrix.arch == 'arm64' && '-A ARM64' }} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMAADEPS_TRIPLET='maa-${{ matrix.arch }}-windows' -DINSTALL_RESOURCE=ON -DINSTALL_PYTHON=ON -DMAA_HASH_VERSION='${{ needs.meta.outputs.tag }}' -DBUILD_WPF_GUI=OFF
 
       - name: Build
         run: |
-          cmake --build build --config Release --parallel $env:NUMBER_OF_PROCESSORS
+          cmake --build build --config RelWithDebInfo --parallel $env:NUMBER_OF_PROCESSORS
 
       - name: Install
         run: |
           mkdir -p install
-          cmake --install build --prefix install --config Release
+          cmake --install build --prefix install --config RelWithDebInfo
+
+      - name: Download MaaFramework
+        if: matrix.arch == 'x64'
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: MaaXYZ/MaaFramework
+          latest: true
+          fileName: '*win-x86_64*.zip'
+          extract: true
+          out-file-path: MaaFramework-temp
+
+      - name: Copy MaaWin32ControlUnit
+        if: matrix.arch == 'x64'
+        run: |
+          cp MaaFramework-temp/bin/*Win32ControlUnit* install/
 
       - name: Cache .nuke/temp, ~/.nuget/packages
         id: cache-nuget
-        uses: actions/cache@v4
+        uses: actions/cache@v5
+        continue-on-error: true
         with:
           path: |
             .nuke/temp
@@ -164,7 +173,7 @@ jobs:
         if: steps.cache-nuget.outputs.cache-hit != 'true'
         run: dotnet restore src/MaaWpfGui/MaaWpfGui.csproj
 
-      - name: Taggify Version for csproj
+      - name: Taggify version for csproj
         run: |
           $csprojPath = "src/MaaWpfGui/MaaWpfGui.csproj"
           $csprojPath = Resolve-Path -Path $csprojPath
@@ -185,11 +194,24 @@ jobs:
       - name: Publish WPF GUI
         continue-on-error: true
         run: |
-          dotnet publish src/MaaWpfGui/MaaWpfGui.csproj -c Release -o install
+          dotnet publish src/MaaWpfGui/MaaWpfGui.csproj -c Release -p:Platform=${{ matrix.arch == 'arm64' && 'ARM64' || 'x64' }} -o install
 
-      - name: Organize Install Files
+      - name: Collect PDB files
+        run: |
+          cp build/bin/RelWithDebInfo/*.pdb install/
+          Compress-Archive -Path install/*.pdb -DestinationPath install/MAAComponent-DebugSymbol-${{ needs.meta.outputs.tag }}-win-${{ matrix.arch }}.zip
+        continue-on-error: true
+
+      - name: Upload PDB files
+        uses: actions/upload-artifact@v6
+        with:
+          name: MAAComponent-DebugSymbol-win-${{ matrix.arch }}
+          path: install/MAAComponent-DebugSymbol-${{ needs.meta.outputs.tag }}-win-${{ matrix.arch }}.zip
+
+      - name: Organize install files
         shell: bash
         run: |
+          rm -rf install/MAAComponent-DebugSymbol-*.zip
           rm -rf install/*.pdb
           rm -rf install/msvc-debug
           rm -rf install/*.h
@@ -201,18 +223,14 @@ jobs:
           cd install
           Compress-Archive -Destination MAA-${{ needs.meta.outputs.tag }}-win-${{ matrix.arch }}.zip -Path ./*
 
-      - name: Upload MAA to Github
-        uses: actions/upload-artifact@v4
+      - name: Upload MAA to GitHub
+        uses: actions/upload-artifact@v6
         with:
           name: MAA-win-${{ matrix.arch }}
-          path: install/*.zip
+          path: install/MAA-*.zip
 
   ubuntu:
-    # Prevent duplicate runs on organization branches with PRs
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
-
+    name: Build for Ubuntu
     needs: meta
     runs-on: ubuntu-latest
     strategy:
@@ -220,21 +238,23 @@ jobs:
         arch: [aarch64, x86_64]
       fail-fast: false
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           show-progress: false
 
       - name: Fetch submodules
         run: |
+          git submodule update --init --depth 1 src/MaaUtils
           git submodule update --init --depth 1 3rdparty/EmulatorExtras
           git submodule update --init --depth 1 src/maa-cli
 
       - name: Cache MaaDeps
         id: cache-maadeps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
+        continue-on-error: true
         with:
-          path: ./MaaDeps
+          path: ./src/MaaUtils/MaaDeps
           key: ${{ runner.os }}-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-maadeps-${{ hashFiles('tools/maadeps-download.py') }}
 
       - name: Bootstrap MaaDeps
@@ -248,36 +268,35 @@ jobs:
         run: |
           mkdir -p build
           cmake -B build \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DMAADEPS_TRIPLET='maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-linux' \
             -DINSTALL_RESOURCE=ON \
             -DINSTALL_PYTHON=ON \
             -DMAA_HASH_VERSION='${{ needs.meta.outputs.tag }}' \
-            -DCMAKE_TOOLCHAIN_FILE=MaaDeps/cmake/maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-linux-toolchain.cmake
+            -DCMAKE_TOOLCHAIN_FILE=src/MaaUtils/MaaDeps/cmake/maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-linux-toolchain.cmake
 
       - name: Build
         run: |
-          cmake --build build --config Release --parallel $(nproc)
+          cmake --build build --config RelWithDebInfo --parallel $(nproc)
         env:
           CLICOLOR_FORCE: 1
 
       - name: Install
         run: |
           mkdir -p install
-          cmake --install build --prefix install --config Release
+          cmake --install build --prefix install --config RelWithDebInfo
 
-      - name: Setup Cross Compile Toolchains for CLI
+      - name: Setup cross compile toolchains for CLI
         uses: ./src/maa-cli/.github/actions/setup
         with:
-          os: ubuntu-latest
           target_arch: ${{ matrix.arch }}
 
       - name: Build CLI
         run: |
-          cargo build --release --locked --package maa-cli --features vendored-openssl
+          cargo build --release --locked --package maa-cli --features git2/vendored-openssl
           cp -v target/$CARGO_BUILD_TARGET/release/maa $GITHUB_WORKSPACE/install/maa
           cargo build --release --locked --package maa-cli --no-default-features \
-            --features git2,vendored-openssl
+            --features git2,git2/vendored-openssl
           cp -v target/$CARGO_BUILD_TARGET/release/maa $GITHUB_WORKSPACE/appimage-maa
         working-directory: src/maa-cli
 
@@ -323,8 +342,8 @@ jobs:
           cd install
           tar czvf $GITHUB_WORKSPACE/release/MAA-${{ needs.meta.outputs.tag }}-linux-${{ matrix.arch }}.tar.gz .
 
-      - name: Upload MAA to Github
-        uses: actions/upload-artifact@v4
+      - name: Upload MAA to GitHub
+        uses: actions/upload-artifact@v6
         with:
           name: MAA-linux-${{ matrix.arch }}
           path: |
@@ -332,11 +351,7 @@ jobs:
             release/*.tar.gz
 
   macOS-Core:
-    # Prevent duplicate runs on organization branches with PRs
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
-
+    name: Build Core for macOS
     needs: meta
     runs-on: macos-26
     strategy:
@@ -344,66 +359,66 @@ jobs:
         arch: [arm64, x86_64]
       fail-fast: false
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           show-progress: false
 
+      - name: Fetch submodules
+        run: |
+          git submodule update --init --depth 1 src/MaaUtils
+
       # ninja 1.13.1 is already installed and up-to-date.
-      # - name: Install Dependencies
+      # - name: Install dependencies
       #   run: |
       #     brew install ninja
 
       - name: Cache MaaDeps
         id: cache-maadeps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
+        continue-on-error: true
         with:
-          path: ./MaaDeps
+          path: ./src/MaaUtils/MaaDeps
           key: ${{ runner.os }}-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-maadeps-${{ hashFiles('tools/maadeps-download.py') }}
 
       - name: Bootstrap MaaDeps
         run: |
-          [[ ${{ matrix.arch }} = "arm64" ]] && triplet="arm64-osx" || triplet="x64-osx"
-          python3 tools/maadeps-download.py ${triplet}
+          python3 tools/maadeps-download.py ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-osx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Config cmake
         run: |
           cmake -B build -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_OSX_ARCHITECTURES='${{ matrix.arch }}' \
             -DMAA_HASH_VERSION='${{ needs.meta.outputs.tag }}'
 
       - name: Build
         run: |
-          cmake --build build --config Release --parallel $(sysctl -n hw.logicalcpu)
+          cmake --build build --config RelWithDebInfo --parallel $(sysctl -n hw.logicalcpu)
 
       - name: Install
         run: |
-          cmake --install build --prefix install --config Release
+          cmake --install build --prefix install --config RelWithDebInfo
 
-      - name: Upload MAA to Github
-        uses: actions/upload-artifact@v4
+      - name: Upload MAA to GitHub
+        uses: actions/upload-artifact@v6
         with:
           name: MAACore-macos-${{ matrix.arch }}
           path: "install/*.dylib"
 
   macOS-GUI:
-    # Prevent duplicate runs on organization branches with PRs
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
-
+    name: Build GUI for macOS
     needs: [meta, macOS-Core]
     runs-on: macos-26
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           show-progress: false
 
-      - name: Install Dependencies
+      - name: Install dependencies
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           brew install graphicsmagick imagemagick
@@ -413,47 +428,47 @@ jobs:
         run: |
           git submodule update --init --depth 1 src/MaaMacGui
 
-      - name: Download Arm64 MAA from Github
-        uses: actions/download-artifact@v5
+      - name: Download MAA (arm64) from GitHub
+        uses: actions/download-artifact@v7
         with:
           name: MAACore-macos-arm64
           path: install-arm64
 
-      - name: Download x64 MAA from Github
-        uses: actions/download-artifact@v5
+      - name: Download MAA (x64) from GitHub
+        uses: actions/download-artifact@v7
         with:
           name: MAACore-macos-x86_64
           path: install-x86_64
 
-      - name: Install Developer ID Certificate
+      - name: Install Developer ID certificate
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: apple-actions/import-codesign-certs@v5
+        uses: apple-actions/import-codesign-certs@v6
         with:
           p12-file-base64: ${{ secrets.HGUANDL_SIGN_CERT_P12 }}
           p12-password: ${{ secrets.HGUANDL_SIGN_CERT_PASSWD }}
 
-      - name: Download Provisioning Profiles
+      - name: Download provisioning profiles
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: apple-actions/download-provisioning-profiles@v4
+        uses: apple-actions/download-provisioning-profiles@v5
         with:
           bundle-id: "com.hguandl.MeoAsstMac"
           issuer-id: ${{ secrets.HGUANDL_APPSTORE_ISSUER }}
           api-key-id: ${{ secrets.HGUANDL_APPSTORE_KEYID }}
           api-private-key: ${{ secrets.HGUANDL_APPSTORE_KEY }}
 
-      - name: Setup Xcode Toolchain
+      - name: Setup Xcode toolchain
         if: false
         run: |
           sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
 
-      - name: Build Universal Binaries
+      - name: Build universal binaries
         run: |
           mkdir build
           for LIB_NAME in $(ls install-arm64); do
             lipo -create install-arm64/$LIB_NAME install-x86_64/$LIB_NAME -output build/$LIB_NAME
           done
 
-      - name: Archive Runtime Files
+      - name: Archive runtime files
         run: |
           mkdir runtime && cd runtime
           name='MAA-${{ needs.meta.outputs.tag }}-macos-runtime-universal'
@@ -465,8 +480,8 @@ jobs:
           cd .. || exit 1
           zip -yrX9 "$name.zip" "$name"
 
-      - name: Upload MAA runtime to Github
-        uses: actions/upload-artifact@v4
+      - name: Upload MAA runtime to GitHub
+        uses: actions/upload-artifact@v6
         with:
           name: MAA-macos-runtime-universal
           path: runtime/MAA-${{ needs.meta.outputs.tag }}-macos-runtime-universal.zip
@@ -474,12 +489,13 @@ jobs:
       - name: Build XCFramework
         run: |
           xcodebuild -create-xcframework -library libMaaCore.dylib -headers ../include -output MaaCore.xcframework
+          xcodebuild -create-xcframework -library libMaaUtils.dylib -output MaaUtils.xcframework
           xcodebuild -create-xcframework -library libfastdeploy_ppocr.dylib -output fastdeploy_ppocr.xcframework
           xcodebuild -create-xcframework -library libonnxruntime.*.dylib -output ONNXRuntime.xcframework
           xcodebuild -create-xcframework -library libopencv*.dylib -output OpenCV.xcframework
         working-directory: build
 
-      - name: Setup GUI Version
+      - name: Setup GUI version
         run: |
           RELEASE_COUNT=$(git ls-remote --tags origin | grep refs/tags/v | awk 'END{print NR}')
           echo 'MARKETING_VERSION = ${{ needs.meta.outputs.tag }}' | tee src/MaaMacGui/Version.xcconfig
@@ -500,20 +516,20 @@ jobs:
           xcodebuild -exportArchive -archivePath MAA.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath Export
         working-directory: src/MaaMacGui
 
-      - name: Create Disk Image
+      - name: Create disk image
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           create-dmg Export/MAA.app
           mv MAA*.dmg MAA.dmg
         working-directory: src/MaaMacGui
 
-      - name: Archive Debug Symbols
+      - name: Archive debug symbols
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           ditto -c -k --keepParent MAA.app.dSYM MAA.app.dSYM.zip
         working-directory: src/MaaMacGui/MAA.xcarchive/dSYMs
 
-      - name: Place Packages
+      - name: Place packages
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           GIT_TAG=${{ needs.meta.outputs.tag }}
@@ -523,7 +539,7 @@ jobs:
           mv src/MaaMacGui/MAA.dmg release/${APP_DMG}
           mv src/MaaMacGui/MAA.xcarchive/dSYMs/MAA.app.dSYM.zip release/${APP_SYM}
 
-      - name: Notarize Image
+      - name: Notarize image
         if: startsWith(github.ref, 'refs/tags/v')
         uses: nick-fields/retry@v3
         with:
@@ -539,34 +555,31 @@ jobs:
           APPSTORE_KEY: ${{ secrets.HGUANDL_APPSTORE_KEY }}
           ISSUER_ID: ${{ secrets.HGUANDL_APPSTORE_ISSUER }}
 
-      - name: Attach Notarization Tickets
+      - name: Attach notarization tickets
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           dmg="MAA-${{ needs.meta.outputs.tag }}-macos-universal.dmg"
           xcrun stapler staple ${dmg}
         working-directory: release
 
-      - name: Upload MAA to Github
-        uses: actions/upload-artifact@v4
+      - name: Upload MAA to GitHub
+        uses: actions/upload-artifact@v6
         with:
           name: MAA-macos-universal
           path: ${{ startsWith(github.ref, 'refs/tags/v') && 'release/MAA*' || 'src/MaaMacGui/MAA.xcarchive/**' }}
 
   release:
-    # Prevent duplicate runs on organization branches with PRs
-    if: (github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name) && startsWith(github.ref, 'refs/tags/v')
-
+    name: Publish Release
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: [meta, windows, ubuntu, macOS-Core, macOS-GUI]
     runs-on: ubuntu-latest
     steps:
-      - name: Download MAA from Github
-        uses: actions/download-artifact@v5
+      - name: Download MAA from GitHub
+        uses: actions/download-artifact@v7
         with:
           path: assets
 
-      - name: Cleanup files
+      - name: Clean up files
         run: |
           mv -vf assets/changelog/* .
           rm -rf assets/MAACore-macos-*
@@ -574,32 +587,35 @@ jobs:
           # find . -type f | xargs mv -fvt .
           find . -type f | while read f; do mv -fvt . $f; done
 
-      - name: Release to Github
-        uses: softprops/action-gh-release@v2.4.1
+      - name: Publish release to GitHub
+        uses: softprops/action-gh-release@v2.5.0
         with:
           body_path: CHANGELOG.md
           files: |
             assets/*
           prerelease: ${{ needs.meta.outputs.prerelease != 'false' }}
 
-      - name: Trigger MirrorChyan
+      - name: Trigger release distribution workflows
         run: |
-          gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan
-          gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release_note
+          gh workflow run --repo $GITHUB_REPOSITORY release-package-distribution.yml \
+            -f release_tag="${{ needs.meta.outputs.tag }}" \
+            -f mirrorchyan=true \
+            -f winget=${{ needs.meta.outputs.prerelease == 'false' }}
+          gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release_note.yml
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trigger secondary workflows # ref: https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+      - name: Trigger OTA release workflow # ref: https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
         run: |
-          gh workflow run --repo $GITHUB_REPOSITORY release-ota
+          gh workflow run --repo $GITHUB_REPOSITORY release-ota.yml
         env:
           GH_TOKEN: ${{ secrets.MISTEOWORKFLOW }}
 
-      - name: Create issue if failed
+      - name: Create issue on failure
         if: failure()
         uses: actions-cool/issues-helper@v3
         with:
           actions: "create-issue"
-          title: "Failed Release"
+          title: "Errors occured during release ${{ needs.meta.outputs.tag }}"
           body: |
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

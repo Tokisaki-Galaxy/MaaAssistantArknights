@@ -21,6 +21,9 @@
     <img alt="stars" src="https://img.shields.io/github/stars/MaaAssistantArknights/MaaAssistantArknights?style=social">
     <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/MaaAssistantArknights/MaaAssistantArknights/total?style=social">
 </div>
+<div>
+    <a href="https://deepwiki.com/MaaAssistantArknights/MaaAssistantArknights"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+</div>
 <br>
 
 <!-- markdownlint-restore -->
@@ -43,7 +46,7 @@ MAA 的意思是 MAA Assistant Arknights
 
 ## 亮点功能
 
-- 刷理智，掉落识别及上传 [企鹅物流](https://penguin-stats.cn/)，[一图流](https://ark.yituliu.cn/)
+- 理智作战，掉落识别及上传 [企鹅物流](https://penguin-stats.cn/)，[一图流](https://ark.yituliu.cn/)
 - 智能基建换班，自动计算干员效率，单设施内最优解；同时也支持 [自定义排班](https://docs.maa.plus/zh-cn/protocol/base-scheduling-schema.html)
 - 自动公招，可选使用加急许可，一次全部刷完！公招数据自动上传 [企鹅物流](https://penguin-stats.cn/result/stage/recruit/recruit)，[一图流](https://ark.yituliu.cn/survey/maarecruitdata)
 - 支持手动识别公招界面，方便对高星公招做出选择 ~~（你的这个高资回费出的是推王呢还是推王呢）~~
@@ -110,15 +113,9 @@ MAA 以中文（简体）为第一语言，翻译词条均以中文（简体）�
 
 ### 参与开发
 
-#### Windows
+请参阅 [开发指南](https://docs.maa.plus/zh-cn/develop/development.html)。
 
-请参阅 [开始开发](https://docs.maa.plus/zh-cn/develop/development.html)。
-
-#### Linux | macOS
-
-请参阅 [Linux 编译教程](https://docs.maa.plus/zh-cn/develop/linux-tutorial.html)。
-
-#### API
+### API
 
 - [C 接口](include/AsstCaller.h)：[集成示例](src/Cpp/main.cpp)
 - [Python 接口](src/Python/asst/asst.py)：[集成示例](src/Python/sample.py)
@@ -134,33 +131,11 @@ MAA 以中文（简体）为第一语言，翻译词条均以中文（简体）�
 - [任务流程协议](https://docs.maa.plus/zh-cn/protocol/task-schema.html)
 - [自动抄作业协议](https://docs.maa.plus/zh-cn/protocol/copilot-schema.html)
 
-#### 外服适配
+### 外服适配
 
 请参阅 [外服适配教程](https://docs.maa.plus/zh-cn/develop/overseas-client-adaptation.html)，对于国服已支持的功能，绝大部分的外服适配工作仅需要截图 + 简单的 JSON 修改即可。
 
-#### 想参与开发，但不太会用 GitHub?
-
-[GitHub Pull Request 流程简述](https://docs.maa.plus/zh-cn/develop/development.html#github-pull-request-流程简述)
-
-#### 想参与开发，但面对庞大的项目仓库望而却步？
-
-请使用 GitHub Codespaces 在线开发环境，尽情尝试！
-
-我们预置了多种不同的开发环境以供选择：
-
-- 空白环境，裸 Linux 容器（默认）
-
-  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg?color=green)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2Fdevcontainer.json)
-  
-- 轻量环境，适合文档站前端开发
-
-  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg?color=green)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F0%2Fdevcontainer.json)
-  
-- 全量环境，适合 MAA Core 相关开发
-
-  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg?color=green)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F1%2Fdevcontainer.json)
-
-#### Issue bot
+### Issue bot
 
 请参阅 [Issue Bot 使用方法](https://docs.maa.plus/zh-cn/develop/issue-bot-usage.html)
 

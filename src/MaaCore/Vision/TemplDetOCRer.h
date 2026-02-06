@@ -10,6 +10,15 @@ class TemplDetOCRer : public VisionHelper, public OCRerConfig, public MatcherCon
 public:
     struct Result : public TextRect
     {
+        using TextRect::TextRect;
+
+        Result(Rect r, double s, std::string t, Rect f_r, double f_s) :
+            TextRect(r, s, std::move(t)),
+            flag_rect(f_r),
+            flag_score(f_s)
+        {
+        }
+
         Rect flag_rect;
         double flag_score = .0;
     };
@@ -23,8 +32,6 @@ public:
 
     void set_task_info(const std::string& templ_task_name, const std::string& ocr_task_name);
     void set_flag_rect_move(Rect flag_rect_move);
-
-    void set_ocr_use_raw(bool use_raw) { m_use_raw = use_raw; }
 
     ResultsVecOpt analyze() const;
 
@@ -42,7 +49,6 @@ protected:
 
 private:
     Rect m_flag_rect_move;
-    bool m_use_raw = true;
 
 private:
     // FIXME: 老接口太难重构了，先弄个这玩意兼容下，后续慢慢全删掉

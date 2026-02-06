@@ -1,7 +1,7 @@
 #include "InfrastAbstractTask.h"
 
 #include <algorithm>
-#include <regex>
+#include <boost/regex.hpp>
 #include <utility>
 
 #include "Common/AsstMsg.h"
@@ -47,9 +47,9 @@ std::string asst::InfrastAbstractTask::facility_name() const
         std::string class_name = typeid(*this).name();
         // typeid.name() 结果可能和编译器有关，所以这里使用正则尽可能保证结果正确。
         // 但还是不能完全保证，如果不行的话建议 override
-        std::regex regex("Infrast(.*)Task");
-        std::smatch match_obj;
-        if (std::regex_search(class_name, match_obj, regex)) {
+        boost::regex regex("Infrast(.*)Task");
+        boost::smatch match_obj;
+        if (boost::regex_search(class_name, match_obj, regex)) {
             m_facility_name_cache = match_obj[1].str();
         }
         else {
@@ -209,11 +209,13 @@ bool asst::InfrastAbstractTask::enter_facility(int index)
     analyzer.set_to_be_analyzed({ facility_name() });
     if (!analyzer.analyze()) {
         Log.info("result is empty");
+        analyzer.save_img(utils::path("debug") / utils::path("infrast") / utils::path("enter_facility"));
         return false;
     }
     Rect rect = analyzer.get_rect(facility_name(), index);
     if (rect.empty()) {
         Log.info("facility index is out of range");
+        analyzer.save_img(utils::path("debug") / utils::path("infrast") / utils::path("enter_facility"));
         return false;
     }
     ctrler()->click(rect);
@@ -685,7 +687,11 @@ bool asst::InfrastAbstractTask::click_confirm_button()
     LogTraceFunction;
 
     ProcessTask task(*this, { "InfrastDormConfirmButton" });
-    return task.run();
+    bool ret = task.run();
+    if (ret) {
+        callback(AsstMsg::SubTaskExtraInfo, basic_info_with_what("InfrastConfirmButton"));
+    }
+    return ret;
 }
 
 void asst::InfrastAbstractTask::swipe_of_operlist()

@@ -24,6 +24,8 @@ using System.Windows;
 using HandyControl.Controls;
 using HandyControl.Data;
 using JetBrains.Annotations;
+using MaaWpfGui.Configuration.Factory;
+using MaaWpfGui.Configuration.Single.MaaTask;
 using MaaWpfGui.Constants;
 using MaaWpfGui.Extensions;
 using MaaWpfGui.Helper;
@@ -32,6 +34,7 @@ using MaaWpfGui.Models;
 using MaaWpfGui.Services.HotKeys;
 using MaaWpfGui.States;
 using MaaWpfGui.Utilities.ValueType;
+using MaaWpfGui.ViewModels.Items;
 using MaaWpfGui.ViewModels.UserControl.Settings;
 using Newtonsoft.Json;
 using Serilog;
@@ -131,8 +134,7 @@ public class SettingsViewModel : Screen
         HangoverEnd();
 
         _runningState = RunningState.Instance;
-        _runningState.StateChanged += (_, e) =>
-        {
+        _runningState.StateChanged += (_, e) => {
             Idle = e.Idle;
 
             // Inited = e.Inited;
@@ -156,7 +158,6 @@ public class SettingsViewModel : Screen
     private void Init()
     {
         InitSettings();
-        TaskQueueViewModel.InfrastTask.InitInfrast();
         TaskQueueViewModel.RoguelikeTask.InitRoguelike();
         InitConfiguration();
         InitUiSettings();
@@ -263,8 +264,7 @@ public class SettingsViewModel : Screen
 
     private void Settings_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs? e)
     {
-        Execute.OnUIThread(() =>
-        {
+        Execute.OnUIThread(() => {
             for (int i = 0; i < Settings.Count; i++)
             {
                 var item = Settings[i];
@@ -283,8 +283,7 @@ public class SettingsViewModel : Screen
 
     private void OnSettingItemValueChanged()
     {
-        Application.Current.Dispatcher.InvokeAsync(() =>
-        {
+        Application.Current.Dispatcher.InvokeAsync(() => {
             RefreshDividerOffsetsRequested?.Invoke(this, EventArgs.Empty);
         }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
@@ -355,8 +354,7 @@ public class SettingsViewModel : Screen
     public bool Cheers
     {
         get => _cheers;
-        set
-        {
+        set {
             if (_cheers == value)
             {
                 return;
@@ -379,8 +377,7 @@ public class SettingsViewModel : Screen
     public bool Hangover
     {
         get => _hangover;
-        set
-        {
+        set {
             SetAndNotify(ref _hangover, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.Hangover, value.ToString());
         }
@@ -391,8 +388,7 @@ public class SettingsViewModel : Screen
     public string LastBuyWineTime
     {
         get => _lastBuyWineTime;
-        set
-        {
+        set {
             SetAndNotify(ref _lastBuyWineTime, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.LastBuyWineTime, value);
         }
@@ -431,8 +427,7 @@ public class SettingsViewModel : Screen
     public string SoberLanguage
     {
         get => _soberLanguage;
-        set
-        {
+        set {
             SetAndNotify(ref _soberLanguage, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.SoberLanguage, value);
         }
@@ -455,7 +450,15 @@ public class SettingsViewModel : Screen
         //     return true;
         // }
         string[] wineList = ["酒", "liquor", "drink", "wine", "beer", "술", "🍷", "🍸", "🍺", "🍻", "🥃", "🍶"];
-        return wineList.Any(TaskQueueViewModel.MallTask.CreditFirstList.Contains);
+        foreach (var task in ConfigFactory.CurrentConfig.TaskQueue.OfType<MallTask>())
+        {
+            if (wineList.Any(task.FirstList.Contains))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     #endregion EasterEggs
@@ -503,11 +506,17 @@ public class SettingsViewModel : Screen
     public string? CurrentConfiguration
     {
         get => _currentConfiguration;
-        set
-        {
-            SetAndNotify(ref _currentConfiguration, value);
-            ConfigurationHelper.SwitchConfiguration(value);
+        set {
+            bool ret = ConfigurationHelper.SwitchConfiguration(value);
+            ret &= ConfigFactory.SwitchConfig(value);
 
+            if (!ret)
+            {
+                ConfigurationHelper.SwitchConfiguration(_currentConfiguration);
+                ConfigFactory.SwitchConfig(_currentConfiguration);
+                return;
+            }
+            SetAndNotify(ref _currentConfiguration, value);
             Bootstrapper.ShutdownAndRestartWithoutArgs();
         }
     }
@@ -529,12 +538,14 @@ public class SettingsViewModel : Screen
             NewConfigurationName = DateTime.Now.ToString("yy/MM/dd HH:mm:ss");
         }
 
-        if (ConfigurationHelper.AddConfiguration(NewConfigurationName, CurrentConfiguration))
+        if (ConfigurationHelper.AddConfiguration(NewConfigurationName, CurrentConfiguration) && ConfigFactory.AddConfiguration(NewConfigurationName, CurrentConfiguration))
         {
             ConfigurationList.Add(new CombinedData { Display = NewConfigurationName, Value = NewConfigurationName });
 
-            var growlInfo = new GrowlInfo
-            {
+            // 配置数量大于 1 时，标题栏显示配置名
+            UpdateWindowTitle();
+
+            var growlInfo = new GrowlInfo {
                 IsCustom = true,
                 Message = string.Format(LocalizationHelper.GetString("AddConfigSuccess"), NewConfigurationName),
                 IconKey = "HangoverGeometry",
@@ -544,8 +555,9 @@ public class SettingsViewModel : Screen
         }
         else
         {
-            var growlInfo = new GrowlInfo
-            {
+            ConfigurationHelper.DeleteConfiguration(NewConfigurationName);
+            ConfigFactory.DeleteConfiguration(NewConfigurationName);
+            var growlInfo = new GrowlInfo {
                 IsCustom = true,
                 Message = string.Format(LocalizationHelper.GetString("ConfigExists"), NewConfigurationName),
                 IconKey = "HangoverGeometry",
@@ -559,9 +571,13 @@ public class SettingsViewModel : Screen
     [UsedImplicitly]
     public void DeleteConfiguration(CombinedData delete)
     {
-        if (ConfigurationHelper.DeleteConfiguration(delete.Display))
+        if (ConfigurationHelper.DeleteConfiguration(delete.Display) && ConfigFactory.DeleteConfiguration(delete.Display))
         {
             ConfigurationList.Remove(delete);
+            if (ConfigurationList.Count <= 1)
+            {
+                UpdateWindowTitle();
+            }
         }
     }
 
@@ -569,15 +585,14 @@ public class SettingsViewModel : Screen
 
     #region SettingsGuide
 
-    public static int GuideMaxStep => 6;
+    public static int GuideMaxStep => 7;
 
     private int _guideStepIndex = Convert.ToInt32(ConfigurationHelper.GetValue(ConfigurationKeys.GuideStepIndex, "0"));
 
     public int GuideStepIndex
     {
         get => _guideStepIndex;
-        set
-        {
+        set {
             SetAndNotify(ref _guideStepIndex, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.GuideStepIndex, value.ToString());
         }
@@ -639,8 +654,7 @@ public class SettingsViewModel : Screen
         }
 
         _resetNotifyTimer = new Timer(20);
-        _resetNotifyTimer.Elapsed += (_, _) =>
-        {
+        _resetNotifyTimer.Elapsed += (_, _) => {
             _notifySource = NotifyType.None;
         };
         _resetNotifyTimer.AutoReset = false;
@@ -666,8 +680,7 @@ public class SettingsViewModel : Screen
     public List<double> DividerVerticalOffsetList
     {
         get => _dividerVerticalOffsetList;
-        set
-        {
+        set {
             if (_dividerVerticalOffsetList == value)
             {
                 return;
@@ -686,8 +699,7 @@ public class SettingsViewModel : Screen
     public int SelectedIndex
     {
         get => _selectedIndex;
-        set
-        {
+        set {
             if (_selectedIndex == value)
             {
                 return;
@@ -730,8 +742,7 @@ public class SettingsViewModel : Screen
     public double ScrollOffset
     {
         get => _scrollOffset;
-        set
-        {
+        set {
             if (!AllowScrollOffsetChange)
             {
                 return;
@@ -820,8 +831,7 @@ public class SettingsViewModel : Screen
     public bool IsCheckingAnnouncement
     {
         get => _isCheckingAnnouncement;
-        set
-        {
+        set {
             SetAndNotify(ref _isCheckingAnnouncement, value);
         }
     }
@@ -839,7 +849,7 @@ public class SettingsViewModel : Screen
 
         try
         {
-            if (Instances.AnnouncementViewModel.View is System.Windows.Window window)
+            if (Instances.AnnouncementDialogViewModel.View is System.Windows.Window window)
             {
                 if (window.WindowState == WindowState.Minimized)
                 {
@@ -850,10 +860,10 @@ public class SettingsViewModel : Screen
             }
             else
             {
-                Instances.WindowManager.ShowWindow(Instances.AnnouncementViewModel);
+                Instances.WindowManager.ShowWindow(Instances.AnnouncementDialogViewModel);
             }
 
-            await Instances.AnnouncementViewModel.CheckAndDownloadAnnouncement();
+            await Instances.AnnouncementDialogViewModel.CheckAndDownloadAnnouncement();
         }
         finally
         {
@@ -871,7 +881,7 @@ public class SettingsViewModel : Screen
         var newVersionFoundInfo = VersionUpdateSettings.NewVersionFoundInfo;
         var uiVersion = VersionUpdateSettingsUserControlModel.UiVersion;
         var startupUpdateCheck = VersionUpdateSettings.StartupUpdateCheck;
-        var isDebug = Instances.VersionUpdateViewModel.IsDebugVersion();
+        var isDebug = Instances.VersionUpdateDialogViewModel.IsDebugVersion();
 
         if (newVersionFoundInfo != uiVersion && !isDebug && !string.IsNullOrEmpty(newVersionFoundInfo) && startupUpdateCheck)
         {
@@ -886,9 +896,8 @@ public class SettingsViewModel : Screen
             prefix += " - ";
         }
 
-        List<string> windowTitleSelectShowList = GuiSettings.WindowTitleSelectShowList
-            .Cast<KeyValuePair<string, string>>().Select(pair => pair.Key)
-            .ToList();
+        List<string> windowTitleSelectShowList = [.. GuiSettings.WindowTitleSelectShowList
+            .Cast<KeyValuePair<string, string>>().Select(pair => pair.Key)];
 
         string currentConfiguration = string.Empty;
         string connectConfigName = string.Empty;
@@ -900,7 +909,11 @@ public class SettingsViewModel : Screen
             switch (select)
             {
                 case "1": // 配置名
-                    currentConfiguration = $" ({CurrentConfiguration})";
+                    if (ConfigurationList.Count > 1)
+                    {
+                        currentConfiguration = $" ({CurrentConfiguration})";
+                    }
+
                     break;
 
                 case "2": // 连接模式
@@ -912,7 +925,7 @@ public class SettingsViewModel : Screen
                     break;
 
                 case "3": // 端口地址
-                    connectAddress = $" ({ConnectSettings.ConnectAddress})";
+                    connectAddress = $" ({ConnectSettings.ConnectAddress})".Replace("127.0.0.1:", string.Empty).Replace("localhost:", string.Empty);
                     break;
 
                 case "4": // 客户端类型
@@ -933,8 +946,7 @@ public class SettingsViewModel : Screen
     /// </summary>
     private string ClientName
     {
-        get
-        {
+        get {
             foreach (var item in GameSettings.ClientTypeList.Where(item => item.Value == GameSettings.ClientType))
             {
                 return item.Display;

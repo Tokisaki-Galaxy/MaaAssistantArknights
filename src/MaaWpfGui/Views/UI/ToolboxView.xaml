@@ -9,10 +9,9 @@
     xmlns:helper="clr-namespace:MaaWpfGui.Helper"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:s="https://github.com/canton7/Stylet"
-    xmlns:ui="clr-namespace:MaaWpfGui.ViewModels.UI"
     xmlns:uiBehaviors="clr-namespace:MaaWpfGui.Extensions.UIBehaviors"
-    xmlns:vwp="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
-    d:DataContext="{d:DesignInstance {x:Type ui:ToolboxViewModel}}"
+    xmlns:ui_vms="clr-namespace:MaaWpfGui.ViewModels.UI"
+    d:DataContext="{d:DesignInstance {x:Type ui_vms:ToolboxViewModel}}"
     d:DesignHeight="600"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -108,7 +107,7 @@
                                     Maximum="9"
                                     Minimum="1"
                                     ValueFormat="00"
-                                    Value="{Binding ChooseLevel3Hour, Source={x:Static ui:TaskQueueViewModel.RecruitTask}}" />
+                                    Value="{Binding ChooseLevel3Hour, Source={x:Static ui_vms:TaskQueueViewModel.RecruitTask}}" />
                                 <controls:TextBlock Margin="5" Text=":" />
                                 <hc:NumericUpDown
                                     Width="55"
@@ -116,7 +115,7 @@
                                     Maximum="50"
                                     Minimum="0"
                                     ValueFormat="00"
-                                    Value="{Binding ChooseLevel3Min, Source={x:Static ui:TaskQueueViewModel.RecruitTask}}" />
+                                    Value="{Binding ChooseLevel3Min, Source={x:Static ui_vms:TaskQueueViewModel.RecruitTask}}" />
                             </StackPanel>
                         </StackPanel>
 
@@ -133,7 +132,7 @@
                                     Maximum="9"
                                     Minimum="1"
                                     ValueFormat="00"
-                                    Value="{Binding ChooseLevel4Hour, Source={x:Static ui:TaskQueueViewModel.RecruitTask}}" />
+                                    Value="{Binding ChooseLevel4Hour, Source={x:Static ui_vms:TaskQueueViewModel.RecruitTask}}" />
                                 <controls:TextBlock Margin="5" Text=":" />
                                 <hc:NumericUpDown
                                     Width="55"
@@ -141,7 +140,7 @@
                                     Maximum="50"
                                     Minimum="0"
                                     ValueFormat="00"
-                                    Value="{Binding ChooseLevel4Min, Source={x:Static ui:TaskQueueViewModel.RecruitTask}}" />
+                                    Value="{Binding ChooseLevel4Min, Source={x:Static ui_vms:TaskQueueViewModel.RecruitTask}}" />
                             </StackPanel>
                         </StackPanel>
 
@@ -158,7 +157,7 @@
                                     Maximum="9"
                                     Minimum="1"
                                     ValueFormat="00"
-                                    Value="{Binding ChooseLevel5Hour, Source={x:Static ui:TaskQueueViewModel.RecruitTask}}" />
+                                    Value="{Binding ChooseLevel5Hour, Source={x:Static ui_vms:TaskQueueViewModel.RecruitTask}}" />
                                 <controls:TextBlock Margin="5" Text=":" />
                                 <hc:NumericUpDown
                                     Width="55"
@@ -166,7 +165,7 @@
                                     Maximum="50"
                                     Minimum="0"
                                     ValueFormat="00"
-                                    Value="{Binding ChooseLevel5Min, Source={x:Static ui:TaskQueueViewModel.RecruitTask}}" />
+                                    Value="{Binding ChooseLevel5Min, Source={x:Static ui_vms:TaskQueueViewModel.RecruitTask}}" />
                             </StackPanel>
                         </StackPanel>
 
@@ -235,48 +234,125 @@
                         Header="{c:Binding OperBoxNotHaveList.Count}"
                         HeaderStringFormat="{StaticResource OperBoxNotHaveList}"
                         Visibility="{c:Binding 'OperBoxNotHaveList.Count != 0'}">
-                        <controls:NoAutomationDataGrid
-                            Width="680"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Stretch"
-                            AutoGenerateColumns="False"
-                            HeadersVisibility="None"
-                            IsReadOnly="True"
-                            ItemsSource="{Binding OperBoxNotHaveList}"
-                            ScrollViewer.CanContentScroll="True"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            VirtualizingPanel.ScrollUnit="Pixel">
-                            <DataGrid.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <vwp:VirtualizingWrapPanel HorizontalAlignment="Center" />
-                                </ItemsPanelTemplate>
-                            </DataGrid.ItemsPanel>
-                            <DataGrid.Columns>
-                                <DataGridTextColumn MinWidth="130" Binding="{Binding Name}" />
-                            </DataGrid.Columns>
-                        </controls:NoAutomationDataGrid>
+                        <hc:ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl
+                                HorizontalAlignment="Center"
+                                ItemsSource="{Binding OperBoxNotHaveList}"
+                                ScrollViewer.CanContentScroll="True"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="5" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border
+                                            Margin="5"
+                                            Padding="10,15"
+                                            Background="{DynamicResource RegionBrushOpacity50}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <controls:TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="13"
+                                                    Text="{Binding Name}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap" />
+                                                <controls:TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    uiBehaviors:ResourceReferenceHelper.ForegroundResourceKey="{Binding RarityColorResourceKey}"
+                                                    FontSize="11"
+                                                    Text="{Binding RarityStars}"
+                                                    TextAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </hc:ScrollViewer>
                     </TabItem>
                     <TabItem Header="{c:Binding OperBoxHaveList.Count}" HeaderStringFormat="{StaticResource OperBoxHaveList}">
-                        <controls:NoAutomationDataGrid
-                            Width="680"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Stretch"
-                            AutoGenerateColumns="False"
-                            HeadersVisibility="None"
-                            IsReadOnly="True"
-                            ItemsSource="{Binding OperBoxHaveList}"
-                            ScrollViewer.CanContentScroll="True"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            VirtualizingPanel.ScrollUnit="Pixel">
-                            <DataGrid.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <vwp:VirtualizingWrapPanel HorizontalAlignment="Center" />
-                                </ItemsPanelTemplate>
-                            </DataGrid.ItemsPanel>
-                            <DataGrid.Columns>
-                                <DataGridTextColumn MinWidth="130" Binding="{Binding Name}" />
-                            </DataGrid.Columns>
-                        </controls:NoAutomationDataGrid>
+                        <hc:ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl
+                                HorizontalAlignment="Center"
+                                ItemsSource="{Binding OperBoxHaveList}"
+                                ScrollViewer.CanContentScroll="True"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="5" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border
+                                            Margin="5"
+                                            Padding="10,15"
+                                            Background="{DynamicResource RegionBrushOpacity25}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <controls:TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="13"
+                                                    Text="{Binding Name}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap" />
+                                                <controls:TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    uiBehaviors:ResourceReferenceHelper.ForegroundResourceKey="{Binding RarityColorResourceKey}"
+                                                    FontSize="11"
+                                                    Text="{Binding RarityStars}"
+                                                    TextAlignment="Center" />
+                                                <StackPanel
+                                                    Margin="0,0,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Orientation="Horizontal">
+                                                    <Image
+                                                        Width="18"
+                                                        Height="18"
+                                                        Source="{Binding EliteIconPath}"
+                                                        Stretch="Uniform"
+                                                        ToolTip="{Binding Elite}">
+                                                        <Image.Effect>
+                                                            <DropShadowEffect
+                                                                BlurRadius="8"
+                                                                Opacity="0.5"
+                                                                ShadowDepth="2"
+                                                                Color="Black" />
+                                                        </Image.Effect>
+                                                    </Image>
+                                                    <controls:TextBlock
+                                                        Margin="2.5,0"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="11"
+                                                        Text="{Binding Level, StringFormat={}Lv.{0}}" />
+                                                    <Image
+                                                        Width="18"
+                                                        Height="18"
+                                                        Source="{Binding PotentialIconPath}"
+                                                        ToolTip="{Binding Potential}">
+                                                        <Image.Effect>
+                                                            <DropShadowEffect
+                                                                BlurRadius="8"
+                                                                Opacity="0.5"
+                                                                ShadowDepth="2"
+                                                                Color="Black" />
+                                                        </Image.Effect>
+                                                    </Image>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </hc:ScrollViewer>
                     </TabItem>
                 </TabControl>
                 <StackPanel
@@ -304,65 +380,94 @@
             </Grid>
         </TabItem>
         <TabItem Header="{DynamicResource DepotRecognition}">
-            <Grid Margin="20,0,20,20" IsEnabled="{Binding Idle}">
+            <Grid Margin="20,0,20,20">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="150" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <StackPanel>
                     <controls:TextBlock
-                        Height="36"
-                        Margin="10"
+                        HorizontalAlignment="Center"
+                        d:Text="上次同步时间: 2026/1/1 上午00:00:00"
+                        Visibility="{c:Binding 'LastDepotSyncTimeText.Length > 0'}">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0}: {1}">
+                                <Binding Source="{StaticResource LastDepotSyncTime}" />
+                                <Binding Path="LastDepotSyncTimeText" Source="{x:Static helper:Instances.ToolboxViewModel}" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </controls:TextBlock>
+                    <controls:TextBlock
+                        Margin="5"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Top"
                         Focusable="True"
                         FontSize="14"
                         Style="{StaticResource TextBlockDefaultBold}"
                         Text="{Binding DepotInfo}"
-                        TextWrapping="Wrap" />
+                        TextWrapping="Wrap"
+                        Visibility="{c:Binding 'DepotInfo.Length > 0'}" />
                 </StackPanel>
-                <controls:NoAutomationDataGrid
+                <hc:ScrollViewer
                     Grid.Row="1"
-                    Width="680"
-                    HorizontalAlignment="Center"
-                    AutoGenerateColumns="False"
-                    HeadersVisibility="None"
-                    IsReadOnly="True"
-                    ItemsSource="{Binding DepotResult}"
-                    ScrollViewer.CanContentScroll="True"
-                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                    VirtualizingPanel.ScrollUnit="Pixel">
-                    <DataGrid.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <vwp:VirtualizingWrapPanel HorizontalAlignment="Center" />
-                        </ItemsPanelTemplate>
-                    </DataGrid.ItemsPanel>
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn>
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Image
-                                        Width="30"
-                                        Height="30"
-                                        Source="{Binding Image}" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Binding="{Binding Name}" Header="Name" />
-                        <DataGridTextColumn Binding="{Binding Count}" Header="Count" />
-                    </DataGrid.Columns>
-                </controls:NoAutomationDataGrid>
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl
+                        HorizontalAlignment="Center"
+                        ItemsSource="{Binding DepotResult}"
+                        ScrollViewer.CanContentScroll="True"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="5" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    MinWidth="125"
+                                    Margin="5"
+                                    Padding="2"
+                                    Background="{DynamicResource RegionBrushOpacity25}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Vertical">
+                                        <Image
+                                            Width="50"
+                                            Height="50"
+                                            Source="{Binding Image}" />
+                                        <controls:TextBlock
+                                            HorizontalAlignment="Center"
+                                            FontSize="12"
+                                            Text="{Binding Name}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                        <controls:TextBlock
+                                            HorizontalAlignment="Center"
+                                            FontSize="12"
+                                            FontWeight="Bold"
+                                            Text="{Binding DisplayCount}"
+                                            TextAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </hc:ScrollViewer>
                 <StackPanel
                     Grid.Row="2"
-                    Margin="27,0"
+                    Margin="0,10,0,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    IsEnabled="{Binding Idle}"
                     Orientation="Horizontal">
                     <Button
                         Width="180"
                         Height="70"
-                        Margin="30"
+                        Margin="30,0"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Command="{s:Action ExportToArkplanner}"
@@ -371,7 +476,7 @@
                     <Button
                         Width="180"
                         Height="70"
-                        Margin="30"
+                        Margin="30,0"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Command="{s:Action ExportToLolicon}"
@@ -380,15 +485,16 @@
                     <Button
                         Width="180"
                         Height="70"
-                        Margin="30"
+                        Margin="30,0"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Command="{s:Action StartDepot}"
                         Content="{DynamicResource StartToDepotRecognition}"
-                        IsEnabled="{Binding 'Idle and Inited'}" />
+                        IsEnabled="{c:Binding 'Idle and Inited'}" />
                 </StackPanel>
             </Grid>
         </TabItem>
+        <!--
         <TabItem Header="{DynamicResource VideoRecognition}" Visibility="Collapsed">
             <controls:TextBlock
                 Height="80"
@@ -401,6 +507,7 @@
                 Text="{DynamicResource VideoRecognitionTips}"
                 TextWrapping="Wrap" />
         </TabItem>
+        -->
         <TabItem Header="{DynamicResource Gacha}">
             <Grid Margin="20,0,20,0">
                 <Grid.RowDefinitions>
@@ -631,17 +738,43 @@
             <Grid Margin="20,0,20,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="100" />
                 </Grid.RowDefinitions>
                 <ComboBox
+                    Margin="10,0"
                     hc:TitleElement.Title="{DynamicResource MiniGameName}"
+                    DisplayMemberPath="Display"
+                    IsEnabled="{Binding Idle}"
                     ItemsSource="{Binding MiniGameTaskList}"
                     SelectedValue="{Binding MiniGameTaskName}"
                     SelectedValuePath="Value" />
-                <controls:TextBlock Grid.Row="1" Text="{Binding MiniGameTip}" />
+                <Grid Grid.Row="1" IsEnabled="{Binding Idle}">
+                    <Grid Visibility="{c:Binding 'MiniGameTaskName == &quot;MiniGame@SecretFront&quot;'}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <ComboBox
+                            Margin="10,10,10,0"
+                            hc:TitleElement.Title="{DynamicResource MiniGame@SecretFront@Ending}"
+                            ItemsSource="{Binding SecretFrontEndingList}"
+                            SelectedValue="{Binding SecretFrontEnding}" />
+                        <ComboBox
+                            Grid.Row="1"
+                            Margin="10,10,10,0"
+                            hc:TitleElement.Title="{DynamicResource MiniGame@SecretFront@Event}"
+                            DisplayMemberPath="Display"
+                            ItemsSource="{Binding SecretFrontEventList}"
+                            SelectedValue="{Binding SecretFrontEvent}"
+                            SelectedValuePath="Value" />
+                    </Grid>
+
+                </Grid>
+                <controls:TextBlock Grid.Row="2" Text="{Binding MiniGameTip}" />
                 <Button
-                    Grid.Row="2"
+                    Grid.Row="3"
                     Width="100"
                     Height="50"
                     Margin="10"

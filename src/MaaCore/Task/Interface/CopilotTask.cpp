@@ -1,24 +1,21 @@
 #include "CopilotTask.h"
 
-#include <regex>
+#include "Arknights-Tile-Pos/TileCalc2.hpp"
 
+#include "Config/Miscellaneous/BattleDataConfig.h"
 #include "Config/Miscellaneous/CopilotConfig.h"
 #include "Config/TaskData.h"
 #include "Task/Fight/MedicineCounterTaskPlugin.h"
 #include "Task/Miscellaneous/BattleFormationTask.h"
 #include "Task/Miscellaneous/BattleProcessTask.h"
 #include "Task/Miscellaneous/MultiCopilotTaskPlugin.h"
-#include "Task/Miscellaneous/ParadoxRecognitionTask.h"
 #include "Task/ProcessTask.h"
 #include "Utils/Logger.hpp"
 #include "Utils/Platform.hpp"
 
-#include "Arknights-Tile-Pos/TileCalc2.hpp"
-
 asst::CopilotTask::CopilotTask(const AsstCallback& callback, Assistant* inst) :
     InterfaceTask(callback, inst, TaskType),
     m_multi_copilot_plugin_ptr(std::make_shared<MultiCopilotTaskPlugin>(callback, inst, TaskType)),
-    m_paradox_task_ptr(std::make_shared<ParadoxRecognitionTask>(callback, inst, TaskType)),
     m_formation_task_ptr(std::make_shared<BattleFormationTask>(callback, inst, TaskType)),
     m_battle_task_ptr(std::make_shared<BattleProcessTask>(callback, inst, TaskType)),
     m_stop_task_ptr(std::make_shared<ProcessTask>(callback, inst, TaskType))
@@ -27,7 +24,6 @@ asst::CopilotTask::CopilotTask(const AsstCallback& callback, Assistant* inst) :
 
     m_multi_copilot_plugin_ptr->set_retry_times(0);
     m_multi_copilot_plugin_ptr->set_battle_task_ptr(m_battle_task_ptr);
-    m_multi_copilot_plugin_ptr->set_paradox_task_ptr(m_paradox_task_ptr);
     m_subtasks.emplace_back(m_multi_copilot_plugin_ptr);
 
     auto start_1_tp = std::make_shared<ProcessTask>(callback, inst, TaskType);
@@ -41,7 +37,6 @@ asst::CopilotTask::CopilotTask(const AsstCallback& callback, Assistant* inst) :
     m_subtasks.emplace_back(m_medicine_task_ptr);
 
     m_subtasks.emplace_back(m_formation_task_ptr)->set_retry_times(0);
-    m_subtasks.emplace_back(m_paradox_task_ptr);
 
     auto start_2_tp = std::make_shared<ProcessTask>(callback, inst, TaskType);
     start_2_tp->set_tasks({ "BattleStartAll" }).set_retry_times(3).set_ignore_error(false);
@@ -69,7 +64,7 @@ bool asst::CopilotTask::set_params(const json::value& params)
         return false;
     }
 
-    bool use_sanity_potion = params.get("use_sanity_potion", false); // 是否吃理智药
+    bool use_sanity_potion = params.get("use_sanity_potion", false); // 是否使用理智药
     bool with_formation = params.get("formation", false);            // 是否使用自动编队
     int formation_index = params.get("formation_index", 0);          // 选择第几个编队，0为不选择
     if (!params.contains("formation_index") && params.contains("select_formation")) {
@@ -85,13 +80,6 @@ bool asst::CopilotTask::set_params(const json::value& params)
         params.get("support_unit_usage", static_cast<int>(SupportUnitUsage::None))); // 助战干员使用模式
     std::string support_unit_name = params.get("support_unit_name", std::string());
 
-    if (params.contains("add_user_additional")) {
-        Log.warn("================  DEPRECATED  ================");
-        Log.warn("`add_user_additional` has been deprecated since v5.1.0-beta.1;");
-        Log.warn("================  DEPRECATED  ================");
-        return false;
-    }
-
     // 是否在当前页面左右滑动寻找关卡，启用战斗列表则为true
     auto nav_opt1 = params.find<bool>("need_navigate");
     auto nav_opt2 = params.find<bool>("navigate_name");
@@ -106,7 +94,7 @@ bool asst::CopilotTask::set_params(const json::value& params)
     }
 
     auto filename_opt = params.find<std::string>("filename");
-    auto multi_tasks_opt = params.find<json::value>("copilot_list"); // 多任务列表
+    auto multi_tasks_opt = params.find<json::array>("copilot_list"); // 多任务列表
     if (!filename_opt && !multi_tasks_opt) {
         Log.error("CopilotTask set_params failed, stage_name or filename not found");
         return false;
@@ -117,8 +105,6 @@ bool asst::CopilotTask::set_params(const json::value& params)
         m_battle_task_ptr->set_wait_until_end(false);
         auto copilot_opt = parse_copilot_filename(*filename_opt);
         m_stage_name = Copilot.get_stage_name();
-        // 单个悖论走正常流程，不用导航
-        m_paradox_task_ptr->set_enable(false);
         if (!m_battle_task_ptr->set_stage_name(m_stage_name)) {
             Log.error("Not support stage");
             return false;
@@ -129,8 +115,7 @@ bool asst::CopilotTask::set_params(const json::value& params)
         m_battle_task_ptr->set_wait_until_end(true);
         auto configs = static_cast<std::vector<MultiCopilotConfig>>(*multi_tasks_opt);
         std::vector<MultiCopilotTaskPlugin::MultiCopilotConfig> configs_cvt;
-
-        for (const auto& [filename, stage_name, is_raid, is_paradox] : configs) {
+        for (const auto& [filename, stage_name, is_raid] : configs) {
             MultiCopilotTaskPlugin::MultiCopilotConfig config_cvt;
             auto copilot_opt = parse_copilot_filename(filename);
             if (!copilot_opt) {
@@ -143,8 +128,6 @@ bool asst::CopilotTask::set_params(const json::value& params)
             config_cvt.copilot_file = *copilot_opt;
             config_cvt.nav_name = stage_name;
             config_cvt.is_raid = is_raid;
-            config_cvt.is_paradox = is_paradox;
-            m_paradox_task_ptr->set_enable(is_paradox);
             configs_cvt.emplace_back(std::move(config_cvt));
         }
 
@@ -158,6 +141,16 @@ bool asst::CopilotTask::set_params(const json::value& params)
         }
         m_multi_copilot_plugin_ptr->set_multi_copilot_config(std::move(configs_cvt));
         m_has_subtasks_duplicate = true;
+
+        for (const auto& obj : *multi_tasks_opt) {
+            if (obj.contains("is_paradox")) {
+                Log.error("================  !DEPRECATED!  ================");
+                LogError << "`is_paradox` has been deprecated since v6.1.2;";
+                LogError << "Please use 'ParadoxCopilotTask' for paradox copilot;";
+                Log.error("================  !DEPRECATED!  ================");
+                return false;
+            }
+        }
     }
 
     m_medicine_task_ptr->set_enable(use_sanity_potion);
@@ -169,12 +162,19 @@ bool asst::CopilotTask::set_params(const json::value& params)
     m_formation_task_ptr->set_support_unit_usage(support_unit_usage);
     m_formation_task_ptr->set_specific_support_unit(support_unit_name);
 
-    if (auto opt = params.find<json::array>("user_additional"); add_user_additional && opt) {
+    if (auto opt = params.find<json::array>("user_additional"); with_formation && add_user_additional && opt) {
         std::vector<std::pair<std::string, int>> user_additional;
         for (const auto& op : *opt) {
             std::string name = op.get("name", std::string());
             if (name.empty()) {
                 continue;
+            }
+            if (BattleData.is_name_invalid(name)) {
+                Log.error(__FUNCTION__, "| User additional oper", name, "is invalid");
+                json::value info = basic_info_with_what("UserAdditionalOperInvalid");
+                info["details"]["name"] = name;
+                callback(AsstMsg::SubTaskError, info);
+                return false;
             }
             user_additional.emplace_back(std::pair<std::string, int> { std::move(name), op.get("skill", 1) });
         }

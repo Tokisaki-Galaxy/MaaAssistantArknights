@@ -5,7 +5,7 @@
 #include <ranges>
 #include <thread>
 
-#include "Utils/NoWarningCV.h"
+#include "MaaUtils/NoWarningCV.hpp"
 
 #include "Config/GeneralConfig.h"
 #include "Config/Miscellaneous/BattleDataConfig.h"
@@ -13,9 +13,9 @@
 #include "Config/Miscellaneous/TilePack.h"
 #include "Config/TaskData.h"
 #include "Controller/Controller.h"
+#include "MaaUtils/ImageIo.h"
 #include "Task/ProcessTask.h"
 #include "Utils/Algorithm.hpp"
-#include "Utils/ImageIo.hpp"
 #include "Utils/Logger.hpp"
 #include "Vision/Battle/BattlefieldMatcher.h"
 #include "Vision/Matcher.h"
@@ -228,7 +228,9 @@ bool asst::BattleProcessTask::do_action(const battle::copilot::Action& action, s
         break;
 
     case ActionType::UseSkill:
-        ret = m_in_bullet_time ? click_skill() : (location.empty() ? use_skill(name) : use_skill(location));
+        ret = m_in_bullet_time ? click_skill(!action.skip_if_not_ready)
+                               : (location.empty() ? use_skill(name, !action.skip_if_not_ready)
+                                                   : use_skill(location, !action.skip_if_not_ready));
         if (ret) {
             m_in_bullet_time = false;
         }
@@ -245,13 +247,35 @@ bool asst::BattleProcessTask::do_action(const battle::copilot::Action& action, s
         }
         break;
 
-    case ActionType::SkillUsage:
-        m_skill_usage[name] = action.modify_usage;
-        if (action.modify_usage == SkillUsage::Times) {
-            m_skill_times[name] = action.modify_times;
+    case ActionType::SkillUsage: {
+        const auto set_usage = [this](const std::string& name, SkillUsage usage, int times) {
+            m_skill_usage[name] = usage;
+            if (usage == SkillUsage::Times) {
+                m_skill_times[name] = times;
+            }
+        };
+        if (!location.empty()) {
+            std::string drone_name;
+            if (!name.empty()) {
+                LogWarn << "Both name and location are set for SkillUsage action. Skip this step.";
+                break;
+            }
+            if (auto it = m_used_tiles.find(location); it == m_used_tiles.end()) {
+                LogInfo << "Tile hasn't used, register for drone" << location;
+                drone_name = std::format("drone_{}_{}", location.x, location.y);
+                register_deployed_oper(drone_name, location);
+            }
+            else {
+                drone_name = it->second;
+            }
+            set_usage(drone_name, action.modify_usage, action.modify_times);
+        }
+        else {
+            set_usage(name, action.modify_usage, action.modify_times);
         }
         ret = true;
         break;
+    }
 
     case ActionType::Output:
         // DoNothing
@@ -260,6 +284,11 @@ bool asst::BattleProcessTask::do_action(const battle::copilot::Action& action, s
 
     case ActionType::MoveCamera:
         ret = move_camera(action.distance);
+        break;
+
+    case ActionType::ResetStopwatch:
+        m_stopwatch_start_time = std::chrono::steady_clock::now();
+        m_stopwatch_enabled = true;
         break;
 
     case ActionType::SkillDaemon:
@@ -299,15 +328,15 @@ void asst::BattleProcessTask::notify_action(const battle::copilot::Action& actio
         { ActionType::MoveCamera, "MoveCamera" },
         { ActionType::DrawCard, "DrawCard" },
         { ActionType::CheckIfStartOver, "CheckIfStartOver" },
+        { ActionType::ResetStopwatch, "ResetStopwatch" },
     };
 
     json::value info = basic_info_with_what("CopilotAction");
-    info["details"] |= json::object {
-        { "action", ActionNames.at(action.type) },
-        { "target", action.name },
-        { "doc", action.doc },
-        { "doc_color", action.doc_color },
-    };
+    info["details"] |= json::object { { "action", ActionNames.at(action.type) },
+                                      { "target", action.name },
+                                      { "doc", action.doc },
+                                      { "doc_color", action.doc_color },
+                                      { "elapsed_time", elapsed_time() } };
     callback(AsstMsg::SubTaskExtraInfo, info);
 }
 
@@ -389,6 +418,25 @@ bool asst::BattleProcessTask::wait_condition(const Action& action)
                 break;
             }
             do_strategy_and_update_image();
+        }
+    }
+
+    // 等待全局计时器
+    if (action.elapsed_time > 0) {
+        if (m_stopwatch_enabled) {
+            update_image_if_empty();
+            while (!need_exit()) {
+                if (elapsed_time() >= action.elapsed_time) {
+                    break;
+                }
+                if (!check_in_battle(image)) {
+                    return false;
+                }
+                do_strategy_and_update_image();
+            }
+        }
+        else {
+            Log.warn(__FUNCTION__, "| Timer not enabled. Reset required before use.");
         }
     }
 

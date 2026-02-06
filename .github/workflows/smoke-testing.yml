@@ -1,60 +1,67 @@
-name: smoke-testing
+name: Smoke Test
+permissions:
+  contents: read
 
 on:
   push:
     paths:
       - ".github/workflows/smoke-testing.yml"
-      - "tools/SmokeTesting/**"
       - "3rdparty/include/**"
-      - "include/**"
-      - "src/Cpp/**"
-      - "src/MaaCore/**"
-      - "resource/**"
-      - "!**/*.md"
       - "cmake/**"
       - "CMakeLists.txt"
+      - "include/**"
+      - "resource/**"
+      - "src/Cpp/**"
+      - "src/MaaCore/**"
       - "tools/maadeps-download.py"
+      - "tools/SmokeTesting/**"
+      - "!**/*.md"
   pull_request:
     paths:
       - ".github/workflows/smoke-testing.yml"
-      - "tools/SmokeTesting/**"
       - "3rdparty/include/**"
-      - "include/**"
-      - "src/Cpp/**"
-      - "src/MaaCore/**"
-      - "resource/**"
-      - "!**/*.md"
       - "cmake/**"
       - "CMakeLists.txt"
+      - "include/**"
+      - "resource/**"
+      - "src/Cpp/**"
+      - "src/MaaCore/**"
       - "tools/maadeps-download.py"
+      - "tools/SmokeTesting/**"
+      - "!**/*.md"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}${{ github.ref == 'refs/heads/dev' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: true
 
 jobs:
   smoke-testing:
-    # Prevent duplicate runs on organization branches with PRs
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    name: Run Smoke Test
     runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           show-progress: false
 
       - name: Generate cache key
         id: cache_key
+        continue-on-error: true
         run: |
           echo "key=Smoke-testing-${{ hashFiles('src/Cpp/**', 'src/MaaCore/**', '3rdparty/include/**', 'include/**', 'cmake/**', 'CMakeLists.txt', 'tools/maadeps-download.py', 'tools/linux-toolchain-download.py') }}" >> $GITHUB_OUTPUT
 
-      - name: Restore cache smoke-testing
+      - name: Restore cache for Smoke Test
+        if: ${{ steps.cache_key.outputs.key != '' }}
         id: smoke-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
+        continue-on-error: true
         with:
           key: ${{ steps.cache_key.outputs.key }}
           path: |
             ./install/libfastdeploy_ppocr.dylib
             ./install/libMaaCore.dylib
+            ./install/libMaaUtils.dylib
             ./install/libonnxruntime.1.19.2.dylib
             ./install/libopencv_world4.4.11.0.dylib
             ./install/smoke_test
@@ -62,14 +69,15 @@ jobs:
       - name: Fetch submodules
         if: steps.smoke-cache.outputs.cache-hit != 'true'
         run: |
-          git submodule update --init --depth 1 3rdparty/EmulatorExtras
+          git submodule update --init --depth 1 src/MaaUtils
 
       - name: Cache MaaDeps
         if: steps.smoke-cache.outputs.cache-hit != 'true'
         id: maadeps-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
+        continue-on-error: true
         with:
-          path: ./MaaDeps
+          path: ./src/MaaUtils/MaaDeps
           key: ${{ runner.os }}-arm64-maadeps-${{ hashFiles('tools/maadeps-download.py') }}
 
       - name: Bootstrap MaaDeps
@@ -101,7 +109,7 @@ jobs:
           mkdir -p install
           cmake --install build --prefix install --config Debug
 
-      - name: Make link for cache smoke-testing
+      - name: Make link to Smoke Test cache
         if: steps.smoke-cache.outputs.cache-hit == 'true'
         run: |
           ln -s "$(pwd)/resource" install/resource
@@ -110,21 +118,23 @@ jobs:
         run: |
           sh ./tools/SmokeTesting/run_tests.sh
 
-      - name: Save cache smoke-testing (only in dev)
+      - name: Save cache for Smoke Test (only in dev)
         if: steps.smoke-cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/dev'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
+        continue-on-error: true
         with:
           key: ${{ steps.cache_key.outputs.key }}
           path: |
             ./install/libfastdeploy_ppocr.dylib
             ./install/libMaaCore.dylib
+            ./install/libMaaUtils.dylib
             ./install/libonnxruntime.1.19.2.dylib
             ./install/libopencv_world4.4.11.0.dylib
             ./install/smoke_test
 
       - name: Upload logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: logs
           path: ./install/debug

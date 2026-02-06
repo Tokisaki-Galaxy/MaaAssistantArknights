@@ -3,19 +3,39 @@ order: 1
 icon: iconoir:developer
 ---
 
-# 开发前须知
+# 开发指南
 
 ::: tip
 本页面主要描述了 PR 流程以及 MAA 的文件格式化要求，如果你想要具体了解如何对 MAA 的运行逻辑做出更改，请参看 [协议文档](../protocol/)
 :::
 
-## Github Pull Request 流程简述
+::: tip
+你可以 [向 DeepWiki 询问](https://deepwiki.com/MaaAssistantArknights/MaaAssistantArknights)，以初步了解 MAA 项目的总体架构。
+:::
 
-### 我不懂编程，只是想改一点点 JSON 文件/文档等，要怎么操作？
+## 我不懂编程，只是想改一点点 JSON 文件/文档等，要怎么操作？
 
 欢迎收看 [牛牛也能看懂的 GitHub Pull Request 使用指南](./pr-tutorial.md) （纯网页端操作 Github.com）
 
-### 我会编程，但没接触过 GitHub/C++/……，要怎么操作？
+## 我只想简单修改几行代码，但配置环境太麻烦，纯网页编辑又很难用，怎么办？
+
+请使用 [GitHub Codespaces](https://github.com/codespaces) 在线开发环境，尽情尝试！
+
+我们预置了多种不同的开发环境以供选择：
+
+- 空白环境，裸 Linux 容器（默认）
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2Fdevcontainer.json)
+
+- 轻量环境，适合文档站前端开发
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F0%2Fdevcontainer.json)
+
+- 全量环境，适合 MAA Core 相关开发（不推荐使用，建议本地开发，完整配置相关环境。详见下一章节）
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F1%2Fdevcontainer.json)
+
+## 完整环境配置流程（Windows）
 
 1. 如果很久以前 Fork 过，先在自己仓库的 `Settings` 里，翻到最下面，删除
 2. 打开 [MAA 主仓库](https://github.com/MaaAssistantArknights/MaaAssistantArknights)，点击 `Fork`，继续点击 `Create fork`
@@ -39,20 +59,24 @@ icon: iconoir:developer
 
 5. 配置编程环境
    - 下载并安装 `CMake`
-   - 下载并安装 `Visual Studio 2022 community`, 安装的时候需要选中 `基于 C++ 的桌面开发` 和 `.NET 桌面开发`。
+   - 下载并安装 `Visual Studio 2026 Community`, 安装的时候需要选中 `基于 C++ 的桌面开发` 和 `.NET 桌面开发`。
 
 6. 执行 cmake 项目配置
 
    ```cmd
    mkdir -p build
-   cmake -G "Visual Studio 17 2022" -B build -DBUILD_WPF_GUI=ON -DBUILD_DEBUG_DEMO=ON
+   cmake -G "Visual Studio 18 2026" -B build -DBUILD_WPF_GUI=ON -DBUILD_DEBUG_DEMO=ON
    ```
 
-7. 双击打开 `build/MAA.sln` 文件，Visual Studio 会自动加载整个项目。
+7. 双击打开 `build/MAA.slnx` 文件，Visual Studio 会自动加载整个项目。
 8. 设置 VS
    - VS 上方配置选择 `Debug` `x64`
    - 右键 `MaaWpfGui` - 设为启动项目
    - 按 F5 运行
+
+   ::: tip
+   若需调试 Win32Controller（Windows 窗口控制）相关功能，需要自行从 [MaaFramework Releases](https://github.com/MaaXYZ/MaaFramework/releases) 下载对应平台的压缩包，将 `bin` 目录中的 `MaaWin32ControlUnit.dll` 放到 MAA 的 DLL 同目录下（如 `build/bin/Debug`）。欢迎 PR 一个自动下载脚本！
+   :::
 
 9. 到这里，你就可以愉快地 ~~瞎 JB 改~~ 发电了
 10. 开发过程中，每一定数量，记得提交一个 Commit, 别忘了写上 Message  
@@ -97,7 +121,7 @@ icon: iconoir:developer
        git merge # 合并
        ```
 
-    4. 重复上述 7, 8, 9, 10 中的操作
+    4. 重复上述 8, 9, 10, 11 中的操作
 
 ::: tip
 在打开 VS 之后，和 Git 有关的操作可以不用命令行工具，直接使用 VS 自带的“Git 更改”即可
@@ -152,9 +176,3 @@ MAA 使用一系列的格式化工具来保证仓库中的代码和资源文件�
 你也可以使用 `tools\ClangFormatter\clang-formatter.py` 来直接调用你的 clang-format 来进行格式化，只需要在项目根目录下执行：
 
 - `python tools\ClangFormatter\clang-formatter.py --clang-format=PATH\TO\YOUR\clang-format.exe --input=src\MaaCore`
-
-## 使用 GitHub Codespace 进行在线开发
-
-创建 GitHub Codespace 自动配置 C++ 开发环境
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg?color=green)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F1%2Fdevcontainer.json)

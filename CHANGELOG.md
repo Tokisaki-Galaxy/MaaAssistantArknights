@@ -1,155 +1,231 @@
-## v5.26.1
+## v6.3.0-beta.7
 
-### 刺身鱼案，启动！ | Highlight
+### Highlights
 
-这个版本我们上线了「次生预案」的初步支持，并且再次对自动肉鸽进行了大量优化。
+#### WPF 一键长草任务配置重构
 
-#### 次生预案部分
+本次更新对 WPF 端 ｢一键长草｣ 任务配置进行了重构，显著提升了可用性与表达能力。
 
-你现在可以在 ｢小工具 - 小游戏｣ 部分找到 ｢RM-次生预案｣ 选项，在游戏的「次生预案」活动的 ｢前哨支点｣ 关卡列表里，找到 `RM-TR-1` 或 `RM-1`，点击 MAA 的 ｢Link Start!｣ 按钮即可开始自动刷取。
+现在支持 **添加重复类型任务**，并支持重命名；新增 **理智作战周计划**：可按星期判断任务是否执行；同时任务勾选框会根据运行状态以不同颜色进行区分，直观反馈任务被跳过、已完成、运行中或执行失败等状态。
 
-`RM-1` 支持更多资源产出，但需解锁前置要求，具体参考对应功能页描述。活动即将结束，建议尽快刷取足够启动材料并推进关卡。
+由于现已支持 ｢理智作战｣ 周计划并可添加多个同类型任务，本次更新**移除了原有 ｢剿灭作战｣ 任务失败后自动尝试下一个已开放的备选逻辑**。如有相关需要，请手动新增一个 ｢理智作战｣ 任务，并**在关卡中选择“剿灭作战”**。
 
-**提示：** 「次生预案」玩法类似《循环勇士》，带有种田要素，越早布置生产产线，就能越早挂机产出资源。不要等到最后一天再开始刷，会来不及。
+#### PC 端明日方舟
 
-#### 自动肉鸽部分
-
-本次我们对自动肉鸽的招募策略进行了较大幅度的调整，主要是为了提升肉鸽的通关率和稳定性。同时我们也修复了部分问题，比如傀影肉鸽无法识别四结局的问题。
-
-#### 其他方面
-
-我们在设置指引中新增了两个新的引导，不管你以前是否看过老的指引，这次都会再次弹出，帮助你避免因未正确配置而导致的问题。~~这下就不会有人问为什么 Linkstart 是灰的点不了了~~
-
-我们也对文档站进行了较大幅度的改版，增加了不少新功能，提升了阅读体验，欢迎你前往查看。
+MAA 现已支持 PC 端明日方舟的运行。但由于维护人手有限，PC 端版本可能长期处于不稳定状态，部分功能可能出现异常或暂时无法使用。我们非常欢迎社区开发者协助适配并提交改进，共同完善对 PC 端的支持。
 
 ----
 
-In this version, we've added initial support for the *Rebuilding Mandate* and made significant improvements to the *Auto I.S.*.
+#### WPF Farming Task Configuration Reconstruction
 
-#### [CN ONLY] *Rebuilding Mandate*
+This update reconstructs the WPF "Farming" task configuration, significantly improving usability and expressiveness.
 
-You can now find the *RM-Rebuilding Mandate* option in the *Minigames* section of the *Toolbox* menu. Within the *Rebuilding Mandate* event, locate `RM-TR-1` or `RM-1` in the *Outpost Support Point* stage list and click the *Link Start!* button to begin automated gameplay.
+Now supports **adding repeating task types** and renaming them; introduces **Combat weekly schedule**: you can determine whether tasks are executed based on the day of the week; task checkboxes will also be distinguished by different colors according to the running status, providing intuitive feedback on tasks being skipped, completed, running, or failed.
 
-`RM-1` supports higher resource output but requires unlocking certain prerequisites. Please refer to the corresponding feature page for details. The event is ending soon, so it is recommended to quickly gather enough starting materials and advance through the stages.
+Since the "Combat" weekly schedule is now supported and multiple similar tasks can be added, this update **removes the original automatic attempt to use the next available alternate stage after "Annihilation" task failure**. If you need this, please manually add a "Combat" task and **select "Annihilation" in the stage**.
 
-**Tip:** *Rebuilding Mandate* is similar to *Loop Hero*, with resource-gathering elements. The sooner you set up your resource production in the stages, the sooner you can start passively generating resources. Don't wait until the last day to start farming; it will be too late.
+#### PC version of Arknights (CN only)
 
-#### *Auto I.S.*
-
-We've made significant adjustments to the *Auto I.S.* recruitment strategy, primarily to improve the success rate and stability. We've also fixed some issues, such as the problem where the game couldn't recognize the Ending 4 in the *Phantom* Theme.
-
-#### Other Improvements
-
-We've added two new guides to the *Settings Guide*. No matter if you have already seen the old one before, these new guides will still pop up, helping you avoid incorrect configurations.
-
-We've also redesigned our documentation website, adding many new features and improving the user experience. Please check it out!
+MAA now supports the PC version of Arknights. However, due to limited maintenance resources, the PC version may remain unstable for an extended period, with some features potentially malfunctioning or temporarily unavailable. We warmly welcome community developers to assist in adaptation and submit improvements to collectively enhance PC support.
 
 ----
 
-以下是详细内容：
-
-### 新增 | New
-
-* 新增 cdk 被封禁的提示信息 @ABA2396
-* RM-1 (#14271) @Daydreamer114
+## v6.3.0-beta.7
 
 ### 改进 | Improved
 
-* RegionOCRer 中 useRaw=false 时, 使用原图二值蒙版代替直接 OCR 二值图像 (#14276) @status102
+* 备选关卡读取后检查 @status102
 
 ### 修复 | Fix
 
-* 游戏更新公招界面后无法确认招募 (#14335) @ABA2396
-* 第一次访问 mirror酱 失败时错误提示 cdk 已过期 @ABA2396
-* 手动关闭模拟器后未重启 MAA 时 minitouch 可能失效 @ABA2396
-* 尝试修复生息演算任务识别并删除编队时卡住的问题 (#14290) @Alan-Charred
-* 增强 playtools 关闭连接时的异常处理，确保套接字安全关闭 (#14280) @RainYangty
-* EN IS3 encounter ocr fix MAA, EN 服水月肉鸽 事件名识别错误 bug Fixes @Constrat
-* 理智药使用数量 ocr 不准确时中断使用 @status102
-* 使用理智药 执行减少次数循环在 asst_stop 时缺少中断判断 @status102
-* 修复因失败导致次生预算出错 (#14267) @Saratoga-Official
-
-### 文档 | Docs
-
-* 补充 CopilotTask 的文档 (#14319) @Alan-Charred
-* 添加目录自动跳转组件并使 locale 自动生成 (#14299) @lucienshawls
-* 文档站新增字符画组件 (#14270) @lucienshawls
-* 将文档中指向部分文档目录的链接改为指向对应目录下的第一篇文档 (#14292) @JasonHuang79
+* 切换刷理智任务时读取到错误的关卡列表 @status102
 
 ### 其他 | Other
 
-* 使用 `BeginAnimation` 替代 `新建 Storyboard 并添加动画` @ABA2396
-* 将 mac 开发环境下的 cmake_osx 版本改为 13.4 (#14283) @Pylinx171
-* 完善容器配置及依赖安装 (#14208) @lucienshawls
-* run smoke test in lldb @horror-proton
-* YostarJP ocr fix @Saratoga-Official
+* 消除部分编译警告 (#15578) @yali-hzy
+* 刷理智高级设置使用hc:InfoElement.Title显示设置项名 @status102
+* 添加 CMakePresets.json (#15568) @yali-hzy
 
-----
-----
-
-## v5.26.0
+## v6.3.0-beta.6
 
 ### 新增 | New
 
-* 萨卡兹肉鸽 `待诉说的故事` 二次选择 (#14246) @Manicsteiner
-* mac 支持次生预案 @ABA2396
-* 次生预案十里坡剑神 @ABA2396
-* 设置指引添加更新设置 @ABA2396
-* 统一显示效果 @ABA2396
-* 设置指引添加性能设置 @ABA2396
+* 干员识别支持显示精英化等级、等级与潜能，并支持自动编队识别精英化与等级 (#15161) @ABA2396 @status102 @Manicsteiner @Constrat @HX3N
+* 界园肉鸽通宝与 DLC2 分队数据更新 @SherkeyXD
+* Yostar Dreamland / JieGarden 主题支持（JP / KR / EN）@Constrat @Manicsteiner @HX3N
+* 新增注入弹窗“不再提醒”选项，勾选后使用软件渲染 @ABA2396
+* 追加自定干员名称非法时的错误处理与本地化支持 (#15556) @yali-hzy @HX3N
 
 ### 改进 | Improved
 
-* 调整界园肉鸽招募策略 (#14255) @Saratoga-Official
-* 优化界园肉鸽部分关卡策略 (#14244) @Lancarus
-* 优化次生预案执行速度 @ABA2396
+* 优化关卡候选列表与关卡选择下拉刷新逻辑 (#15562) @status102 @HX3N @Constrat @Manicsteiner
+* 自动战斗界面布局优化 (#15512) @yali-hzy
+* TaskQueue 重命名与删除任务时显示任务序号 @status102
+* 提取任务启用状态并统一字段使用 @status102
+* 刷理智任务高级设置 UI 选项顺序优化 @status102
+* OpenCV `cv::Mat` 使用 const reference 优化 @status102
 
 ### 修复 | Fix
 
-* 商店刷新两步走 (#14201) @Alan-Charred
-* 水月肉鸽商店刷新延迟不够 @Saratoga-Official
-* 按钮显示文字错误 @ABA2396
-* 次生预案模拟器卡了容易点过头 @Saratoga-Official
-* 怎么还有人在用 adb input @ABA2396
-* 文档首页语言选择按钮的宽度定义方式 (#14199) @lucienshawls
-* 傀影肉鸽无法识别四结局 (#14193) @Saratoga-Official
-* GamePassSkip2 识别到错误的跳过 @Saratoga-Official
-* 萨米肉鸽不期而遇避战 @Saratoga-Official
-* clang @Constrat
-* Google Play Games Developer shutdown @Constrat
-* manual set resource version time @MistEO
-* prettier @Constrat
+* 修复自动战斗-自动编队自定干员名非法字段处理问题 @status102
+* 禁用无需技能等级校验时的快速选中，修复外服技能描述过长导致的误选问题 @status102
+* 修复追加信赖时助战重复计算问题 @status102
+* 修复 OR 关卡掉落界面关卡名识别错误 @ABA2396
+* 刷理智任务运行中禁止新增关卡，防止状态异常 @status102
+* 修复自动编队干员等级不足的 i18n 问题 @status102
+* 修复通宝优先级未定义导致的加载崩溃，回退至默认值 @SherkeyXD
+* 修复新增任务时“完成后动作”设置 UI 未正确隐藏的问题 @status102
+* 修复切换刷理智时候选掉落物重复加入下拉列表问题 @status102
+* 修复信用收取任务好友访问与 OF-1 最后执行时间未保存问题 @status102
+* 修复 YostarKR OCR 替换规则导致换行丢失问题 @HX3N
+* 日服酒神干员识别修复 @Saratoga-Official
+* 修复未勾选“每日仅访问一次”时会访问好友的问题 @status102
+* 修复手动输入关卡名时错误移除过期关卡的问题 @status102
+* 修复基建计划选择计数变化后 UI 未刷新问题 @status102
+* 修复涤火杰西卡干员识别问题 @ABA2396
 
 ### 文档 | Docs
 
-* 更新文档 (#14236) @Rbqwow @Saratoga-Official
-* 补充 vsc 插件繁中文档 @Rbqwow
-* 修复文档站 readme 盾换行 @Rbqwow
-* 调整文档站的标题和尾注文本显示 (#14213) @lucienshawls
-* 更新网页开发相关文档 (#14167) @Rbqwow @Manicsteiner
-* 完善任务流程协议文档 (#13232) @zzyyyl
-* 回调消息协议文档视觉更新 @SherkeyXD
-* 集成文档视觉更新 @SherkeyXD
-* 文档启用b站视频播放功能 @SherkeyXD
-* 文档添加字段容器功能 @SherkeyXD
-* 文档添加功能 @SherkeyXD
-* 更新文档编写指南 @SherkeyXD
-* 标题 MAA 统一采用缩写 @MistEO
-* 再次调整文档站标题（ @MistEO
-* 调整文档站标题 @MistEO
-* Update JP(#14227) @wallsman
-* markdown pre-commit @zzyyyl
-* add extension's evaluating feature @neko-para
-* add telegram icon @SherkeyXD
+* 修正开发文档格式错误与笔误 (#15516) @yali-hzy
 
 ### 其他 | Other
 
-* 新图标和界面风格 @hguandl
-* 水月萨米肉鸽不期而遇避战 @Saratoga-Official
-* 重写完成后动作仅一次的ui字符串 (#14196) @Rbqwow
-* 贸易站没其他好用的人再用锏 @ABA2396
-* YostarJP roguelike edits (#14252) @Manicsteiner
-* YostarJP Sarkaz roguelike StageEncounter (#14223) @Manicsteiner
-* YostarJP sami roguelike 720p (#14210) @Manicsteiner
-* YostarJP Mizuki StageEncounter (#14206) @Manicsteiner
-* devcontainer.json (#14169) @Rbqwow @lucienshawls
+* KR 本地化补充与确认弹窗文案优化 @HX3N
+* 按钮不透明度与正则匹配规则调整 @ABA2396
+* 调整“当前剿灭”键名以避免模式混淆 @status102
+* 多语言小游戏与活动文案补充（EN / JP / KR）@Constrat @Manicsteiner @HX3N
+* TXWY 数据补充与模板优化 @Constrat
+* 补全缺失翻译 @ABA2396
+
+## v6.3.0-beta.5
+
+### 改进 | Improved
+
+* 新 Config 加载时移除旧 Config 中不存在的配置 @status102
+* 优化信用战斗检查启用判断 @status102
+* 优化干员识别、仓库识别显示 @ABA2396
+* 存在 crash.log 时, 尝试获取 dumps 文件 (#15432) @status102
+* 配置迁移检查简化 @status102
+* 新 Config 字符序列化 @status102
+* 剿灭卡使用到上限时不报错停止 @ABA2396
+* 剿灭关卡通过 ends_with 判断 @ABA2396
+* FightTask 以剿灭为目标关卡时, 在终端界面找不到周剿灭获取进度图标不再以报错退出 @status102
+
+### 修复 | Fix
+
+* 剩余理智启用状态迁移后未能从旧配置移除 @status102
+* 剩余理智关卡 关卡选择 迁移后错误使用 @status102
+* 萨米肉鸽刷开局功能异常 @ABA2396
+* 基建计划选中 Index 超出范围 @status102
+* SEH 错误终止运行 @status102
+* 自动编队识别技能等级匹配失败 @status102
+* 信用收取后刷 OF-1 不会在后续刷理智任务选中 `当前/上次` 时禁用 @status102
+* 启动 MAA 后重新读取基建计划 @status102
+* 剩余理智勾选且设定关卡为空时, 迁移后禁用剩余理智 @status102
+* 配置迁移后切换回原配置 @status102
+* `源石恢复` -> `使用源石` 遗漏 @status102
+* 刷理智使用源石 CheckBox 勾选后不生效 @status102
+
+### 文档 | Docs
+
+* 繁中文件大更新 (#15480) @momomochi987
+
+### 其他 | Other
+
+* 增加借助战 OF-1 在后续刷理智选择 `当前/上次` 导致禁用时的输出 (#15478) @status102 @ABA2396 @momomochi987 @Constrat @Manicsteiner @HX3N
+* 繁中服不上报企鹅物流 @ABA2396
+* 基建找不到对应时间的基建计划 (#15468) @status102 @momomochi987
+* 移除不再使用的 VirtualizingWrapPanel 与 NoAutomationDataGrid @ABA2396
+
+## v6.3.0-beta.4
+
+### 改进 | Improved
+
+* 自动战斗掉线重连、自动肉鸽在战斗结束前延迟 ｢停止｣ 动作 添加多任务共用提示 @ABA2396
+
+### 修复 | Fix
+
+* 配置迁移后移除 gui.new 中多余的 config @status102
+* 任务序列化 Catch @status102
+* 基建计划转换期增加检查 @status102
+* 多配置用户在删除 Default 配置时迁移异常 @ABA2396
+* EX 关符合时 1 被识别为 | @ABA2396
+* 修复移动已打开设置的任务后，当前的设置面板无法继续修改的问题 @ABA2396
+* add MaaWin32ControlUnit to nightly build (#15447) @Manicsteiner
+
+### 文档 | Docs
+
+* changelog for PC arknights @MistEO
+
+### 其他 | Other
+
+* 调整删旧配置时机 @ABA2396
+
+## v6.3.0-beta.3
+
+### 新增 | New
+
+* 设置指引增加右键重命名 / 删除提示 @ABA2396
+* PC 端说明文案调整 @MistEO
+
+### 改进 | Improved
+
+* 优化任务设置按钮悬浮提示 @ABA2396
+* 开始唤醒多任务共用参数提示 @status102
+* 开始唤醒任务未设置账号切换时，禁用手动切换按钮 @status102
+* 优化设置右键菜单布局 @ABA2396
+* 更换 Config 迁移检查逻辑 @status102
+
+### 修复 | Fix
+
+* 修复右键“跳过一次”异常行为 @status102
+* 修复新 Config 丢失 Default 的问题 @status102
+* 修复 Config 仅剩最后一个时移除按钮状态错误 @status102
+* 修复删除配置时未清理 `.new` 文件的问题 @ABA2396
+* 修复公招加速券相关异常 @status102
+* 修复启动客户端绑定失效的问题 @status102
+* 修复关卡列表显示不刷新的问题 @status102
+* 修复启动客户端绑定流程异常 @status102
+* OF-1 跳过条件又有猪改错了 ↓ @ABA2396
+* 修复收取信用检查逻辑问题 @status102
+* 修复启动 MAA 时无任何任务未自动追加默认任务的问题 @status102
+* YostarEN refresh node template @Constrat
+
+### 其他 | Other
+
+* style @status102
+* EN fix @Constrat
+
+## v6.3.0-beta.2
+
+### 修复 | Fix
+
+* 在赠送线索时弹出上次线索交流结束的提示时无法返回 @ABA2396
+* 有猪乱写 OF-1 和 当前/上次 的条件 @ABA2396
+
+## v6.3.0-beta.1
+
+### 新增 | New
+
+* WPF 一键长草任务配置重构，支持重复添加任务，支持理智作战周计划 (#15385) @status102 @ABA2396
+* 支持 PC 端明日方舟 (#15407) @MistEO @ABA2396
+
+### 改进 | Improved
+
+* 自动战斗编队、技能等级不足、使用理智药及碎石描述优化 (#15435) @status102
+
+### 修复 | Fix
+
+* 修复指定技能等级时三技能无法正确选中的问题 @ABA2396 @status102
+* 日服見字祠识别错误 @Saratoga-Official
+* 粘贴作业集代码后下方的链接未重置为作业站链接 @ABA2396
+* JP AT 小游戏确认按钮识别 (#15427) @Manicsteiner
+* 日服界园JieGarden战略变更OCR识别 @Saratoga-Official
+* 国服IS投资模板更新 @Constrat
+* YostarJP 肉鸽OCR识别 @Manicsteiner
+* EN IS6 提示文本 @Constrat
+
+### 文档 | Docs
+
+* 集成文档统一格式，同时显示 field-group 和示例代码 (#15409) @ABA2396 @Manicsteiner @Constrat
+* 有猪改漏了 @ABA2396

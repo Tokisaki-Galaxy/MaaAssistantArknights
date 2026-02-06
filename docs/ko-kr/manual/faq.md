@@ -15,13 +15,13 @@ MAA가 업데이트 후 실행되지 않거나 MAA의 오류 창을 통해 여�
 MAA 디렉토리에서 `DependencySetup_依赖库安装.bat`를 실행하거나, 터미널에서 아래 명령을 실행하거나,
 
 ```sh
-winget install "Microsoft.VCRedist.2015+.x64" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements && winget install "Microsoft.DotNet.DesktopRuntime.8" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements
+winget install "Microsoft.VCRedist.2015+.x64" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements && winget install "Microsoft.DotNet.DesktopRuntime.10" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements
 ```
 
 아래<u>**두 개**</u>의 실행 라이브러리를 수동으로 다운로드하여 설치하여 문제를 해결하세요.
 
-- [Visual C++ 재배포 가능 패키지](https://aka.ms/vs/17/release/vc_redist.x64.exe)
-- [.NET 데스크톱 런타임 8](https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe)
+- [Visual C++ 재배포 가능 패키지](https://aka.ms/vc14/vc_redist.x64.exe)
+- [.NET 데스크톱 런타임 10](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe)
 
 :::
 
@@ -37,13 +37,21 @@ winget install "Microsoft.VCRedist.2015+.x64" --override "/repair /passive /nore
 
 웹 페이지 오른쪽 아래에 있는 위로 ↑ 화살표를 찾아 클릭하세요.
 
+### 시스템 문제
+
+- MAA는 32비트 운영 체제를 지원하지 않으며, Windows 7 / 8 / 8.1을 지원하지 않습니다.
+- 아래의 런타임 설치는 모두 구성 요소 저장소(CBS, TrustedInstaller/TiWorker, WinSxS)에 의존합니다.
+  구성 요소 저장소가 손상되면 정상적으로 설치할 수 없습니다.
+
+운영 체제를 다시 설치하는 것 이외에 다른 수정 방법을 제공할 수 없으며, 확장 기능이나 리스크가 표시되지 않은 "정리판" 운영 체제를 사용하는 것을 피하세요. 또는 아주 오래된 구버전 시스템 사용을 피하세요.
+
 #### Windows N/KN 관련
 
 Windows 8/8.1/10/11 N/KN(유럽/한국) 버전을 사용하는 경우, [미디어 기능 팩](https://support.microsoft.com/ko-kr/topic/c1c6fffa-d052-8338-7a79-a4bb980a700a)을 설치해야 합니다.
 
 #### Windows 7 관련
 
-.NET 8은 Windows 7 / 8 / 8.1 시스템을 지원하지 않으므로<sup>[출처](https://github.com/dotnet/core/issues/7556)</sup>, MAA도 더 이상 지원하지 않습니다. 마지막으로 사용 가능한 .NET 8 버전은 [`v5.4.0-beta.1.d035.gd2e5001e7`](https://github.com/MaaAssistantArknights/MaaRelease/releases/tag/v5.4.0-beta.1.d035.gd2e5001e7)입니다. 마지막으로 사용 가능한 .NET 4.8 버전은 [`v4.28.8`](https://github.com/MaaAssistantArknights/MaaAssistantArknights/releases/tag/v4.28.8)입니다. 자체 컴파일의 실현 가능성은 아직 확인되지 않았습니다.
+.NET 10은 Windows 7 / 8 / 8.1 시스템을 지원하지 않으므로<sup>[출처](https://github.com/dotnet/core/issues/7556)</sup>, MAA도 더 이상 지원하지 않습니다. 마지막으로 사용 가능한 .NET 8 버전은 [`v5.4.0-beta.1.d035.gd2e5001e7`](https://github.com/MaaAssistantArknights/MaaRelease/releases/tag/v5.4.0-beta.1.d035.gd2e5001e7)입니다. 마지막으로 사용 가능한 .NET 4.8 버전은 [`v4.28.8`](https://github.com/MaaAssistantArknights/MaaAssistantArknights/releases/tag/v4.28.8)입니다. 자체 컴파일의 실현 가능성은 아직 확인되지 않았습니다.
 
 Windows 7의 경우, 위에서 언급한 두 개의 런타임 라이브러리를 설치하기 전에 다음 패치가 설치되어 있는지 확인해야 합니다:
 
@@ -55,25 +63,11 @@ Windows 7의 경우, 위에서 언급한 두 개의 런타임 라이브러리를
 
 ##### .NET 8 애플리케이션이 Windows 7에서 비정상적으로 실행되는 문제 완화 조치 [#8238](https://github.com/MaaAssistantArknights/MaaAssistantArknights/issues/8238)
 
-Windows 7에서 .NET 8 애플리케이션을 실행할 때 메모리 사용량이 비정상적으로 증가하는 문제가 있습니다. 아래의 완화 조치를 참조하십시오. Windows 8/8.1은 테스트되지 않았습니다. 동일한 문제가 있는 경우, 문서를 업데이트할 수 있도록 Issue를 제출해 주십시오.
+Windows 7에서 .NET 8 애플리케이션을 실행할 때 메모리 사용량이 비정상적으로 증가하는 문제가 있습니다. 아래의 완화 조치를 참조하세요. Windows 8/8.1은 테스트되지 않았습니다. 동일한 문제가 있는 경우, 문서를 업데이트할 수 있도록 Issue를 제출해 주세요.
 
 1. `컴퓨터`를 열고 빈 공간을 마우스 오른쪽 버튼으로 클릭하여 속성을 클릭하고, 왼쪽의 `고급 시스템 설정`을 클릭한 다음 `환경 변수`를 클릭합니다.
 2. 새 시스템 변수를 만들고, 변수 이름을 `DOTNET_EnableWriteXorExecute`, 변수 값을 `0`으로 설정합니다.
 3. 컴퓨터를 재시작합니다.
-
-#### 공식 통합 패키지 (확실함)
-
-::: info 참고
-이 작업은 약 10GB 정도의 디스크 공간을 소비하므로 다른 방법들을 모두 시도한 후에 마지막으로 시도하세요.
-:::
-
-[Microsoft C++ 빌드도구](https://visualstudio.microsoft.com/zh-hans/visual-cpp-build-tools/)를 설치하여 완전한 개발 환경을 설정하세요 (닷넷 및 C++ 개발 환경만 설치하면 됩니다).
-
-### 가능성 3: 시스템 구성 요소 문제
-
-상기된 런타임 설치는 구성 요소 저장소(CBS, TrustedInstaller/TiWorker, WinSxS)에 의존합니다. 구성 요소 저장소가 손상되면 정상적으로 설치할 수 없습니다.
-
-운영 체제를 다시 설치하는 것 이외에 다른 수정 방법을 제공할 수 없으며, 확장 기능이나 리스크가 표시되지 않은 "정리판" 운영 체제를 사용하는 것을 피하세요.
 
 ## 연결 오류
 
@@ -137,79 +131,21 @@ UU 가속기와 MuMu를 동시에 사용할 경우 [공식 문서](https://mumu.
 
 이러한 조치로도 문제가 해결되지 않는 경우, `연결 설정` - `터치 모드`를 `Minitouch`에서 `MaaTouch`로 변경하여 다시 시도하세요. `Adb Input` 작업은 최후의 수단으로 사용해야 합니다.
 
-## 블루스택 에뮬레이터가 매번 시작될 때마다 포트 번호가 다릅니다. (Hyper-V)
-
-MAA를 열고 `설정` - `연결 설정`에서 `연결 구성`을 `블루스택`으로 설정한 후 `자동 연결 검색`과 `매번 다시 검색`을 선택하세요. (또는 메인 화면의 시작 버튼 옆의 설정에서 이 두 항목을 선택하세요)
-
-일반적으로 이렇게 하면 연결됩니다. 연결되지 않으면 여러 에뮬레이터 코어가 있는지 또는 문제가 있는지 확인하려면 아래 추가 설정을 참조하세요.
-
-### `Bluestacks.Config.Keyword` 지정
-
-::: info 참고
-멀티 코어 기능을 사용하거나 여러 에뮬레이터 코어를 설치한 경우 사용할 에뮬레이터의 번호를 지정해야 합니다.
-:::
-
-`.\config\gui.json`에서 `Bluestacks.Config.Keyword` 필드를 검색하고 내용을 `"bst.instance.<에뮬레이터 번호>.status.adb_port"`로 설정합니다. 에뮬레이터 번호는 에뮬레이터 경로인 `BlueStacks_nxt\Engine`에서 확인할 수 있습니다.
-
-::: details 예시
-Nougat64 코어:
-
-```json
-"Bluestacks.Config.Keyword":"bst.instance.Nougat64.status.adb_port",
-```
-
-Pie64_2 코어: (코어 이름 뒤의 숫자는 멀티 오픈 코어를 나타냅니다)
-
-```json
-"Bluestacks.Config.Keyword": "bst.instance.Pie64_2.status.adb_port",
-```
-
-:::
-
-### `Bluestacks.Config.Path` 지정
-
-::: info 참고
-MAA는 이제 레지스트리에서 `bluestacks.conf`의 위치를 읽으려고 시도합니다. 이 기능이 작동하지 않으면 설정 파일 경로를 수동으로 지정해야 합니다.
-:::
-
-1. 블루스택 에뮬레이터 데이터 디렉터리에서 `bluestacks.conf` 파일을 찾으세요.
-   - 국제 버전의 기본 경로는 `C:\ProgramData\BlueStacks_nxt\bluestacks.conf`입니다.
-   - 중국 본토 버전의 기본 경로는 `C:\ProgramData\BlueStacks_nxt_cn\bluestacks.conf`입니다.
-
-2. 처음 사용하는 경우 MAA를 실행하여 MAA가 설정 파일을 자동으로 생성하도록 하세요.
-
-3. **먼저** MAA를 닫고 **그 다음에** `gui.json`을 열고 현재 설정 이름(설정-설정 변경에서 확인할 수 있습니다. 기본적으로 Default) 아래의 `Configurations`에서 `Bluestacks.Config.Path` 필드를 검색하여 `bluestacks.conf` 파일의 전체 경로를 입력하세요. (슬래시는 `\\`로 이스케이프해야 합니다.)
-
-::: details 예시
-`C:\ProgramData\BlueStacks_nxt\bluestacks.conf`를 기준으로합니다.
-
-```json
-{
-  "Configurations": {
-    "Default": {
-      "Bluestacks.Config.Path": "C:\\ProgramData\\BlueStacks_nxt\\bluestacks.conf"
-      // 다른 설정 필드, 수동으로 입력하지 마세요.
-    }
-  }
-}
-```
-
-:::
-
 ## 연결은 정상이지만 작업이 버벅거리거나 이상 또는 빈번한 오류가 발생합니다
 
 - `UI 위치 조절`을 사용하는 경우 0으로 설정하세요.
 - 국가 별 클라이언트를 플레이하는 경우 먼저 `설정` - `게임 설정` - `클라이언트 유형`에서 `클라이언트 버전`을 선택하세요. 해외 클라이언트의 경우 일부 기능이 완전히 호환되지 않을 수 있으므로 해당 해외 클라이언트 사용 설명서를 참조하세요.
-- 통합전략 기능을 사용할 경우, [사용자 설명서](./introduction/integrated-strategy.md)를 참조하고 `통합전략` - `테마`에서 올바른 테마를 선택하세요
-- 자동 전투가 자주 일시 정지되고 오퍼레이터가 배치되지 않으면 `설정` - `실행 설정`에서 `일시정지 상태로 배치하기`를 비활성화하세요.
-- 자동 배치가 오퍼레이터를 제대로 인식하지 못할 경우, 해당 오퍼레이터의 즐겨찾기를 해제하세요.
-- `Adb Input` 터치 모드 작업이 느린 것은 정상입니다. Copilot 기능이 필요한 경우 다른 모드로 전환해 보세요.
+- 통합 전략 기능을 사용할 경우, [사용자 설명서](./introduction/integrated-strategy.md)를 참조하고 `통합 전략` - `테마`에서 올바른 테마를 선택하세요
+- 자동지휘가 자주 일시 정지되고 오퍼레이터가 배치되지 않으면 `설정` - `실행 설정`에서 `일시정지 상태로 배치하기`를 비활성화하세요.
+- 자동 편성 시 오퍼레이터를 제대로 인식하지 못할 경우, 해당 오퍼레이터의 즐겨찾기를 해제하세요.
+- `Adb Input` 터치 모드 작업이 느린 것은 정상입니다. 자동지휘 기능이 필요한 경우 다른 모드로 전환해 보세요.
+- MuMu 에뮬레이터를 사용하는 경우, `메모리 사용 정책`을 `리소스 사용량 최소화`로 설정하지 마세요.
 
 ### 스크린샷 촬영이 오래 걸리거나 오랜 시간이 걸립니다
 
 - MAA는 현재 `RawByNc`, `RawWithGzip`, `Encode` 세 가지 방법으로 스크린샷을 지원하며 평균 스크린샷 시간이 400/800보다 클 때 한 번의 메시지를 출력합니다. (한 번의 작업에서 한 번만 메시지를 출력합니다)
 - `설정` - `연결 설정`에서 최근 30회 스크린샷 시간의 최소/평균/최대값을 표시하며 10회마다 스크린샷이 새로 고침됩니다.
-- Copilot(자동 전투) 기능은 스크린샷 시간에 크게 영향을 받습니다.
+- 자동지휘 기능은 스크린샷 시간에 크게 영향을 받습니다.
 - 이 시간은 MAA와 관련이 없으며 컴퓨터 성능, 현재 사용률 또는 에뮬레이터에 따라 달라집니다. 백그라운드를 정리하거나 에뮬레이터를 변경하거나 컴퓨터 구성을 업그레이드하는 등의 조치를 취해보세요.
 
 ## 관리자 권한 관련 문제
@@ -225,4 +161,4 @@ UAC가 비활성화된 시스템에서는 "우클릭하여 관리자 권한으�
 
 ## 중간에 다운로드 중 "로그인"/"인증" 메시지가 표시됩니다
 
-브라우저 / IDM / FDM 등의 다운로드 관리자를 사용하여 파일을 다운로드하세요. **웨이더를 사용하지 마세요!**
+브라우저 / IDM / FDM 등의 다운로드 관리자를 사용하여 파일을 다운로드하세요. **Xunlei(썬더)를 사용하지 마세요!**

@@ -13,6 +13,7 @@
 
 #pragma warning disable SA1401
 
+using System;
 using GlobalHotKey;
 using MaaWpfGui.Main;
 using MaaWpfGui.Services;
@@ -20,6 +21,7 @@ using MaaWpfGui.Services.HotKeys;
 using MaaWpfGui.Services.Managers;
 using MaaWpfGui.Services.RemoteControl;
 using MaaWpfGui.Services.Web;
+using MaaWpfGui.ViewModels.Dialogs;
 using MaaWpfGui.ViewModels.UI;
 using MaaWpfGui.ViewModels.UserControl.TaskQueue;
 using Stylet;
@@ -34,13 +36,15 @@ public static class Instances
 {
     public static class Data
     {
-        public static int MedicineUsedTimes { get; set; }
+        public static int MedicineUsedTimes { get; set; } = 0;
 
-        public static int ExpiringMedicineUsedTimes { get; set; }
+        public static int ExpiringMedicineUsedTimes { get; set; } = 0;
 
-        public static int StoneUsedTimes { get; set; }
+        public static int StoneUsedTimes { get; set; } = 0;
 
-        public static bool HasPrintedScreencapWarning { get; set; }
+        public static bool HasPrintedScreencapWarning { get; set; } = false;
+
+        public static int RecruitConfirmTime { get; set; } = 0;
 
         public static void ClearCache()
         {
@@ -48,6 +52,7 @@ public static class Instances
             MedicineUsedTimes = 0;
             ExpiringMedicineUsedTimes = 0;
             StoneUsedTimes = 0;
+            RecruitConfirmTime = 0;
             HasPrintedScreencapWarning = false;
         }
     }
@@ -62,9 +67,9 @@ public static class Instances
 
     public static CopilotViewModel CopilotViewModel { get; private set; }
 
-    public static VersionUpdateViewModel VersionUpdateViewModel { get; private set; }
+    public static VersionUpdateDialogViewModel VersionUpdateDialogViewModel { get; private set; }
 
-    public static AnnouncementViewModel AnnouncementViewModel { get; private set; }
+    public static AnnouncementDialogViewModel AnnouncementDialogViewModel { get; private set; }
 
     public static AsstProxy AsstProxy { get; private set; }
 
@@ -76,11 +81,15 @@ public static class Instances
 
     public static IMaaHotKeyActionHandler MaaHotKeyActionHandler { get; private set; }
 
+    public static OverlayViewModel OverlayViewModel { get; private set; }
+
     // 别的地方有用到这个吗？
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public static RemoteControlService RemoteControlService { get; private set; }
 
     public static IMainWindowManager MainWindowManager { get; private set; }
+
+    public static event EventHandler MainWindowManagerInstantiated;
 
     public static IHttpService HttpService { get; private set; }
 
@@ -94,17 +103,22 @@ public static class Instances
         HttpService = container.Get<HttpService>();
         MaaApiService = container.Get<MaaApiService>();
 
-        VersionUpdateViewModel = container.Get<VersionUpdateViewModel>();
-        AnnouncementViewModel = container.Get<AnnouncementViewModel>();
+        VersionUpdateDialogViewModel = container.Get<VersionUpdateDialogViewModel>();
+        AnnouncementDialogViewModel = container.Get<AnnouncementDialogViewModel>();
         AsstProxy = container.Get<AsstProxy>();
+
+        // 这些实例化时存在依赖顺序
+        StageManager = container.Get<StageManager>();
         TaskQueueViewModel = container.Get<TaskQueueViewModel>();
         ToolboxViewModel = container.Get<ToolboxViewModel>();
+
         SettingsViewModel = container.Get<SettingsViewModel>();
         CopilotViewModel = container.Get<CopilotViewModel>();
 
         RemoteControlService = container.Get<RemoteControlService>();
 
-        StageManager = container.Get<StageManager>();
+        OverlayViewModel = container.Get<OverlayViewModel>();
+
         HotKeyManager = container.Get<HotKeyManager>();
         MaaHotKeyManager = container.Get<MaaHotKeyManager>();
         MaaHotKeyActionHandler = container.Get<MaaHotKeyActionHandler>();
@@ -113,5 +127,6 @@ public static class Instances
     public static void InstantiateOnRootViewDisplayed(IContainer container)
     {
         MainWindowManager = container.Get<MainWindowManager>();
+        MainWindowManagerInstantiated?.Invoke(null, EventArgs.Empty);
     }
 }

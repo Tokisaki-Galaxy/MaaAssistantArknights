@@ -40,10 +40,10 @@ MAAは、MAA Assistant Arknightsです。
 - 自動基地シフト、オペレーター効率計算、単一設備内に最適なソリューション；[カスタムシフト](./protocol/base-scheduling-schema.md)にも対応しています。
 - 自動公開求人、緊急招集票を使う、使い切るのもサポート。[PenguinStats](https://penguin-stats.io/result/stage/recruit/recruit)と[Yituliu](https://ark.yituliu.cn/survey/maarecruitdata)へ公開求人データのアップロード。
 - 高スターの公開求人を選択するのに便利な公開求人のパネルの手動認識をサポートします。~~（この上級エリートとCost回復はシージかシージか）~~
-- 所持オペレーターを認識し、既存および未所有のオペレーターの記録サポート、公開求人を手動で設定するためのヒントを提供することもできます。
-- 倉庫のアイテム認識機能 [Arkplanner](https://penguin-stats.io/planner)/[ARK-NIGHTS.com](https://ark-nights.com/settings)と[アークナイツ ツールボックス](https://arkntools.app/#/material)へ出力可能！使用方法はツール内文章を参照してください。
+- オペレーターリストを認識し、所持および未所持のオペレーターと潜在能力を集計し、公開求人認識時に表示します。
+- 育成素材を認識し、[PenguinStats プランナー](https://penguin-stats.io/planner)、[アークナイツ ツールボックス](https://arkntools.app/#/material)、[ARK-NIGHTS オペレーター育成表](https://ark-nights.com/settings)へエクスポートできます。
 - 戦友訪問、FP収集、買い物、デイリーリワード収集、ワンクリックして全自動操作！
-- 統合戦略自動作戦、オペレーターとレベルの自動認識、源石錐とキャンドルの自動収集、電気ケトルを獲得！
+- 統合戦略全自動で源石錐とレベルをファーム、自動で電気ケトルを取得とオペレーター直接アップグレード、オペレーターとレベルを自動認識します。
 - 作業JSONファイルをインポートし、自動操作も可能！ [ビデオデモ](https://www.bilibili.com/video/BV1H841177Fk/)（中文）
 - C、Python、Java、Rust、Golang、Java HTTP、Rust HTTPなどの多種多様なインターフェースに対応、統合や呼び出しが簡単で、自分好みにMAAをカスタマイズできます!
 
@@ -71,18 +71,18 @@ UIを見れば使い方もすぐ分かる！
 現在、国際クライアント（英語クライアント）、日本語クライアント、韓国語クライアント、繁体字中国語クライアントのほとんどの機能がサポートされています。 ただし、海外ユーザーの少なさとプロジェクト要員不足により、十分に検証できていない機能も多いので、ぜひ体験してみてください。  
 バグに遭遇した場合、または特定の機能に対する強い要望がある場合は、[Issues](https://github.com/MaaAssistantArknights/MaaAssistantArknights/issues) and [Discussions](https://github.com/MaaAssistantArknights/MaaAssistantArknights/discussions) で質問してください。 MAA の構築にご参加ください。[海外クライアント対応](#グローバル版を含む海外クライアントの対応について) を参照してください
 
-### CLI支持
+### CLI サポート
 
-MAA はコマンドラインインタフェース（CLI）操作をサポートし、LinuxとmacOSをサポートし、自動スクリプトやグラフィックインタフェースのないサーバで使用することができる。[CLI使用ガイド](./manual/cli)を参照してください。
+MAA はコマンドラインインタフェース（CLI）操作をサポートし、Linux、macOS と Windows をサポートし、自動スクリプトやグラフィックインタフェースのないサーバで使用することができます。[CLI 使用ガイド](./manual/cli/)を参照してください。
 
 ## 一緒に参加しよう
 
 ### 主な関連プロジェクト
 
-- 新しいFramework: [MaaFramework](https://github.com/MaaAssistantArknights/MaaFramework)
+- 新しいFramework: [MaaFramework](https://github.com/MaaXYZ/MaaFramework)
 - [作業シェアサイト](https://prts.plus)：[フロントエンド](https://github.com/ZOOT-Plus/zoot-plus-frontend)
 - バックエンド：[ZootPlusBackend](https://github.com/ZOOT-Plus/ZootPlusBackend)
-- [公式ウェブサイト](https://maa.plus): [フロントエンド](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/dev/website)
+- [公式ウェブサイト](https://maa.plus): [フロントエンド](https://github.com/MaaAssistantArknights/maa-website)
 - Deep Learning: [MaaAI](https://github.com/MaaAssistantArknights/MaaAI)
 
 ### 多言語 (i18n)
@@ -91,37 +91,27 @@ MAA は中国語（簡体字）を第一言語とし、翻訳見出しはすべ�
 
 ### 開発への参加
 
-#### Windows
-
-[開発関連](./develop/development.md)を参照してください。
-
-### Linux | macOS
-
-[Linuxチュートリアル](./develop/linux-tutorial.md)を参照してください。
+[開発ガイド](./develop/development.md)を参照してください。
 
 ### API
 
-- [Cインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/include/AsstCaller.h)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Cpp/main.cpp)
-- [Pythonインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Python/asst/asst.py)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Python/sample.py)
-- [Golangインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/master/src/Golang/)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Golang/maa/maa.go)
-- [Dartインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/master/src/Dart)
-- [Javaインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Java/src/main/java/com/iguigui/maaj/easySample/MaaCore.java)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Java/src/main/java/com/iguigui/maaj/easySample/MaaJavaSample.java)
-- [Java HTTPインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Java/Readme.md)
-- [Rustインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/master/src/Rust/src/maa_sys)：[HTTPインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/master/src/Rust)
-- [TypeScriptインターフェース](https://github.com/MaaAssistantArknights/MaaAsstElectronUI/tree/main/packages/main/coreLoader)
-- [Woolangインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Woolang/maa.wo)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master/src/Woolang/demo.wo)
+- [Cインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/include/AsstCaller.h)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Cpp/main.cpp)
+- [Pythonインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Python/asst/asst.py)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Python/sample.py)
+- [Golangインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/dev/src/Golang)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Golang/maa/maa.go)
+- [Dartインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/dev/src/Dart)
+- [Javaインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Java/src/main/java/com/iguigui/maaj/easySample/MaaCore.java)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Java/src/main/java/com/iguigui/maaj/easySample/MaaJavaSample.java)
+- [Java HTTPインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Java/Readme.md)
+- [Rustインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/dev/src/Rust/src/maa_sys)：[HTTPインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/dev/src/Rust)
+- [TypeScriptインターフェース](https://github.com/MaaAssistantArknights/MaaX/tree/main/packages/main/coreLoader)
+- [Woolangインターフェース](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Woolang/maa.wo)：[統合例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Woolang/demo.wo)
 - [統合ドキュメント](./protocol/integration.md)
-- [コールバックAPI](./protocol/callback-schema.md)
-- [タスクAPI](./protocol/task-schema.md)
-- [自動戦闘API](./protocol/copilot-schema.md)
+- [コールバックメッセージプロトコル](./protocol/callback-schema.md)
+- [タスクワークフロープロトコル](./protocol/task-schema.md)
+- [自動コパイロットプロトコル](./protocol/copilot-schema.md)
 
 ### グローバル版を含む海外クライアントの対応について
 
 [海外版クライアントの対応について](./develop/overseas-client-adaptation.md)をご覧ください。大陸版で既にサポートされている機能を他地域クライアントへ移植するための必要作業の大半は、簡単なJSONの修正と（作業に必要な）スクリーンショットの提出で済みます。。
-
-### 開発に参加したいがGitHubの使い方がよくわかりません
-
-[Githubプルリクエストのプロセス](./develop/development.md#introduction-to-github-pull-request-flow)
 
 ### Issue bot
 

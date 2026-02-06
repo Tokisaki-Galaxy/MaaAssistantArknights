@@ -1,13 +1,14 @@
 #include "VisionHelper.h"
 
-#include "Utils/NoWarningCV.h"
+#include "MaaUtils/NoWarningCV.hpp"
 
 #include "Assistant.h"
 #include "InstHelper.h"
-#include "Utils/ImageIo.hpp"
+#include "MaaUtils/ImageIo.h"
+#include "MaaUtils/Time.hpp"
+#include "Utils/DebugImageHelper.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/StringMisc.hpp"
-#include "Utils/Time.hpp"
 
 using namespace asst;
 
@@ -75,40 +76,28 @@ Rect asst::VisionHelper::correct_rect(const Rect& rect, const Rect& main_roi)
 
 Rect VisionHelper::correct_rect(const Rect& rect, const cv::Mat& image)
 {
-    if (image.empty()) {
+    if (image.empty() || image.cols <= 0 || image.rows <= 0) {
         Log.error(__FUNCTION__, "image is empty");
         return rect;
     }
     if (rect.empty()) {
         return { 0, 0, image.cols, image.rows };
     }
+    if (rect.x >= image.cols || rect.y >= image.rows) {
+        Log.error(__FUNCTION__, "roi is out of range", image.cols, image.rows, rect.to_string());
+        return rect;
+    }
 
     Rect res = rect;
-    if (image.cols < res.x) {
-        Log.error("roi is out of range", image.cols, image.rows, res.to_string());
-        res.x = image.cols - res.width;
-    }
-    if (image.rows < res.y) {
-        Log.error("roi is out of range", image.cols, image.rows, res.to_string());
-        res.y = image.rows - res.height;
+    res.x = std::clamp(res.x, 0, image.cols - 1);
+    res.y = std::clamp(res.y, 0, image.rows - 1);
+    res.width = std::clamp(res.width, 1, image.cols - res.x);
+    res.height = std::clamp(res.height, 1, image.rows - res.y);
+
+    if (res != rect) {
+        Log.warn(__FUNCTION__, "roi is out of range", image.cols, image.rows, rect.to_string(), "clamped");
     }
 
-    if (res.x < 0) {
-        Log.warn("roi is out of range", image.cols, image.rows, res.to_string());
-        res.x = 0;
-    }
-    if (res.y < 0) {
-        Log.warn("roi is out of range", image.cols, image.rows, res.to_string());
-        res.y = 0;
-    }
-    if (image.cols < res.x + res.width) {
-        Log.warn("roi is out of range", image.cols, image.rows, res.to_string());
-        res.width = image.cols - res.x;
-    }
-    if (image.rows < res.y + res.height) {
-        Log.warn("roi is out of range", image.cols, image.rows, res.to_string());
-        res.height = image.rows - res.y;
-    }
     return res;
 }
 
@@ -131,13 +120,10 @@ cv::Mat asst::VisionHelper::create_mask(const cv::Mat& image, const cv::Rect& ro
 
 bool VisionHelper::save_img(const std::filesystem::path& relative_dir)
 {
-    std::string stem = utils::format_now_for_filename();
-    auto relative_path = relative_dir / (stem + "_raw.png");
-    Log.trace("Save image", relative_path);
-    bool ret = imwrite(relative_path, m_image);
+    bool ret = utils::save_debug_image(m_image, relative_dir, true);
 
 #ifdef ASST_DEBUG
-    imwrite(relative_dir / (stem + "_draw.png"), m_image_draw);
+    utils::save_debug_image(m_image_draw, relative_dir, true, "", "draw");
 #endif
 
     return ret;

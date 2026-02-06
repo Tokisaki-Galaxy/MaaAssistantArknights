@@ -13,12 +13,10 @@
 
 #nullable enable
 using System;
-using System.Drawing.Drawing2D;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Newtonsoft.Json.Linq;
 
 namespace MaaWpfGui.Styles.Controls;
 
@@ -32,9 +30,6 @@ public partial class TooltipBlock : UserControl
         InitializeComponent();
 
         Opacity = NormalOpacity;
-
-        MouseEnter += OnMouseEnter;
-        MouseLeave += OnMouseLeave;
     }
 
     public static readonly DependencyProperty PathDateProperty = DependencyProperty.Register(nameof(PathDate), typeof(Geometry), typeof(TooltipBlock), new FrameworkPropertyMetadata(null));
@@ -123,10 +118,29 @@ public partial class TooltipBlock : UserControl
         AnimateOpacity(NormalOpacity);
     }
 
+    private void OnToolTipOpening(object element, ToolTipEventArgs args)
+    {
+        if (IsEnabled)
+        {
+            return;
+        }
+
+        AnimateOpacity(HoverOpacity);
+    }
+
+    private void OnToolTipClosing(object element, ToolTipEventArgs args)
+    {
+        if (IsEnabled)
+        {
+            return;
+        }
+
+        AnimateOpacity(NormalOpacity);
+    }
+
     private void AnimateOpacity(double targetOpacity)
     {
-        var animation = new DoubleAnimation
-        {
+        var animation = new DoubleAnimation {
             To = targetOpacity,
             Duration = new(TimeSpan.FromMilliseconds(InitialShowDelay)),
             FillBehavior = FillBehavior.HoldEnd,

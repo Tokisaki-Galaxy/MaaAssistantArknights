@@ -205,11 +205,11 @@
             [".*Daw.*", "_pragmatic"],
             [".*rostbou.*", "_pragmatic"],
             [".*12.*", "_pragmatic"],
-            [".*Gel?i?d ?Rockshe.*", "_pragmatic"],
+            [".*Ge?l?i?d? ?Rockshe.*", "_pragmatic"],
             [".*Immaculate ?Garde.*", "_default"],
             [".*70.*", "_default"],
             [".*Clairvoyant ?Carcass", "_default"],
-            [".*Secl?uded ?Passag.*", "_SKIP_"]
+            [".*Sec.?uded ?Passag.*", "_SKIP_"]
         ]
     },
     "Sami@Roguelike@StrategyChange_mode1": {
@@ -221,11 +221,11 @@
             [".*Daw.*", "_exit"],
             [".*rostbou.*", "_exit"],
             [".*12.*", "_exit"],
-            [".*Gel?i?d ?Rockshe.*", "_exit"],
+            [".*Ge?l?i?d? ?Rockshe.*", "_exit"],
             [".*Immaculate ?Garde.*", "_exit"],
             [".*70.*", "_exit"],
             [".*Clairvoyant ?Carcass", "_exit"],
-            [".*Secl?uded ?Passag.*", "_exit"]
+            [".*Sec.?uded ?Passag.*", "_exit"]
         ]
     },
     "Sami@Roguelike@StrategyChange_mode4": {
@@ -237,11 +237,11 @@
             [".*Daw.*", "_exit"],
             [".*rostbou.*", "_exit"],
             [".*12.*", "_exit"],
-            [".*Gel?i?d ?Rockshe.*", "_exit"],
+            [".*Ge?l?i?d? ?Rockshe.*", "_exit"],
             [".*Immaculate ?Garde.*", "_exit"],
             [".*70.*", "_exit"],
             [".*Clairvoyant ?Carcass", "_exit"],
-            [".*Secl?uded ?Passag.*", "_exit"]
+            [".*Sec.?uded ?Passag.*", "_exit"]
         ]
     },
     "Sami@Roguelike@StrategyChange_mode5": {
@@ -253,11 +253,11 @@
             [".*Daw.*", "_SKIP_"],
             [".*rostbou.*", "_SKIP_"],
             [".*12.*", "_SKIP_"],
-            [".*Gel?i?d ?Rockshe.*", "_SKIP_"],
+            [".*Ge?l?i?d? ?Rockshe.*", "_SKIP_"],
             [".*Immaculate ?Garde.*", "_SKIP_"],
             [".*70.*", "_SKIP_"],
             [".*Clairvoyant ?Carcass", "_SKIP_"],
-            [".*Secl?uded ?Passag.*", "_SKIP_"]
+            [".*Sec.?uded ?Passag.*", "_SKIP_"]
         ]
     },
     "Sami@Roguelike@StrategyChange_mode6": {
@@ -269,11 +269,11 @@
             [".*Daw.*", "_pragmatic"],
             [".*rostbou.*", "_pragmatic"],
             [".*12.*", "_pragmatic"],
-            [".*Gel?i?d ?Rockshe.*", "_pragmatic"],
+            [".*Ge?l?i?d? ?Rockshe.*", "_pragmatic"],
             [".*Immaculate ?Garde.*", "_default"],
             [".*70.*", "_default"],
             [".*Clairvoyant ?Carcass", "_default"],
-            [".*Secl?uded ?Passag.*", "_SKIP_"]
+            [".*Sec.?uded ?Passag.*", "_SKIP_"]
         ]
     },
     "Sami@Roguelike@StrategyChange_mode7": {
@@ -285,11 +285,11 @@
             [".*Daw.*", "_pragmatic"],
             [".*rostbou.*", "_pragmatic"],
             [".*12.*", "_pragmatic"],
-            [".*Gel?i?d ?Rockshe.*", "_pragmatic"],
+            [".*Ge?l?i?d? ?Rockshe.*", "_pragmatic"],
             [".*Immaculate ?Garde.*", "_default"],
             [".*70.*", "_default"],
             [".*Clairvoyant ?Carcass", "_default"],
-            [".*Secl?uded ?Passag.*", "_SKIP_"]
+            [".*Sec.?uded ?Passag.*", "_SKIP_"]
         ]
     }
 }

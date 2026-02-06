@@ -10,7 +10,7 @@ icon: ri:earth-fill
 이 튜토리얼을 시작하기 전에 다음 사항이 준비되었는지 확인해야 합니다.
 
 1. 필요한 소프트웨어를 설치하고 올바르게 구성했습니다. ZH-CN 클라이언트 또는 해당 클라이언트의 `readme.md` 에 지원되는 기능이 제대로 작동하는지 확인할 수 있는 정보가 있어야 합니다.
-2. [작업 스키마](../protocol/task-schema.md) 를 읽고 각 필드의 의미와 사용법을 기본적으로 이해해야 합니다. 코드에서 `@` 와 `#` 의 의미와 용법도 이해해야 합니다.
+2. [작업 프로토콜](../protocol/task-schema.md)을 읽고 각 필드의 의미와 사용법을 기본적으로 이해해야 합니다. 코드에서 `@` 와 `#` 의 의미와 용법도 이해해야 합니다.
 3. ZH-CN 클라이언트의 `task.json` 파일과 템플릿 이미지는 해외 클라이언트에 대해 언급되지 않았거나 누락된 경우의 대안으로 사용된다는 점을 이해해야합니다. 해외 클라이언트에 대한 `task.json` 의 내용은 ZH-CN 작업 필드에 따라 다시 작성해야 합니다.
 4. 영어 실력이 있고, 영어 로그를 읽을 수 있으며, 로그를 통해 누락된 사진과 다른 정보를 찾을 수 있는 역량이 있으면 좋습니다.
 5. 작업 체인에 따라 개별적으로 수정을 수행하는 것이 좋습니다. 예를 들어, Award 작업을 수정하려면 `next` 필드의 순서에 따라 `template image`, `text`, 그리고 `roi` 를 단계적으로 수정해야 합니다. 이렇게 하면 수정 후 모든 작업이 정상적으로 작동하고 오류를 쉽게 발견할 수 있습니다. 또한 이렇게 하면 한 번에 너무 많은 콘텐츠가 수정될 때 소프트웨어가 어떤 작업에 고정되어 있는지 혼동하거나 잊어버리는 것을 방지할 수 있습니다.
@@ -31,15 +31,39 @@ icon: ri:earth-fill
 3. 스크린샷에 작업 표시줄, 상태 표시줄 또는 알림 표시줄과 같은 관련 없는 내용이 포함되어 있지 않은지 확인해야 합니다.
 4. 스크린샷에 인식해야 할 내용이 모두 포함되어 있는지 확인해야합니다.
 
-이미지를 잘라내고 관심 텍스트/이미지 영역(ROI)을 얻으려면, `Python` 과 `OpenCV` 를 설치하고, `MaaAssistantArknights/tools/CropRoi/main.py` 파일을 다운로드해야 합니다.
+이미지를 잘라내고 관심 텍스트/이미지 영역(ROI)을 얻으려면, `MaaAssistantArknights/tools/ImageCropper` 도구를 사용해야 합니다.
 
-그런 다음, 다음 단계를 수행합니다.
+**ImageCropper** 는 미리 준비된 스크린샷 또는 ADB를 통해 연결된 장치에서 ROI 영역의 자르기, 저장, 색상 추출 작업을 지원하는 강력한 스크린샷 도구입니다.
 
-1. `main.py`와 같은 디렉토리에 `src` 와 `dst` 폴더를 새로 만듭니다.
-2. 크기를 조정해야 하거나 새로운 ROI 값이 필요한 텍스트/이미지의 **전체 스크린샷**을 `src` 폴더에 넣습니다.
-3. `main.py`를 실행합니다.
-4. 마우스를 드래그하여 대상 범위를 선택하고, 관련 없는 내용이 포함되지 않도록 합니다.
-5. 범위가 결정되면 `S`를 눌러 저장하고 `Q`를 눌러 종료합니다. 잘라낸 이미지가 dst 폴더에 저장됩니다.
+### 환경 설정
+
+`Python` 환경이 필요하며, 권장 버전은 `3.11`, 최소 버전은 `3.9` 이상입니다.
+
+### 의존성 설치
+
+Windows 사용자는 `install.bat` 을 직접 실행하는 것을 권장하거나, 수동으로 설치:
+
+```shell
+python -m pip install -r requirements.txt
+```
+
+### 사용 단계
+
+1. 미리 준비된 스크린샷이 있는 경우, `./src/` 디렉토리에 저장합니다
+2. `start.bat` 또는 `python main.py [device serial]` 을 실행합니다 (장치 주소는 선택 사항)
+   - 도구는 연결된 ADB 장치를 자동으로 검색하고, 프롬프트에 따라 장치를 선택합니다 (ENTER를 눌러 건너뛰기)
+   - `python main.py [device serial]` 을 사용하여 특정 장치에 직접 연결할 수도 있습니다
+3. 팝업 창에서 왼쪽 클릭으로 대상 영역을 선택하고, 스크롤 휠로 확대/축소하고, 오른쪽 클릭으로 이미지를 이동합니다
+4. 키보드 단축키 사용:
+   - `S` 또는 `ENTER` 를 눌러 대상 영역 저장
+   - `F` 를 눌러 전체 화면 표준화 스크린샷 저장
+   - `R` 를 눌러 ROI 범위만 출력 (저장하지 않음)
+   - `C` 를 눌러 ROI 범위와 ColorMatch 필드 출력 (저장하지 않음)
+   - `Z`, `DELETE` 또는 `BACKSPACE` 를 눌러 실행 취소
+   - `0` ~ `9` 를 눌러 창 확대/축소
+   - `Q` 또는 `ESC` 를 눌러 종료
+   - 다른 키를 눌러 현재 스크린샷 건너뛰기/새로 고침
+5. 대상 영역 스크린샷은 `./dst/` 디렉토리에 저장됩니다
 
 예를 들어, 자르기를 완료한 후의 출력은 다음과 같습니다:
 
@@ -110,7 +134,7 @@ ROI 범위를 수정하는 방법:
 
 ```log
 [2022-12-18 17:43:17.535][INF][Px7ec][Tx15c8] {"taskchain":"Award","details":{"to_be_recognized":["Award@ReturnTo","Award","ReceiveAward","DailyTask","WeeklyTask","Award@CloseAnno","Award@CloseAnnoTexas","Award@TodaysSupplies","Award@FromStageSN"],"cur_retry":10,"retry_times":20},"first":["AwardBegin"],"taskid":2,"class":"asst::ProcessTask","subtask":"ProcessTask","pre_task":"AwardBegin"}
-[2022-12-18 17:43:18.398][INF][Px7ec][Tx15c8] Call ` C:\Program Files\BlueStacks_nxt\. \HD-Adb.exe -s 127.0.0.1:5555 exec-out "screencap | gzip -1" ` ret 0 , cost 862 ms , stdout size: 2074904 , socket size: 0
+[2022-12-18 17:43:18.398][INF][Px7ec][Tx15c8] Call ` C:\Program Files\BlueStacks_nxt\.\HD-Adb.exe -s 127.0.0.1:5555 exec-out "screencap | gzip -1" ` ret 0 , cost 862 ms , stdout size: 2074904 , socket size: 0
 [2022-12-18 17:43:18.541][TRC][Px7ec][Tx15c8] OcrPack::recognize | roi: [ 500, 50, 300, 150 ]
 [2022-12-18 17:43:18.541][TRC][Px7ec][Tx15c8] Ocr Pipeline with asst::WordOcr | enter
 [2022-12-18 17:43:18.634][TRC][Px7ec][Tx15c8] Ocr Pipeline with asst::WordOcr | leave, 93 ms

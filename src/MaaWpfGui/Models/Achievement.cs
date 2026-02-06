@@ -15,8 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Media;
 using MaaWpfGui.Constants.Enums;
 using MaaWpfGui.Helper;
 using Newtonsoft.Json;
@@ -84,6 +82,9 @@ public class Achievement
 
     [JsonIgnore]
     public string Group { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public int GroupIndex { get; set; } = int.MaxValue;
 
     [JsonIgnore]
     public string MedalBrushKey

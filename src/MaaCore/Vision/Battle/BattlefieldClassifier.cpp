@@ -1,6 +1,6 @@
 #include "BattlefieldClassifier.h"
 
-#include "Utils/NoWarningCV.h"
+#include "MaaUtils/NoWarningCV.hpp"
 
 #include <algorithm>
 #include <array>
@@ -8,7 +8,7 @@
 
 #include "Config/OnnxSessions.h"
 #include "Config/TaskData.h"
-#include "Utils/ImageIo.hpp"
+#include "MaaUtils/ImageIo.h"
 #include "Utils/Logger.hpp"
 
 using namespace asst;
@@ -174,18 +174,22 @@ BattlefieldClassifier::SkillReadyResult BattlefieldClassifier::skill_ready_analy
         switch (class_id) {
         case 2:
             subfolder = "y";
+            break;
         case 1:
             subfolder = "n";
+            break;
         case 0:
             subfolder = "c";
+            break;
         default:
             subfolder = "unknown";
+            break;
         }
 
         std::string filename = std::format(
             "debug/skill_ready/{}/{}_{}_{}(c{:3f})(n{:3f})(y{:3f}).png",
             subfolder,
-            utils::format_now_for_filename(),
+            MAA_NS::format_now_for_filename(),
             m_base_point.x,
             m_base_point.y,
             prob[0],
@@ -197,7 +201,7 @@ BattlefieldClassifier::SkillReadyResult BattlefieldClassifier::skill_ready_analy
         last_save_time = now;
 
         Log.trace("Save image", relative_path);
-        asst::imwrite(relative_path, image);
+        MAA_NS::imwrite(relative_path, image);
     }
 
     return result;

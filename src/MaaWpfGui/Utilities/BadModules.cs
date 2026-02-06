@@ -14,18 +14,25 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using MaaWpfGui.Configuration.Factory;
 using MaaWpfGui.Helper;
+using MaaWpfGui.Main;
+using Serilog;
 using Windows.Win32;
 
 namespace MaaWpfGui.Utilities;
 
 internal class BadModules
 {
-    private static readonly string[] _names = ["NahimicOSD.dll", "AudioDevProps2.dll"];
+    private static readonly ILogger _logger = Log.ForContext<BadModules>();
+    private static readonly string[] _names = [
+        "NahimicOSD.dll",
+        "AudioDevProps2.dll",
+        "GTII-OSD64.dll",
+        "GTIII-OSD64.dll"
+    ];
 
     public static unsafe string[] GetBadInjectedModules()
     {
@@ -49,7 +56,7 @@ internal class BadModules
             }
         }
 
-        return result.ToArray();
+        return [.. result];
     }
 
     private class WpfWin32Window(System.Windows.Window w) : IWin32Window, System.Windows.Interop.IWin32Window
@@ -66,14 +73,14 @@ internal class BadModules
             return;
         }
 
-        var allBadModules = GetBadInjectedModules();
-        var prevFound = ConfigFactory.Root.GUI.FoundBadModules.Split(";", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var suppressed = ConfigFactory.Root.GUI.SuppressedBadModules.Split(";", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var newFoundBadModules = allBadModules.Where(x => !prevFound.Contains(x, StringComparer.InvariantCultureIgnoreCase)).ToArray();
-        var notSuppressedBadModules = allBadModules.Where(x => !suppressed.Contains(x, StringComparer.InvariantCultureIgnoreCase)).ToArray();
-        ConfigFactory.Root.GUI.FoundBadModules = string.Join(";", [.. prevFound, .. newFoundBadModules]);
+        // 如果用户已经选择忽略警告并使用软件渲染，则不再显示警告
+        if (ConfigFactory.Root.GUI.IgnoreBadModulesAndUseSoftwareRendering)
+        {
+            return;
+        }
 
-        if (notSuppressedBadModules.Length <= 0)
+        var allBadModules = GetBadInjectedModules();
+        if (allBadModules.Length == 0)
         {
             return;
         }
@@ -97,28 +104,43 @@ internal class BadModules
             Icon = TaskDialogIcon.Warning,
             Buttons = { TaskDialogButton.OK },
             SizeToContent = true,
-        };
-
-        if (newFoundBadModules.Length == 0)
-        {
-            // only show the "Do not show again" checkbox on the second time
-            page.Verification = new()
+            Verification = new()
             {
                 Text = LocalizationHelper.GetString("BadModules.Warning.DoNotShowAgain"),
                 Checked = false,
-            };
-        }
+            },
+        };
 
-        TaskDialog.ShowDialog(new WpfWin32Window(System.Windows.Application.Current.MainWindow), page);
+        var result = TaskDialog.ShowDialog(new WpfWin32Window(System.Windows.Application.Current.MainWindow), page);
+        _logger.Warning("Detected bad injected modules:\n{Modules}", sb.ToString());
 
-        if (page.Verification?.Checked ?? false)
+        // 如果用户勾选了"不再显示"选项
+        if (page.Verification.Checked)
         {
-            ConfigFactory.Root.GUI.SuppressedBadModules = string.Join(";", allBadModules);
+            // 弹出第二个确认对话框
+            var confirmPage = new TaskDialogPage
+            {
+                Caption = "MAA",
+                Heading = LocalizationHelper.GetString("BadModules.Confirmation.Heading"),
+                Text = LocalizationHelper.GetString("BadModules.Confirmation.Text"),
+                Icon = TaskDialogIcon.Warning,
+                Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
+                SizeToContent = true,
+                DefaultButton = TaskDialogButton.No,
+            };
+
+            var confirmResult = TaskDialog.ShowDialog(new WpfWin32Window(System.Windows.Application.Current.MainWindow), confirmPage);
+
+            // 如果用户确认，则保存设置
+            if (confirmResult == TaskDialogButton.Yes)
+            {
+                ConfigFactory.Root.GUI.IgnoreBadModulesAndUseSoftwareRendering = true;
+                _logger.Information("User chose to ignore bad modules warning and use software rendering");
+                Bootstrapper.ShutdownAndRestartWithoutArgs();
+            }
         }
 
-        return;
-
-        string BreakLongPath(string path, int maxLen)
+        static string BreakLongPath(string path, int maxLen)
         {
             if (path.Length <= maxLen)
             {

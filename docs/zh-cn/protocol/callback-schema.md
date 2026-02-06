@@ -66,13 +66,13 @@ typedef void(ASST_CALL* AsstCallback)(int msg, const char* details, void* custom
 :::: field-group
 ::: field name="what" type="string" required
 错误类型。
-:::
+:::  
 ::: field name="why" type="string" required
 错误原因。
-:::
+:::  
 ::: field name="details" type="object" required
 错误详情。
-:::
+:::  
 ::::
 
 ### ConnectionInfo
@@ -162,7 +162,7 @@ typedef void(ASST_CALL* AsstCallback)(int msg, const char* details, void* custom
 - `CloseDown`  
   关闭游戏
 - `Fight`  
-  刷理智
+  理智作战
 - `Mall`  
   信用点及购物
 - `Recruit`  
@@ -298,9 +298,9 @@ typedef void(ASST_CALL* AsstCallback)(int msg, const char* details, void* custom
   肉鸽关卡：安全的角落
 - `StageEncounterEnter`  
   肉鸽关卡：不期而遇/古堡馈赠
-- `StageCombatDpsEnter`  
+- `StageCombatOpsEnter`  
   肉鸽关卡：普通作战
-- `StageEmergencyDps`  
+- `StageEmergencyOps`  
   肉鸽关卡：紧急作战
 - `StageDreadfulFoe`  
   肉鸽关卡：险路恶敌
@@ -474,8 +474,7 @@ typedef void(ASST_CALL* AsstCallback)(int msg, const char* details, void* custom
 - `Depot`  
   仓库识别结果。`details` 字段结构如下：
   - `done` (boolean, required): 是否已经识别完了，为 `false` 表示仍在识别中（过程中的数据）。
-  - `arkplanner` (object, required): [ArkPlanner](https://penguin-stats.cn/planner) 格式的数据。
-  - `lolicon` (object, required): [lolicon](https://arkntools.app/#/material) (Arkntools) 格式的数据。
+  - `data` (string, required): JSON 字符串，格式为 `{"物品ID": 数量, ...}`，例如 `{"2001":18000,"31043":317}`。
 
 - `OperBox`  
   干员识别结果。`details` 字段结构如下：

@@ -1,19 +1,21 @@
 #pragma once
+
+#include <optional>
 #include <set>
 
 #include "Common/AsstBattleDef.h"
+#include "MaaUtils/NoWarningCVMat.hpp"
 #include "Task/AbstractTask.h"
-#include "Utils/NoWarningCVMat.h"
+#include "Ui/SupportList.h"
 #include "Vision/TemplDetOCRer.h"
 
 namespace asst
 {
-class UseSupportUnitTaskPlugin;
 
 class BattleFormationTask : public AbstractTask
 {
 public:
-    BattleFormationTask(const AsstCallback& callback, Assistant* inst, std::string_view task_chain);
+    using AbstractTask::AbstractTask;
     virtual ~BattleFormationTask() override = default;
 
     enum class Filter
@@ -32,6 +34,7 @@ public:
 
     struct QuickFormationOper : public asst::TemplDetOCRer::Result
     {
+        battle::Role role = battle::Role::Unknown;
         bool is_selected = false; // 是否选中
     };
 
@@ -67,10 +70,10 @@ public:
     // ————————————————————————————————
     enum class SupportUnitUsage // 助战干员使用策略
     {
-        None = 0,               // 不使用助战干员
-        WhenNeeded = 1,         // 如果有且仅有一名缺失干员则尝试寻找助战干员补齐编队, 如果无缺失干员则不使用助战干员
-        Specific = 2,           // 如果有且仅有一名缺失干员则尝试寻找助战干员补齐编队，如果无缺失干员则使用指定助战干员
-        Random = 3              // 如果有且仅有一名缺失干员则尝试寻找助战干员补齐编队，如果无缺失干员则使用随机助战干员
+        None = 0,               // 不加助战干员
+        WhenNeeded = 1,         // 如果仅缺一名干员则尝试补助战,
+        Specific = 2,           // 如果仅缺一名干员则尝试补助战，如无缺失则使用指定助战干员
+        Random = 3              // 如果仅缺一名干员则尝试补助战，如无缺失则随机加一个助战干员
     };
 
     void set_support_unit_usage(const SupportUnitUsage& value) { m_support_unit_usage = value; }
@@ -103,6 +106,20 @@ protected:
     bool add_trust_operators();
     // 选择当前页中的干员, return 是否继续翻页
     bool select_opers_in_cur_page(const std::vector<OperGroup*>& groups);
+    // 检查干员等级
+    bool check_oper_level(
+        const cv::Mat& image,
+        asst::Rect flag,
+        const std::string& name,
+        int elite,
+        int level,
+        bool ignore);
+    // 检查并选中技能, return 技能是否达到要求
+    bool check_and_select_skill(const std::string& name, int skill, int level_required, bool ignore, int delay);
+    // 查找并匹配技能, return 技能区域及技能等级, reverse 为反向查找3技能; skip_check 跳过技能等级检查,
+    // 返回的rect略大于技能icon区域
+    std::optional<std::pair<asst::Rect, int>>
+        find_skill(const cv::Mat& image, int skill, bool reverse, bool skip_check = false);
     void swipe_page();
     void swipe_to_the_left(int times = 2);
     bool confirm_selection();
@@ -117,7 +134,7 @@ protected:
 
     std::unordered_map<battle::Role, std::vector<OperGroup>> m_formation;      // 作业编队
     std::unordered_map<battle::Role, std::vector<OperGroup>> m_formation_last; // 上次的编队
-    // 编队中的干员名称-所属组名
+    // 编队中的干员名称-所属组名, 传递给外部使用, 编入的干员需要存入该表
     std::shared_ptr<std::unordered_map<std::string, std::string>> m_opers_in_formation =
         std::make_shared<std::unordered_map<std::string, std::string>>();
     bool m_add_trust = false;                                   // 是否需要追加信赖干员
@@ -132,10 +149,29 @@ protected:
     // ————————————————————————————————
     // 助战干员选择相关
     // ————————————————————————————————
-    std::shared_ptr<UseSupportUnitTaskPlugin> m_use_support_unit_task_ptr = nullptr;
+    using Friendship = battle::Friendship;
+    using Role = battle::Role;
+    using OperModule = battle::OperModule;
+    using RequiredOper = battle::RequiredOper;
+
+    std::optional<std::string> add_support_unit(
+        const std::vector<RequiredOper>& required_opers = {},
+        size_t max_refresh_times = 5,
+        Friendship friendship = Friendship::Stranger);
+
+    std::optional<std::string> add_support_unit_from_support_list(
+        SupportList& support_list,
+        const std::vector<RequiredOper>& required_opers,
+        Friendship friendship = Friendship::Stranger);
+
     SupportUnitUsage m_support_unit_usage = SupportUnitUsage::None;
     bool m_used_support_unit = false; // 是否已经招募助战干员
     // ———————— 以下变量为指定助战干员设置，仅当 m_support_unit_usage == SupportUnitUsage::Specific 时有效 ————————
     battle::RequiredOper m_specific_support_unit;
+
+private:
+    static constexpr battle::Role Roles[] = { battle::Role::Caster,  battle::Role::Medic,   battle::Role::Pioneer,
+                                              battle::Role::Warrior, battle::Role::Special, battle::Role::Tank,
+                                              battle::Role::Sniper,  battle::Role::Support };
 };
 } // namespace asst

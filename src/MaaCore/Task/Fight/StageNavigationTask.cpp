@@ -1,6 +1,7 @@
 #include "StageNavigationTask.h"
 
-#include <regex>
+#include <boost/regex.hpp>
+#include <ranges>
 
 #include "Config/TaskData.h"
 #include "Controller/Controller.h"
@@ -23,9 +24,9 @@ bool asst::StageNavigationTask::set_stage_name(const std::string& stage_name)
     }
     m_is_directly = false;
 
-    static const std::regex stage_regex(R"(^([A-Za-z]{0,3})(\d{1,2})-(\d{1,2})(?:-?(\w+))*$)");
-    std::smatch stage_sm;
-    if (!std::regex_match(stage_name, stage_sm, stage_regex)) {
+    static const boost::regex stage_regex(R"(^([A-Za-z]{0,3})(\d{1,2})-(\d{1,2})(?:-?(\w+))*$)");
+    boost::smatch stage_sm;
+    if (!boost::regex_match(stage_name, stage_sm, stage_regex)) {
         Log.error("The stage name is not in invalid, or is not main line stage", stage_name);
         return false;
     }
@@ -76,7 +77,16 @@ bool asst::StageNavigationTask::_run()
     LogTraceFunction;
 
     if (m_is_directly) {
-        return ProcessTask(*this, { m_directly_task }).set_retry_times(RetryTimesDefault).run();
+        ProcessTask task(*this, { m_directly_task });
+        task.set_retry_times(RetryTimesDefault);
+        bool ret = task.run();
+        if (!ret && task.get_last_task_name().empty() && m_directly_task.ends_with(AnnihilationSuffix)) {
+            m_fight_task_ptr->set_enable(false);
+            return true;
+        }
+        else {
+            return ret;
+        }
     }
 
     return chapter_wayfinding() && swipe_and_find_stage();
@@ -114,5 +124,8 @@ bool asst::StageNavigationTask::swipe_and_find_stage()
     std::string replace_m_stage_code = m_stage_code;
     utils::string_replace_all_in_place(replace_m_stage_code, { { "-", "" } });
     Task.get<OcrTaskInfo>(m_stage_code + "@ClickedCorrectStage")->text = { m_stage_code, replace_m_stage_code };
-    return ProcessTask(*this, { m_stage_code + "@StageNavigationBegin" }).set_retry_times(RetryTimesDefault).run();
+
+    return ProcessTask(*this, { m_stage_code + "@ClickStageName", m_stage_code + "@StageNavigationBegin" })
+        .set_retry_times(RetryTimesDefault)
+        .run();
 }

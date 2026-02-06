@@ -457,7 +457,8 @@ tools/RoguelikeRecruitmentTool/output
 .lycheecache
 
 # MaaDeps
-/MaaDeps/*
+MaaDeps
+src/MaaUtils/*
 
 # ResourceUpdater workflow
 /original/*
@@ -478,3 +479,6 @@ install
 
 # pnpm cache
 .pnpm-store
+
+# CMake user presets
+CMakeUserPresets.json

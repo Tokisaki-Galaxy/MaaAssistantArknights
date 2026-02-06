@@ -6,9 +6,11 @@
 #include "Controller/Controller.h"
 #include "Task/ProcessTask.h"
 #include "Utils/Logger.hpp"
+#include "Utils/StringMisc.hpp"
 #include "Vision/Infrast/InfrastClueVacancyImageAnalyzer.h"
 #include "Vision/Matcher.h"
 #include "Vision/MultiMatcher.h"
+#include "Vision/RegionOCRer.h"
 
 bool asst::InfrastReceptionTask::_run()
 {
@@ -35,20 +37,30 @@ bool asst::InfrastReceptionTask::_run()
         return false;
     }
 
-    use_clue();
-    back_to_reception_main();
+    if (m_enable_clue_exchange) {
+        use_clue();
+        back_to_reception_main();
+    }
+
+    if (m_send_clue) {
+        send_clue();
+    }
 
     if (need_exit()) {
         return false;
     }
 
+    // 赠送线索后的弹窗会挡住自己新线索的图标
+    sleep(500);
     get_self_clue();
     if (need_exit()) {
         return false;
     }
 
-    use_clue();
-    back_to_reception_main();
+    if (m_enable_clue_exchange) {
+        use_clue();
+        back_to_reception_main();
+    }
 
     if (need_exit()) {
         return false;
@@ -145,6 +157,34 @@ bool asst::InfrastReceptionTask::proc_clue_vacancy()
     const static std::vector<std::string> clue_suffix = { "No1", "No2", "No3", "No4", "No5", "No6", "No7" };
 
     cv::Mat image = ctrler()->get_image();
+
+    // 优先检测官服新增的“快捷置入”按钮，如果存在则尝试根据数字与空位一致时批量置入
+    if (ProcessTask(*this, { "InfrastClueQuickInsert" }).set_retry_times(3).run()) {
+        InfrastClueVacancyImageAnalyzer vacancy_analyzer(image);
+        vacancy_analyzer.set_to_be_analyzed(clue_suffix);
+        vacancy_analyzer.analyze();
+        const int vacancy_cnt = static_cast<int>(vacancy_analyzer.get_vacancy().size());
+
+        const auto confirm_task = Task.get("InfrastClueQuickInsertConfirm");
+        if (vacancy_cnt > 0 && confirm_task != nullptr) {
+            RegionOCRer ocr_analyzer(image);
+            ocr_analyzer.set_task_info(confirm_task);
+
+            if (auto ocr_res = ocr_analyzer.analyze()) {
+                int available = 0;
+                if (utils::chars_to_number(ocr_res->text, available)) {
+                    Log.info("vacancy_cnt:", vacancy_cnt, ", available:", available);
+                    if (available == vacancy_cnt) {
+                        Rect click_rect = confirm_task->roi.move(confirm_task->rect_move);
+                        ctrler()->click(click_rect);
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
     for (const std::string& clue : clue_suffix) {
         if (need_exit()) {
             return false;
@@ -195,8 +235,9 @@ bool asst::InfrastReceptionTask::back_to_reception_main()
 
 bool asst::InfrastReceptionTask::send_clue()
 {
+    // 优先检测是否存在“快捷传递重复线索”按钮（官服特性），若存在则点击一次
     ProcessTask task(*this, { "SendClues" });
-    return task.run();
+    return task.set_retry_times(20).run();
 }
 
 bool asst::InfrastReceptionTask::shift()

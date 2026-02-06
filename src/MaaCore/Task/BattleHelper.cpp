@@ -8,11 +8,11 @@
 #include "Config/Miscellaneous/BattleDataConfig.h"
 #include "Config/TaskData.h"
 #include "Controller/Controller.h"
+#include "MaaUtils/ImageIo.h"
+#include "MaaUtils/NoWarningCV.hpp"
+#include "MaaUtils/Time.hpp"
 #include "Task/ProcessTask.h"
-#include "Utils/ImageIo.hpp"
 #include "Utils/Logger.hpp"
-#include "Utils/NoWarningCV.h"
-#include "Utils/Time.hpp"
 #include "Vision/Battle/BattlefieldClassifier.h"
 #include "Vision/Battle/BattlefieldMatcher.h"
 #include "Vision/Matcher.h"
@@ -54,6 +54,7 @@ void asst::BattleHelper::clear()
     m_in_battle = false;
     m_kills = 0;
     m_total_kills = 0;
+    m_stopwatch_enabled = false;
     m_cur_deployment_opers.clear();
     m_battlefield_opers.clear();
     m_used_tiles.clear();
@@ -73,6 +74,7 @@ bool asst::BattleHelper::calc_tiles_info(const std::string& stage_name, double s
     m_side_tile_info = std::move(calc_result.side_tile_info);
     m_retreat_button_pos = calc_result.retreat_button;
     m_skill_button_pos = calc_result.skill_button;
+    m_has_multi_stages = calc_result.has_multi_stages;
 
     return true;
 }
@@ -334,7 +336,8 @@ bool asst::BattleHelper::update_deployment(bool init, const cv::Mat& reusable, b
 }
 
 // if side = true, get top view of the selected operator, tile size is 5x5
-cv::Mat asst::BattleHelper::get_top_view(const cv::Mat& cam_img, bool side)
+// has_multi_stages: does map have multi stages, e.g. TN-1 ~ TN-4
+cv::Mat asst::BattleHelper::get_top_view(const cv::Mat& cam_img, bool side, bool has_multi_stages)
 {
     if (!side) {
         return cv::Mat {}; // TODO
@@ -354,7 +357,7 @@ cv::Mat asst::BattleHelper::get_top_view(const cv::Mat& cam_img, bool side)
     };
     std::vector<cv::Point2f> screen_points;
     for (const auto& point : world_points) {
-        cv::Vec3d temp { point.x, -point.y, -0.3967874050140381 };
+        cv::Vec3d temp { point.x + (has_multi_stages ? m_map_data.view[0].x : 0), -point.y, Map::TileCalc2::rel_pos_z };
         auto screen_pt = Map::TileCalc2::world_to_screen(m_map_data, temp, true);
         screen_points.push_back(screen_pt);
     }
@@ -491,9 +494,7 @@ bool asst::BattleHelper::deploy_oper(const std::string& name, const Point& loc, 
         // m_used_tiles.erase(pre_loc);
     }
 
-    m_used_tiles.emplace(loc, name);
-    m_battlefield_opers.emplace(name, loc);
-    m_last_use_skill_time.emplace(loc, std::chrono::steady_clock::time_point());
+    register_deployed_oper(name, loc);
     m_inst_helper.sleep(200); // 部署完会有 166 ms 的动画
 
     return true;
@@ -529,6 +530,7 @@ bool asst::BattleHelper::retreat_oper(const Point& loc, bool manually)
     if (manually) {
         std::erase_if(m_battlefield_opers, [&loc](const auto& pair) -> bool { return pair.second == loc; });
     }
+    cancel_oper_selection(); // 兜底一下, 防止格子上面并没有干员, 导致点到隔壁格子
     return true;
 }
 
@@ -691,10 +693,8 @@ bool asst::BattleHelper::use_all_ready_skill(const cv::Mat& reusable)
         Log.info("Skill", name, "is ready");
 
         if (auto interval = now - last_use_time; min_frame_interval > interval) {
-            Log.info(
-                name,
-                "use skill too fast, interval time:",
-                std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(interval).count()) + " ms");
+            LogInfo << name << "use skill too fast, interval time:"
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(interval).count() << " ms";
             continue;
         }
 
@@ -753,7 +753,7 @@ void asst::BattleHelper::save_map(const cv::Mat& image)
 
     // 清理旧的 PNG 文件
     static bool clean_png = true;
-    if (clean_png) {
+    if (clean_png && std::filesystem::exists(MapRelativeDir)) {
         for (const auto& entry : std::filesystem::directory_iterator(MapRelativeDir)) {
             if (entry.path().extension() == ".png") {
                 std::error_code ec;
@@ -778,7 +778,7 @@ void asst::BattleHelper::save_map(const cv::Mat& image)
         suffix = "-" + std::to_string(m_camera_count);
     }
     std::vector<int> jpeg_params = { cv::IMWRITE_JPEG_QUALITY, 50, cv::IMWRITE_JPEG_OPTIMIZE, 1 };
-    asst::imwrite(MapRelativeDir / asst::utils::path(m_stage_name + suffix + ".jpeg"), draw, jpeg_params);
+    MAA_NS::imwrite(MapRelativeDir / asst::utils::path(m_stage_name + suffix + ".jpeg"), draw, jpeg_params);
 }
 
 bool asst::BattleHelper::click_oper_on_deployment(const std::string& name)
@@ -874,7 +874,7 @@ bool asst::BattleHelper::click_skill(bool keep_waiting)
         if (keep_waiting && retry > 0 && (retry % 10 == 0) && !check_in_battle(image)) {
             return false;
         }
-        top_view = get_top_view(image, true);
+        top_view = get_top_view(image, true, m_has_multi_stages);
         Matcher skill_analyzer { top_view };
         skill_analyzer.set_task_info("BattleSkillReadyOnClick-TopView");
         skill_analyzer.set_roi({ 250, 250, 250, 250 });
@@ -893,8 +893,8 @@ bool asst::BattleHelper::click_skill(bool keep_waiting)
 #ifdef ASST_DEBUG
     if (!top_view.empty()) {
         using namespace asst::utils::path_literals;
-        asst::imwrite(
-            asst::utils::path(std::format("debug/skill/{}_{}.png", m_stage_name, utils::format_now_for_filename())),
+        MAA_NS::imwrite(
+            asst::utils::path(std::format("debug/skill/{}_{}.png", m_stage_name, MAA_NS::format_now_for_filename())),
             top_view);
     }
 #endif
@@ -1030,6 +1030,27 @@ std::optional<asst::Rect> asst::BattleHelper::get_oper_rect_on_deployment(const 
     }
 
     return oper_iter->rect;
+}
+
+int asst::BattleHelper::elapsed_time()
+{
+    if (!m_stopwatch_enabled) {
+        return -1;
+    }
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_stopwatch_start_time).count();
+    if (elapsed_ms > std::numeric_limits<int>::max()) {
+        Log.error(__FUNCTION__, "| elapsed time exceeds int maximum");
+        return std::numeric_limits<int>::max();
+    }
+    return static_cast<int>(elapsed_ms);
+}
+
+void asst::BattleHelper::register_deployed_oper(const std::string& name, const Point& loc)
+{
+    m_used_tiles.emplace(loc, name);
+    m_battlefield_opers.emplace(name, loc);
+    m_last_use_skill_time.emplace(loc, std::chrono::steady_clock::time_point());
 }
 
 void asst::BattleHelper::remove_cooling_from_battlefield(const battle::DeploymentOper& oper)

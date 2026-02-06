@@ -33,6 +33,9 @@ public class Root : INotifyPropertyChanged
     [JsonInclude]
     public ObservableDictionary<int, Timer> Timers { get; private set; } = [];
 
+    public int ConfigVersion { get; set; } = 1;
+
+    [JsonInclude]
     public string Current { get; set; } = ConfigurationKeys.DefaultConfiguration;
 
     [JsonInclude]
@@ -47,12 +50,10 @@ public class Root : INotifyPropertyChanged
     [JsonIgnore]
     public SpecificConfig CurrentConfig
     {
-        get
-        {
+        get {
             Configurations.TryGetValue(Current, out var result);
             return result!;
         }
-
         set => Configurations[Current] = value;
     }
 

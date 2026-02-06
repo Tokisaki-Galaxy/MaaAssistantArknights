@@ -43,6 +43,11 @@ public class AsstCopilotTask : AsstBaseTask
     public bool Formation { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether 自动编队
+    /// </summary>
+    public int SupportUnitUsage { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether 追加信赖干员
     /// </summary>
     public bool AddTrust { get; set; }
@@ -77,6 +82,7 @@ public class AsstCopilotTask : AsstBaseTask
         var taskParams = new JObject
         {
             ["formation"] = Formation,
+            ["support_unit_usage"] = SupportUnitUsage,
             ["add_trust"] = AddTrust,
             ["ignore_requirements"] = IgnoreRequirements,
             ["loop_times"] = LoopTimes,
@@ -85,7 +91,7 @@ public class AsstCopilotTask : AsstBaseTask
 
         if (!string.IsNullOrEmpty(FileName) && MultiTasks.Count > 0)
         {
-            throw new ArgumentException("FileName和MultiTasks不能同时使用");
+            throw new ArgumentException("FileName 和 MultiTasks 不能同时使用");
         }
         else if (MultiTasks.Count > 0)
         {
@@ -97,7 +103,7 @@ public class AsstCopilotTask : AsstBaseTask
         }
         else
         {
-            throw new ArgumentException("FileName和MultiTasks必须使用其一");
+            throw new ArgumentException("FileName 和 MultiTasks 必须使用其一");
         }
 
         if (FormationIndex > 0)
@@ -121,8 +127,19 @@ public class AsstCopilotTask : AsstBaseTask
         [JsonProperty("name")]
         public string Name { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets 技能序号，可选，默认为 1，取值范围 [1, 3]
+        /// </summary>
         [JsonProperty("skill")]
-        public int Skill { get; set; }
+        public int Skill { get; set; } = 1;
+
+        /// <summary>
+        /// Gets or sets 模组编号，可选，默认为 0
+        /// -1: 不切换模组 / 无要求, 0: 不使用模组, 1: 模组 χ, 2: 模组 γ, 3: 模组 α, 4: 模组 Δ
+        /// 当前核心仅使用 name 和 skill 字段，module 作为预留字段
+        /// </summary>
+        [JsonProperty("module")]
+        public int Module { get; set; }
     }
 
     public class MultiTask
@@ -141,11 +158,5 @@ public class AsstCopilotTask : AsstBaseTask
         /// </summary>
         [JsonProperty("is_raid")]
         public bool IsRaid { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether 悖论模拟
-        /// </summary>
-        [JsonProperty("is_paradox")]
-        public bool IsParadox { get; set; }
     }
 }

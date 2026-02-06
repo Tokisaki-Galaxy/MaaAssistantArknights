@@ -14,14 +14,18 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
+using HandyControl.Controls;
+using HandyControl.Data;
 using MaaWpfGui.Configuration.Factory;
 using MaaWpfGui.Constants;
 using MaaWpfGui.Helper;
 using MaaWpfGui.Main;
 using MaaWpfGui.Utilities.ValueType;
 using MaaWpfGui.ViewModels.UI;
+using Serilog;
 using Stylet;
 using DarkModeType = MaaWpfGui.Configuration.Global.GUI.DarkModeType;
 
@@ -78,8 +82,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public bool UseTray
     {
         get => _useTray;
-        set
-        {
+        set {
             if (!value)
             {
                 MinimizeToTray = false;
@@ -99,8 +102,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public bool MinimizeToTray
     {
         get => _minimizeToTray;
-        set
-        {
+        set {
             SetAndNotify(ref _minimizeToTray, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.MinimizeToTray, value.ToString());
             Instances.MainWindowManager.SetMinimizeToTray(value);
@@ -115,8 +117,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public bool WindowTitleScrollable
     {
         get => _windowTitleScrollable;
-        set
-        {
+        set {
             SetAndNotify(ref _windowTitleScrollable, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.WindowTitleScrollable, value.ToString());
             var rvm = (RootViewModel)Instances.SettingsViewModel.Parent;
@@ -132,8 +133,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public bool HideCloseButton
     {
         get => _hideCloseButton;
-        set
-        {
+        set {
             SetAndNotify(ref _hideCloseButton, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.HideCloseButton, value.ToString());
             var rvm = (RootViewModel)Instances.SettingsViewModel.Parent;
@@ -147,8 +147,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public bool UseNotify
     {
         get => ConfigFactory.Root.GUI.UseNotify;
-        set
-        {
+        set {
             ConfigFactory.Root.GUI.UseNotify = value;
             NotifyOfPropertyChange();
             if (value)
@@ -161,8 +160,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public bool MainTasksInvertNullFunction
     {
         get => ConfigFactory.Root.GUI.MainTasksInvertNullFunction;
-        set
-        {
+        set {
             ConfigFactory.Root.GUI.MainTasksInvertNullFunction = value;
             NotifyOfPropertyChange();
         }
@@ -184,8 +182,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public string LogItemDateFormatString
     {
         get => _logItemDateFormatString;
-        set
-        {
+        set {
             SetAndNotify(ref _logItemDateFormatString, value);
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.LogItemDateFormat, value);
         }
@@ -197,8 +194,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public DarkModeType DarkMode
     {
         get => ConfigFactory.Root.GUI.DarkMode;
-        set
-        {
+        set {
             ConfigFactory.Root.GUI.DarkMode = value;
             NotifyOfPropertyChange();
             SwitchDarkMode();
@@ -249,8 +245,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public string InverseClearMode
     {
         get => _inverseClearMode.ToString();
-        set
-        {
+        set {
             if (!Enum.TryParse(value, out InverseClearType tempEnumValue))
             {
                 return;
@@ -283,6 +278,31 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
         }
     }
 
+    private bool _useCardLog = ConfigurationHelper.GetValue(ConfigurationKeys.UseCardLog, true);
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to use card log format.
+    /// </summary>
+    public bool UseCardLog
+    {
+        get => _useCardLog;
+        set {
+            SetAndNotify(ref _useCardLog, value);
+            ConfigurationHelper.SetValue(ConfigurationKeys.UseCardLog, value.ToString());
+        }
+    }
+
+    private int _maxNumberOfLogThumbnails = ConfigurationHelper.GetValue(ConfigurationKeys.MaxNumberOfLogThumbnails, 100);
+
+    public int MaxNumberOfLogThumbnails
+    {
+        get => _maxNumberOfLogThumbnails;
+        set {
+            SetAndNotify(ref _maxNumberOfLogThumbnails, value);
+            ConfigurationHelper.SetValue(ConfigurationKeys.MaxNumberOfLogThumbnails, value.ToString());
+        }
+    }
+
     private static readonly Dictionary<string, string> _windowTitleAllShowDict = new()
     {
         { "1", LocalizationHelper.GetString("ConfigurationName") },
@@ -293,17 +313,15 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
 
     public static Dictionary<string, string> WindowTitleAllShowDict { get => _windowTitleAllShowDict; }
 
-    private static object[] _windowTitleSelectShowList = ConfigurationHelper.GetGlobalValue(ConfigurationKeys.WindowTitleSelectShowList, "1 2 3 4")
+    private static object[] _windowTitleSelectShowList = [.. ConfigurationHelper.GetGlobalValue(ConfigurationKeys.WindowTitleSelectShowList, "2 3 4")
         .Split(' ')
         .Where(s => _windowTitleAllShowDict.ContainsKey(s.ToString()))
-        .Select(s => (object)new KeyValuePair<string, string>(s, _windowTitleAllShowDict[s]))
-        .ToArray();
+        .Select(s => (object)new KeyValuePair<string, string>(s, _windowTitleAllShowDict[s]))];
 
     public object[] WindowTitleSelectShowList
     {
         get => _windowTitleSelectShowList;
-        set
-        {
+        set {
             SetAndNotify(ref _windowTitleSelectShowList, value);
             Instances.SettingsViewModel.UpdateWindowTitle();
             var config = string.Join(' ', _windowTitleSelectShowList.Cast<KeyValuePair<string, string>>().Select(pair => pair.Key).ToList());
@@ -319,8 +337,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     public string Language
     {
         get => _language;
-        set
-        {
+        set {
             if (value == _language)
             {
                 return;
@@ -340,8 +357,9 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
             // var backup = _language;
             ConfigurationHelper.SetGlobalValue(ConfigurationKeys.Localization, value);
 
-            var mainWindow = Application.Current.MainWindow;
+            AchievementTrackerHelper.Instance.Unlock(AchievementIds.Linguist);
 
+            var mainWindow = Application.Current.MainWindow;
             if (mainWindow != null)
             {
                 mainWindow.Show();
@@ -375,8 +393,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
     /// </summary>
     public string LanguageInfo
     {
-        get
-        {
+        get {
             var language = (string?)Application.Current.Resources["Language"];
             return language == "Language" ? language : language + " / Language";
         }
@@ -389,8 +406,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
 
     public string OperNameLanguage
     {
-        get
-        {
+        get {
             if (!_operNameLanguage.Contains('.'))
             {
                 return _operNameLanguage;
@@ -405,8 +421,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
             return "OperNameLanguageForce";
         }
 
-        set
-        {
+        set {
             if (value == _operNameLanguage.Split('.')[0])
             {
                 return;
@@ -451,8 +466,7 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
 
     public string OperNameLocalization
     {
-        get
-        {
+        get {
             if (_operNameLanguage == "OperNameLanguageClient")
             {
                 return DataHelper.ClientLanguageMapper[SettingsViewModel.GameSettings.ClientType];
@@ -469,6 +483,118 @@ public class GuiSettingsUserControlModel : PropertyChangedBase
             }
 
             return _language;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to ignore bad modules and use software rendering.
+    /// </summary>
+    public bool IgnoreBadModulesAndUseSoftwareRendering
+    {
+        get => ConfigFactory.Root.GUI.IgnoreBadModulesAndUseSoftwareRendering;
+        set {
+            ConfigFactory.Root.GUI.IgnoreBadModulesAndUseSoftwareRendering = value;
+            NotifyOfPropertyChange();
+            if (value)
+            {
+                var result = MessageBoxHelper.Show(
+                    LocalizationHelper.GetString("BadModules.ResetWarning"),
+                    LocalizationHelper.GetString("Tip"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                var mainWindow = Application.Current.MainWindow;
+                if (mainWindow != null)
+                {
+                    mainWindow.Show();
+                    mainWindow.WindowState = WindowState.Normal;
+                    mainWindow.Activate();
+                }
+
+                var result = MessageBoxHelper.Show(
+                    LocalizationHelper.GetString("BadModules.ResetSuccess"),
+                    LocalizationHelper.GetString("Tip"),
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Information,
+                    ok: LocalizationHelper.GetString("Ok"),
+                    cancel: LocalizationHelper.GetString("ManualRestart"));
+                if (result == MessageBoxResult.OK)
+                {
+                    Bootstrapper.ShutdownAndRestartWithoutArgs();
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 清空缓存 包括cache目录和debug目录
+    /// </summary>
+    public static void ClearCache()
+    {
+        try
+        {
+            var clearedDirs = new List<string>();
+
+            if (Directory.Exists(PathsHelper.CacheDir))
+            {
+                Directory.Delete(PathsHelper.CacheDir, recursive: true);
+                clearedDirs.Add("cache");
+            }
+
+            if (Directory.Exists(PathsHelper.DebugDir))
+            {
+                DeleteDirectoryContentsExcept(PathsHelper.DebugDir, ["asst.log", "asst.bak.log", "gui.log", "gui.bak.log"]);
+                clearedDirs.Add("debug");
+            }
+
+            if (clearedDirs.Count > 0)
+            {
+                ShowGrowl(LocalizationHelper.GetString("ClearCacheSuccessful"));
+            }
+            else
+            {
+                ShowGrowl(LocalizationHelper.GetString("ClearCacheAlreadyEmpty"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowGrowl($"{LocalizationHelper.GetString("ClearCacheException")}\n{ex.Message}");
+            Log.Error(ex, "Failed to clear cache");
+        }
+
+        void ShowGrowl(string message)
+        {
+            var growlInfo = new GrowlInfo {
+                IsCustom = true,
+                Message = message,
+                IconKey = "HangoverGeometry",
+                IconBrushKey = "PallasBrush",
+            };
+            Growl.Info(growlInfo);
+        }
+    }
+
+    /// <summary>
+    /// 删除目录下的所有文件和子目录，排除指定的文件名。
+    /// </summary>
+    private static void DeleteDirectoryContentsExcept(string dir, IEnumerable<string> excludeFileNames)
+    {
+        var excludeSet = excludeFileNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in Directory.EnumerateFiles(dir))
+        {
+            if (excludeSet.Contains(Path.GetFileName(file)))
+            {
+                continue;
+            }
+
+            File.Delete(file);
+        }
+
+        foreach (var subDir in Directory.EnumerateDirectories(dir))
+        {
+            Directory.Delete(subDir, recursive: true);
         }
     }
 }

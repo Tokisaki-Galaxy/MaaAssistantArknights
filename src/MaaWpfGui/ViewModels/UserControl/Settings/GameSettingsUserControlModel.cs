@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MaaWpfGui.Constants;
 using MaaWpfGui.Helper;
@@ -43,17 +44,14 @@ public class GameSettingsUserControlModel : PropertyChangedBase
 
     private static VersionUpdateSettingsUserControlModel VersionUpdateSettings => SettingsViewModel.VersionUpdateSettings;
 
-    private bool _startGame = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.StartGame, bool.TrueString));
-
     public bool StartGame
     {
-        get => _startGame;
-        set
-        {
-            SetAndNotify(ref _startGame, value);
+        get => field;
+        set {
+            SetAndNotify(ref field, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.StartGame, value.ToString());
         }
-    }
+    } = ConfigurationHelper.GetValue(ConfigurationKeys.StartGame, true);
 
     /// <summary>
     /// Gets the list of the client types.
@@ -75,8 +73,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     /// </summary>
     public string ClientType
     {
-        get
-        { // v5.19.0-beta.1
+        get { // v5.19.0-beta.1
             if (!string.IsNullOrEmpty(_clientType))
             {
                 return _clientType;
@@ -86,8 +83,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
             return "Official";
         }
 
-        set
-        {
+        set {
             var oldValue = _clientType;
             if (!SetAndNotify(ref _clientType, value))
             {
@@ -104,8 +100,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
                 return;
             }
 
-            Task.Run(() =>
-            {
+            Task.Run(() => {
                 Instances.AsstProxy.LoadResource();
             });
 
@@ -130,8 +125,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public bool DeploymentWithPause
     {
         get => _deploymentWithPause;
-        set
-        {
+        set {
             SetAndNotify(ref _deploymentWithPause, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.RoguelikeDeploymentWithPause, value.ToString());
             SettingsViewModel.ConnectSettings.UpdateInstanceSettings();
@@ -143,8 +137,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public string StartsWithScript
     {
         get => _startsWithScript;
-        set
-        {
+        set {
             SetAndNotify(ref _startsWithScript, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.StartsWithScript, value);
         }
@@ -155,8 +148,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public string EndsWithScript
     {
         get => _endsWithScript;
-        set
-        {
+        set {
             SetAndNotify(ref _endsWithScript, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.EndsWithScript, value);
         }
@@ -167,8 +159,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public bool CopilotWithScript
     {
         get => _copilotWithScript;
-        set
-        {
+        set {
             SetAndNotify(ref _copilotWithScript, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.CopilotWithScript, value.ToString());
         }
@@ -179,8 +170,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public bool ManualStopWithScript
     {
         get => _manualStopWithScript;
-        set
-        {
+        set {
             SetAndNotify(ref _manualStopWithScript, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.ManualStopWithScript, value.ToString());
         }
@@ -188,8 +178,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
 
     public void RunScript(string str, bool showLog = true)
     {
-        bool enable = str switch
-        {
+        bool enable = str switch {
             "StartsWithScript" => !string.IsNullOrWhiteSpace(StartsWithScript),
             "EndsWithScript" => !string.IsNullOrWhiteSpace(EndsWithScript),
             _ => false,
@@ -200,8 +189,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
             return;
         }
 
-        Func<bool> func = str switch
-        {
+        Func<bool> func = str switch {
             "StartsWithScript" => () => ExecuteScript(StartsWithScript),
             "EndsWithScript" => () => ExecuteScript(EndsWithScript),
             _ => () => false,
@@ -232,10 +220,14 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     {
         try
         {
+            scriptPath = scriptPath.Trim();
+
             if (string.IsNullOrWhiteSpace(scriptPath))
             {
                 return false;
             }
+
+            scriptPath = Regex.Replace(scriptPath, @"\p{C}", string.Empty);
 
             string fileName;
             string arguments;
@@ -265,10 +257,8 @@ public class GameSettingsUserControlModel : PropertyChangedBase
                 arguments = arguments.Replace("-minimized", string.Empty).Trim();
             }
 
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
+            var process = new Process {
+                StartInfo = new ProcessStartInfo {
                     FileName = fileName,
                     Arguments = arguments,
                     WindowStyle = minimized ? ProcessWindowStyle.Minimized : ProcessWindowStyle.Normal,
@@ -291,8 +281,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public bool BlockSleep
     {
         get => _blockSleep;
-        set
-        {
+        set {
             SetAndNotify(ref _blockSleep, value);
             SleepManagement.SetBlockSleep(value);
             ConfigurationHelper.SetValue(ConfigurationKeys.BlockSleep, value.ToString());
@@ -304,8 +293,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public bool BlockSleepWithScreenOn
     {
         get => _blockSleepWithScreenOn;
-        set
-        {
+        set {
             SetAndNotify(ref _blockSleepWithScreenOn, value);
             SleepManagement.SetBlockSleepWithScreenOn(value);
             ConfigurationHelper.SetValue(ConfigurationKeys.BlockSleepWithScreenOn, value.ToString());
@@ -322,8 +310,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public string PenguinId
     {
         get => _penguinId;
-        set
-        {
+        set {
             SetAndNotify(ref _penguinId, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.PenguinId, value);
         }
@@ -337,8 +324,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public bool EnablePenguin
     {
         get => _enablePenguin;
-        set
-        {
+        set {
             SetAndNotify(ref _enablePenguin, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.EnablePenguin, value.ToString());
         }
@@ -352,8 +338,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public bool EnableYituliu
     {
         get => _enableYituliu;
-        set
-        {
+        set {
             SetAndNotify(ref _enableYituliu, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.EnableYituliu, value.ToString());
         }
@@ -368,8 +353,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public int TaskTimeoutMinutes
     {
         get => _taskTimeoutMinutes;
-        set
-        {
+        set {
             SetAndNotify(ref _taskTimeoutMinutes, value);
             _runningState.TaskTimeoutMinutes = value;
             ConfigurationHelper.SetValue(ConfigurationKeys.TaskTimeoutMinutes, value.ToString());
@@ -381,8 +365,7 @@ public class GameSettingsUserControlModel : PropertyChangedBase
     public int ReminderIntervalMinutes
     {
         get => _reminderIntervalMinutes;
-        set
-        {
+        set {
             SetAndNotify(ref _reminderIntervalMinutes, value);
             _runningState.ReminderIntervalMinutes = value;
             ConfigurationHelper.SetValue(ConfigurationKeys.ReminderIntervalMinutes, value.ToString());

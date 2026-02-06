@@ -115,6 +115,21 @@
             "Sami@Roguelike@ClickToDrops"
         ]
     },
+    "Sami@Roguelike@ClickToStartPoint": {
+        "next": [
+            "Sami@Roguelike@MissionCompletedFlag",
+            "Sami@Roguelike@MissionFailedFlag2",
+            "Sami@Roguelike@StartExplore",
+            "Sami@Roguelike@Stages#next",
+            "Sami@Roguelike@GamePass",
+            "Sami@Roguelike@TodoEnter",
+            "Sami@Roguelike@Continue",
+            "Sami@Roguelike@ReturnButtons#next",
+            "Sami@Roguelike@ReturnConfirm",
+            "Sami@Roguelike@StartUpThemes#next",
+            "Sami@Roguelike@ClickToStartPoint"
+        ]
+    },
     "Sami@Roguelike@CloseCollection": {
         "next": ["Sami@Roguelike@LastReward-EnterPoint", "Sami@Roguelike@GetLUD", "Sami@Roguelike@RolesDefault"]
     },
@@ -168,14 +183,14 @@
         ],
         "algorithm": "OcrDetect",
         "sub": [
-            "Sami@Roguelike@StageCombatDps",
-            "Sami@Roguelike@StageCombatDpsAI6",
-            "Sami@Roguelike@StageVerticalCombatDps",
-            "Sami@Roguelike@StageVerticalCombatDpsAI6",
-            "Sami@Roguelike@StageEmergencyDps",
-            "Sami@Roguelike@StageEmergencyDpsAI6",
-            "Sami@Roguelike@StageVerticalEmergencyDps",
-            "Sami@Roguelike@StageVerticalEmergencyDpsAI6",
+            "Sami@Roguelike@StageCombatOps",
+            "Sami@Roguelike@StageCombatOpsAI6",
+            "Sami@Roguelike@StageVerticalCombatOps",
+            "Sami@Roguelike@StageVerticalCombatOpsAI6",
+            "Sami@Roguelike@StageEmergencyOps",
+            "Sami@Roguelike@StageEmergencyOpsAI6",
+            "Sami@Roguelike@StageVerticalEmergencyOps",
+            "Sami@Roguelike@StageVerticalEmergencyOpsAI6",
             "Sami@Roguelike@StageDreadfulFoe",
             "Sami@Roguelike@StageDreadfulFoe-5",
             "Sami@Roguelike@StageEncounter",
@@ -409,8 +424,8 @@
     "Sami@Roguelike@FoldartalUseOnStageBattle": {
         "baseTask": "Sami@Roguelike@FoldartalUseOnStage",
         "template": [
-            "Sami@Roguelike@FoldartalUseOnCombatDps.png",
-            "Sami@Roguelike@FoldartalUseOnEmergencyDps.png",
+            "Sami@Roguelike@FoldartalUseOnCombatOps.png",
+            "Sami@Roguelike@FoldartalUseOnEmergencyOps.png",
             "Sami@Roguelike@FoldartalUseOnFerociousPresage.png"
         ],
         "templThreshold": [0.7, 0.7, 0.7]
@@ -438,8 +453,8 @@
     "Sami@Roguelike@FoldartalUseOnStageSkipBattle": {
         "baseTask": "Sami@Roguelike@FoldartalUseOnStage",
         "template": [
-            "Sami@Roguelike@FoldartalUseOnCombatDps.png",
-            "Sami@Roguelike@FoldartalUseOnEmergencyDps.png",
+            "Sami@Roguelike@FoldartalUseOnCombatOps.png",
+            "Sami@Roguelike@FoldartalUseOnEmergencyOps.png",
             "Sami@Roguelike@FoldartalUseOnFerociousPresage.png"
         ],
         "templThreshold": [0.7, 0.7, 0.7]
@@ -541,7 +556,9 @@
     "Sami@Roguelike@MissionFailedFlag": {},
     "Sami@Roguelike@MissionFailedFlag2": {},
     "Sami@Roguelike@MissionFailedFlag3": {
-        "baseTask": "Sami@Roguelike@MissionFailedFlag"
+        "baseTask": "Sami@Roguelike@MissionFailedFlag",
+        "template": "Sami@Roguelike@MissionFailedFlag3.png",
+        "roi": [504, 163, 480, 267]
     },
     "Sami@Roguelike@MonthlySquad": {
         "template": "Roguelike@MonthlySquad.png"
@@ -604,11 +621,13 @@
         "text": []
     },
     "Sami@Roguelike@SquadConfirm": {
+        "doc": "注意：在部分深入调查条目（如傀影主题的 <地面推进>）中有可能跳过招募组合直接开始初始招募",
         "template": "Sami@Roguelike@LastRewardConfirm.png",
         "next": [
             "Sami@Roguelike@LastReward-EnterPoint",
             "Sami@Roguelike@GetLUD",
             "Sami@Roguelike@RolesDefault",
+            "Sami@Roguelike@RecruitMain",
             "Sami@Roguelike@CloseCollection",
             "Sami@Roguelike@MapObject",
             "Sami@Roguelike@FoldartalGain"
@@ -651,19 +670,19 @@
             "Sami@Roguelike@StageEncounterJudgeClick"
         ]
     },
-    "Sami@Roguelike@StageCombatDps": {
+    "Sami@Roguelike@StageCombatOps": {
         "templThreshold": 0.95
     },
-    "Sami@Roguelike@StageCombatDpsAI6": {
+    "Sami@Roguelike@StageCombatOpsAI6": {
         "templThreshold": 0.95,
         "baseTask": "Sami@Roguelike@Stage",
         "next": [
-            "Sami@Roguelike@StageCombatDpsEnter",
-            "Sami@Roguelike@StageEmergencyDpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
             "Sami@Roguelike@Stages#next"
         ]
     },
-    "Sami@Roguelike@StageCombatDpsEnter": {},
+    "Sami@Roguelike@StageCombatOpsEnter": {},
     "Sami@Roguelike@StageDreadfulFoe": {},
     "Sami@Roguelike@StageDreadfulFoe-5": {
         "Doc": "第五层的boss关卡",
@@ -673,8 +692,8 @@
         "next": [
             "Sami@Roguelike@StageDreadfulFoe-5Enter",
             "Sami@Roguelike@StageDreadfulFoeEnter",
-            "Sami@Roguelike@StageEmergencyDpsEnter",
-            "Sami@Roguelike@StageCombatDpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
             "Sami@Roguelike@Stages#next"
         ]
     },
@@ -682,19 +701,19 @@
         "baseTask": "Sami@Roguelike@StageEnterBattle"
     },
     "Sami@Roguelike@StageDreadfulFoeEnter": {},
-    "Sami@Roguelike@StageEmergencyDps": {
+    "Sami@Roguelike@StageEmergencyOps": {
         "templThreshold": 0.95
     },
-    "Sami@Roguelike@StageEmergencyDpsAI6": {
+    "Sami@Roguelike@StageEmergencyOpsAI6": {
         "templThreshold": 0.95,
         "baseTask": "Sami@Roguelike@Stage",
         "next": [
-            "Sami@Roguelike@StageEmergencyDpsEnter",
-            "Sami@Roguelike@StageCombatDpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
             "Sami@Roguelike@Stages#next"
         ]
     },
-    "Sami@Roguelike@StageEmergencyDpsEnter": {},
+    "Sami@Roguelike@StageEmergencyOpsEnter": {},
     "Sami@Roguelike@StageEmergencyTransportation": {
         "Doc": "先行一步，拒绝可以获取2希望",
         "baseTask": "Sami@Roguelike@Stage",
@@ -729,8 +748,8 @@
             "Sami@Roguelike@StageEncounterOptionLeave",
             "Sami@Roguelike@StageEncounterOptionWonderland",
             "Sami@Roguelike@ChooseOperFlag",
-            "Sami@Roguelike@StageEmergencyDpsEnter",
-            "Sami@Roguelike@StageCombatDpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
             "Sami@Roguelike@CloseEvent",
             "Sami@Roguelike@StageEncounterOptionUnknown"
         ]
@@ -760,11 +779,11 @@
         "Doc": "诡秘的预感",
         "baseTask": "Sami@Roguelike@Stage",
         "templThreshold": 0.9,
-        "next": ["Sami@Roguelike@StageMysteriousPresageEnter", "Sami@Roguelike@Stages#next"]
+        "next": ["Sami@Roguelike@StageMysteriousPresageEnter", "#self"]
     },
     "Sami@Roguelike@StageMysteriousPresageEnter": {
         "baseTask": "Sami@Roguelike@StageEnter",
-        "templThreshold": 0.9,
+        "templThreshold": 0.85,
         "postDelay": 1000,
         "next": ["Sami@Roguelike@TraderCheck", "Sami@Roguelike@StageEncounterJudgeClick"]
     },
@@ -846,21 +865,21 @@
         "baseTask": "Roguelike@StageVertical",
         "next": ["Sami@Roguelike@StageBoskyPassageEnter", "Sami@Roguelike@Stages#next"]
     },
-    "Sami@Roguelike@StageVerticalCombatDps": {
+    "Sami@Roguelike@StageVerticalCombatOps": {
         "templThreshold": 0.9,
         "baseTask": "Roguelike@StageVertical",
         "next": [
-            "Sami@Roguelike@StageCombatDpsEnter",
-            "Sami@Roguelike@StageEmergencyDpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
             "Sami@Roguelike@Stages#next"
         ]
     },
-    "Sami@Roguelike@StageVerticalCombatDpsAI6": {
+    "Sami@Roguelike@StageVerticalCombatOpsAI6": {
         "templThreshold": 0.9,
         "baseTask": "Roguelike@StageVertical",
         "next": [
-            "Sami@Roguelike@StageCombatDpsEnter",
-            "Sami@Roguelike@StageEmergencyDpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
             "Sami@Roguelike@Stages#next"
         ]
     },
@@ -896,21 +915,21 @@
         "template": "Sami@Roguelike@StageVerticalConfirm.png",
         "next": ["Sami@Roguelike@WaitForStartButtonClicked"]
     },
-    "Sami@Roguelike@StageVerticalEmergencyDps": {
+    "Sami@Roguelike@StageVerticalEmergencyOps": {
         "templThreshold": 0.9,
         "baseTask": "Roguelike@StageVertical",
         "next": [
-            "Sami@Roguelike@StageEmergencyDpsEnter",
-            "Sami@Roguelike@StageCombatDpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
             "Sami@Roguelike@Stages#next"
         ]
     },
-    "Sami@Roguelike@StageVerticalEmergencyDpsAI6": {
+    "Sami@Roguelike@StageVerticalEmergencyOpsAI6": {
         "templThreshold": 0.9,
         "baseTask": "Roguelike@StageVertical",
         "next": [
-            "Sami@Roguelike@StageEmergencyDpsEnter",
-            "Sami@Roguelike@StageCombatDpsEnter",
+            "Sami@Roguelike@StageEmergencyOpsEnter",
+            "Sami@Roguelike@StageCombatOpsEnter",
             "Sami@Roguelike@Stages#next"
         ]
     },
@@ -1020,8 +1039,8 @@
             "Sami@Roguelike@StageSafeHouseAI6",
             "Sami@Roguelike@StageBoons",
             "Sami@Roguelike@StageBoonsAI6",
-            "Sami@Roguelike@StageCombatDps",
-            "Sami@Roguelike@StageCombatDpsAI6",
+            "Sami@Roguelike@StageCombatOps",
+            "Sami@Roguelike@StageCombatOpsAI6",
             "Sami@Roguelike@StageFerociousPresage",
             "Sami@Roguelike@StageEmergencyTransportation",
             "Sami@Roguelike@StageEmergencyTransportationAI6",
@@ -1036,8 +1055,8 @@
             "Sami@Roguelike@StageWindAndRainAI6",
             "Sami@Roguelike@StageDreadfulFoe",
             "Sami@Roguelike@StageDreadfulFoe-5",
-            "Sami@Roguelike@StageEmergencyDps",
-            "Sami@Roguelike@StageEmergencyDpsAI6",
+            "Sami@Roguelike@StageEmergencyOps",
+            "Sami@Roguelike@StageEmergencyOpsAI6",
             "Sami@Roguelike@CloseCollectionClose",
             "Sami@Roguelike@ChooseOperFlag",
             "Sami@Roguelike@StageEncounterSpecialClose",
@@ -1061,14 +1080,14 @@
             "Sami@Roguelike@StageVerticalBoskyPassageAI6",
             "Sami@Roguelike@StageBoskyPassage",
             "Sami@Roguelike@StageBoskyPassageAI6",
-            "Sami@Roguelike@StageVerticalEmergencyDps",
-            "Sami@Roguelike@StageVerticalEmergencyDpsAI6",
-            "Sami@Roguelike@StageEmergencyDps",
-            "Sami@Roguelike@StageEmergencyDpsAI6",
-            "Sami@Roguelike@StageVerticalCombatDps",
-            "Sami@Roguelike@StageVerticalCombatDpsAI6",
-            "Sami@Roguelike@StageCombatDps",
-            "Sami@Roguelike@StageCombatDpsAI6",
+            "Sami@Roguelike@StageVerticalEmergencyOps",
+            "Sami@Roguelike@StageVerticalEmergencyOpsAI6",
+            "Sami@Roguelike@StageEmergencyOps",
+            "Sami@Roguelike@StageEmergencyOpsAI6",
+            "Sami@Roguelike@StageVerticalCombatOps",
+            "Sami@Roguelike@StageVerticalCombatOpsAI6",
+            "Sami@Roguelike@StageCombatOps",
+            "Sami@Roguelike@StageCombatOpsAI6",
             "Sami@Roguelike@StageFerociousPresage",
             "Sami@Roguelike@StageVerticalSafeHouse",
             "Sami@Roguelike@StageVerticalSafeHouseAI6",
@@ -1107,20 +1126,20 @@
         "next": [
             "Sami@Roguelike@NextLevel",
             "Sami@Roguelike@FoldartalGainNextLevel",
-            "Sami@Roguelike@StageCombatDps",
-            "Sami@Roguelike@StageCombatDpsAI6",
-            "Sami@Roguelike@StageVerticalCombatDps",
-            "Sami@Roguelike@StageVerticalCombatDpsAI6",
+            "Sami@Roguelike@StageCombatOps",
+            "Sami@Roguelike@StageCombatOpsAI6",
+            "Sami@Roguelike@StageVerticalCombatOps",
+            "Sami@Roguelike@StageVerticalCombatOpsAI6",
             "Sami@Roguelike@StageFerociousPresage",
             "Sami@Roguelike@StageEncounter",
             "Sami@Roguelike@StageEncounterAI6",
             "Sami@Roguelike@StageMysteriousPresage",
             "Sami@Roguelike@StageTrader",
             "Sami@Roguelike@StageTraderAI6",
-            "Sami@Roguelike@StageEmergencyDps",
-            "Sami@Roguelike@StageEmergencyDpsAI6",
-            "Sami@Roguelike@StageVerticalEmergencyDps",
-            "Sami@Roguelike@StageVerticalEmergencyDpsAI6",
+            "Sami@Roguelike@StageEmergencyOps",
+            "Sami@Roguelike@StageEmergencyOpsAI6",
+            "Sami@Roguelike@StageVerticalEmergencyOps",
+            "Sami@Roguelike@StageVerticalEmergencyOpsAI6",
             "Sami@Roguelike@StageSafeHouse",
             "Sami@Roguelike@StageSafeHouseAI6",
             "Sami@Roguelike@StageBoons",
@@ -1192,10 +1211,10 @@
             "Sami@Roguelike@StageVerticalEmergencyTransportationAI6",
             "Sami@Roguelike@StageVerticalGambling",
             "Sami@Roguelike@StageVerticalGamblingAI6",
-            "Sami@Roguelike@StageCombatDps",
-            "Sami@Roguelike@StageCombatDpsAI6",
-            "Sami@Roguelike@StageEmergencyDps",
-            "Sami@Roguelike@StageEmergencyDpsAI6",
+            "Sami@Roguelike@StageCombatOps",
+            "Sami@Roguelike@StageCombatOpsAI6",
+            "Sami@Roguelike@StageEmergencyOps",
+            "Sami@Roguelike@StageEmergencyOpsAI6",
             "Sami@Roguelike@StageDreadfulFoe",
             "Sami@Roguelike@StageDreadfulFoe-5",
             "Sami@Roguelike@StageFerociousPresage",
@@ -1214,10 +1233,10 @@
             "Sami@Roguelike@StageVerticalBoskyPassageAI6",
             "Sami@Roguelike@StageBoskyPassage",
             "Sami@Roguelike@StageBoskyPassageAI6",
-            "Sami@Roguelike@StageVerticalCombatDps",
-            "Sami@Roguelike@StageVerticalCombatDpsAI6",
-            "Sami@Roguelike@StageCombatDps",
-            "Sami@Roguelike@StageCombatDpsAI6",
+            "Sami@Roguelike@StageVerticalCombatOps",
+            "Sami@Roguelike@StageVerticalCombatOpsAI6",
+            "Sami@Roguelike@StageCombatOps",
+            "Sami@Roguelike@StageCombatOpsAI6",
             "Sami@Roguelike@StageFerociousPresage",
             "Sami@Roguelike@StageVerticalTrader",
             "Sami@Roguelike@StageVerticalTraderAI6",
@@ -1245,10 +1264,10 @@
             "Sami@Roguelike@StageEmergencyTransportationAI6",
             "Sami@Roguelike@StageGambling",
             "Sami@Roguelike@StageGamblingAI6",
-            "Sami@Roguelike@StageVerticalEmergencyDps",
-            "Sami@Roguelike@StageVerticalEmergencyDpsAI6",
-            "Sami@Roguelike@StageEmergencyDps",
-            "Sami@Roguelike@StageEmergencyDpsAI6",
+            "Sami@Roguelike@StageVerticalEmergencyOps",
+            "Sami@Roguelike@StageVerticalEmergencyOpsAI6",
+            "Sami@Roguelike@StageEmergencyOps",
+            "Sami@Roguelike@StageEmergencyOpsAI6",
             "Sami@Roguelike@StageMysteriousPresage",
             "Sami@Roguelike@StageDreadfulFoe",
             "Sami@Roguelike@StageDreadfulFoe-5",
@@ -1274,7 +1293,8 @@
             "Sami@Roguelike@GamePassTheEndConfirm",
             "Sami@Roguelike@GamePass",
             "Sami@Roguelike@StartAction@LoadingText",
-            "Sami@Roguelike@StartAction@LoadingIcon"
+            "Sami@Roguelike@StartAction@LoadingIcon",
+            "Sami@Roguelike@StartActionReCheck"
         ]
     },
     "Sami@Roguelike@StartExplore": {
@@ -1291,7 +1311,7 @@
             ["密静林地", "_aggressive"],
             [".*明冻土", "昧明冻土"],
             ["昧明冻土", "_pragmatic"],
-            ["积冰岩骸", "_pragmatic"],
+            ["积冰岩.*", "_pragmatic"],
             ["无瑕花园", "_default"],
             ["远见之构", "_default"],
             ["深埋迷境", "_SKIP_"]
@@ -1340,7 +1360,7 @@
             ["密静林地", "_aggressive"],
             [".*明冻土", "昧明冻土"],
             ["昧明冻土", "_pragmatic"],
-            ["积冰岩骸", "_pragmatic"],
+            ["积冰岩.*", "_pragmatic"],
             ["无瑕花园", "_default"],
             ["远见之构", "_default"],
             ["深埋迷境", "_SKIP_"]
@@ -1353,7 +1373,7 @@
             ["密静林地", "_aggressive"],
             [".*明冻土", "昧明冻土"],
             ["昧明冻土", "_pragmatic"],
-            ["积冰岩骸", "_pragmatic"],
+            ["积冰岩.*", "_pragmatic"],
             ["无瑕花园", "_default"],
             ["远见之构", "_default"],
             ["深埋迷境", "_SKIP_"]

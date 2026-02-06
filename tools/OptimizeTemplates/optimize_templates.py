@@ -55,10 +55,6 @@ def get_file_id(file_path: str):
     m = re.search(r"docs/.vuepress/public/images/(.*)\.png", file_id)
     if m:
         return f"docs/{m.group(1)}"
-    # website\\apps\\web\\PATH\\TO\\xxx.png -> web/PATH/TO/xxx
-    m = re.search(r"website/apps/web/(.*)\.png", file_id)
-    if m:
-        return f"web/{m.group(1)}"
 
     return None
 
@@ -187,6 +183,12 @@ def ArgParser():
         default=[],
     )
     parser.add_argument("-q", "--quiet", dest="quiet", action="store_true")
+    parser.add_argument(
+        "--no-cleanup",
+        dest="no_cleanup",
+        action="store_true",
+        help="disable cleanup of deleted templates from cache",
+    )
     return parser
 
 
@@ -194,6 +196,7 @@ if __name__ == "__main__":
     args = ArgParser().parse_args()
     paths = args.path
     quiet = args.quiet
+    no_cleanup = args.no_cleanup
 
     perfect_pngs = {}
     optimized_png_paths = []
@@ -204,30 +207,50 @@ if __name__ == "__main__":
 
     if len(paths) == 0:
         docs_dir = cur_dir.parent.parent / "docs"
-        website_dir = cur_dir.parent.parent / "website"
         resource_dir = cur_dir.parent.parent / "resource"
         paths = [
             str(resource_dir / "global"),
             str(resource_dir / "template"),
             str(docs_dir),
-            str(website_dir),
         ]
         print("no path specified, use default paths:", paths)
 
     files = []
     tqdm_total = 0
+    existing_file_ids = set()
 
     for path in paths:
         if pathlib.Path(path).is_dir():
             for root, _, _files in os.walk(path):
                 for f in _files:
                     file = os.path.join(root, f)
+                    if file.endswith(".png"):
+                        file_id = get_file_id(str(pathlib.Path(file).resolve()))
+                        if file_id:
+                            existing_file_ids.add(file_id)
                     if check_png_need_update(file, perfect_pngs, quiet):
                         files.append(file)
                         tqdm_total += os.stat(file).st_size ** 2 // 2**20
         elif pathlib.Path(path).is_file():
             files.append(path)
             tqdm_total += os.stat(path).st_size ** 2 // 2**20
+            file_id = get_file_id(str(pathlib.Path(path).resolve()))
+            if file_id:
+                existing_file_ids.add(file_id)
+
+    if not no_cleanup:
+        removed_count = 0
+        for file_id in list(perfect_pngs.keys()):
+            if file_id not in existing_file_ids:
+                del perfect_pngs[file_id]
+                removed_count += 1
+                if not quiet:
+                    print(f"Removed deleted file from cache: {file_id}")
+
+        if removed_count > 0:
+            update_perfect_png_dict(perfect_pngs)
+            if not quiet:
+                print(f"Cleaned up {removed_count} removed file(s) from cache")
 
     total_diff_sz = 0
     if quiet:
@@ -252,10 +275,10 @@ if __name__ == "__main__":
         if quiet:
             t.update(cur_file_sz**2 // 2**20)
             t.set_postfix(
-                file_counts=f"{i+1}/{len(files)}", reduced_size=total_diff_sz_str
+                file_counts=f"{i + 1}/{len(files)}", reduced_size=total_diff_sz_str
             )
             t.refresh()
         else:
             print(
-                f"file counts: {i+1}/{len(files)}, reduced pngs size: {total_diff_sz_str}"
+                f"file counts: {i + 1}/{len(files)}, reduced pngs size: {total_diff_sz_str}"
             )

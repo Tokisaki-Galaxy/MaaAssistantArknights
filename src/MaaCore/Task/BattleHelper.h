@@ -5,7 +5,7 @@
 #include "Common/AsstBattleDef.h"
 #include "Config/Miscellaneous/TilePack.h"
 #include "InstHelper.h"
-#include "Utils/NoWarningCVMat.h"
+#include "MaaUtils/NoWarningCVMat.hpp"
 #include "Utils/Platform.hpp"
 #include "Utils/WorkingDir.hpp"
 #include "Vision/BestMatcher.h"
@@ -56,7 +56,7 @@ protected:
     bool update_kills(const cv::Mat& image, const cv::Mat& image_prev = cv::Mat());
     bool update_cost(const cv::Mat& image, const cv::Mat& image_prev = cv::Mat());
 
-    cv::Mat get_top_view(const cv::Mat& cam_img, bool side = true);
+    cv::Mat get_top_view(const cv::Mat& cam_img, bool side = true, bool has_multi_stages = false);
 
     bool deploy_oper(const std::string& name, const Point& loc, battle::DeployDirection direction);
     bool retreat_oper(const std::string& name);
@@ -96,6 +96,10 @@ protected:
     std::string analyze_detail_page_oper_name(const cv::Mat& image);
     std::optional<Rect> get_oper_rect_on_deployment(const std::string& name) const;
 
+    int elapsed_time();
+
+    // 注册已部署干员及位置
+    void register_deployed_oper(const std::string& name, const Point& loc);
     // 从场上干员和已占用格子中移除冷却中的干员
     void remove_cooling_from_battlefield(const battle::DeploymentOper& oper);
 
@@ -105,6 +109,7 @@ protected:
     std::unordered_map<Point, TilePack::TileInfo> m_normal_tile_info; // 正常的坐标映射
     Point m_skill_button_pos;
     Point m_retreat_button_pos;
+    bool m_has_multi_stages = false;
     std::unordered_map<std::string, battle::SkillUsage> m_skill_usage;
     std::unordered_map<std::string, int> m_skill_times;
     std::unordered_map<std::string, int> m_skill_error_count;
@@ -117,6 +122,8 @@ protected:
     int m_kills = 0;
     int m_total_kills = 0;
     int m_cost = 0;
+    bool m_stopwatch_enabled = false;
+    std::chrono::steady_clock::time_point m_stopwatch_start_time;
 
     std::vector<battle::DeploymentOper> m_cur_deployment_opers;
 

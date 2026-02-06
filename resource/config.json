@@ -36,14 +36,9 @@
             "recruitUrl": "https://backend.yituliu.cn/maa/upload/recruit",
             "dropUrl": "https://backend.yituliu.cn/maa/upload/stageDrop"
         },
-        "depotExportTemplate": {
-            "Doc": "仓库识别导出结果模板",
-            "arkPlanner": "{\"@type\": \"@penguin-statistics/depot\",\"items\": []}",
-            "arkPlanner_Doc": "https://penguin-stats.cn/planner"
-        },
         "debug": {
-            "cleanFilesFreq": 50,
-            "maxDebugFileNum": 100
+            "cleanFilesFreq": 5,
+            "maxDebugFileNum": 10
         }
     },
     "packageName": {
@@ -58,7 +53,7 @@
         {
             "configName": "General",
             "devices": "[Adb] devices",
-            "addressRegex": "(.+)\tdevice",
+            "addressRegex": "([^\\n]+)\tdevice",
             "connect": "[Adb] connect [AdbSerial]",
             "uuid": "[Adb] -s [AdbSerial] shell settings get secure android_id",
             "version": "[Adb] -s [AdbSerial] shell getprop ro.build.version.release",
@@ -145,7 +140,8 @@
             "baseConfig": "CompatPOSIXShell",
             "start": "[Adb] -s [AdbSerial] shell am start --windowingMode 4 -n [PackageName]/com.u8.sdk.U8UnityContext",
             "screencapRawWithGzip": "[Adb] -s [AdbSerial] exec-out \"screencap 2>/dev/null | gzip -1\"",
-            "screencapEncode": "[Adb] -s [AdbSerial] exec-out \"screencap -p 2>/dev/null\""
+            "screencapEncode": "[Adb] -s [AdbSerial] exec-out \"screencap -p 2>/dev/null\"",
+            "screencapRawByNC": "[Adb] -s [AdbSerial] exec-out \"screencap 2>/dev/null | nc -w 3 [NcAddress] [NcPort]\""
         }
     ]
 }

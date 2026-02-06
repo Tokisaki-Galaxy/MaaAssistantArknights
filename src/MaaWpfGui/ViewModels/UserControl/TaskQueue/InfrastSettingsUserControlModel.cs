@@ -19,10 +19,10 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using MaaWpfGui.Configuration.Single.MaaTask;
 using MaaWpfGui.Constants;
 using MaaWpfGui.Constants.Enums;
 using MaaWpfGui.Helper;
-using MaaWpfGui.Main;
 using MaaWpfGui.Models;
 using MaaWpfGui.Models.AsstTasks;
 using MaaWpfGui.Services;
@@ -36,12 +36,13 @@ using Serilog;
 
 namespace MaaWpfGui.ViewModels.UserControl.TaskQueue;
 
+using static MaaWpfGui.Main.AsstProxy;
 using Mode = InfrastMode;
 
 /// <summary>
 /// 基建任务
 /// </summary>
-public class InfrastSettingsUserControlModel : TaskViewModel
+public class InfrastSettingsUserControlModel : TaskSettingsViewModel
 {
     static InfrastSettingsUserControlModel()
     {
@@ -63,37 +64,45 @@ public class InfrastSettingsUserControlModel : TaskViewModel
     /// </summary>
     public static TaskSettingVisibilityInfo TaskSettingVisibilities => TaskSettingVisibilityInfo.Instance;
 
-    public void InitInfrast()
+    private void RefreshInfrastRoomList()
     {
-        var roomTypes = Enum.GetNames(typeof(InfrastRoomType));
-        var list = new List<KeyValuePair<string, int>>();
-        var roomList = new List<DragItemViewModel>(roomTypes.Length);
-        foreach (var item in roomTypes)
-        {
-            var index = ConfigurationHelper.GetValue("Infrast.Order." + item, -1);
-            list.Add(new KeyValuePair<string, int>(item, index));
-        }
+        var preList = GetTaskConfig<InfrastTask>().RoomList;
+        var set = new HashSet<InfrastRoomType>(preList.Select(i => i.Room));
 
-        list.Sort((x, y) => x.Value.CompareTo(y.Value));
-        for (int i = 0; i < list.Count; ++i)
+        // 房间列表不完整，补全
+        if (set.Count != Enum.GetValues<InfrastRoomType>().Length || set.Count != preList.Count)
         {
-            var item = list[i];
-            if (item.Value != i)
+            var list = new List<InfrastTask.RoomInfo>(preList);
+            foreach (var room in Enum.GetValues<InfrastRoomType>())
             {
-                ConfigurationHelper.SetValue("Infrast.Order." + item.Key, i.ToString());
+                if (!set.Contains(room))
+                {
+                    list.Add(new InfrastTask.RoomInfo(room, false));
+                }
             }
-
-            roomList.Add(new DragItemViewModel(LocalizationHelper.GetString(item.Key), item.Key, "Infrast."));
+            SetTaskConfig<InfrastTask>(t => t.RoomList.SequenceEqual(list), t => t.RoomList = list);
+        }
+        var roomList = new List<InfrastRoomItemViewModel>();
+        foreach (var (room, isEnabled) in GetTaskConfig<InfrastTask>().RoomList)
+        {
+            var item = new InfrastRoomItemViewModel(room, isEnabled);
+            item.PropertyChanged += (sender, args) => {
+                if (args.PropertyName == nameof(InfrastRoomItemViewModel.IsEnabled))
+                {
+                    InfrastOrderSelectionChanged(sender, null);
+                }
+            };
+            roomList.Add(item);
         }
 
-        InfrastItemViewModels = new ObservableCollection<DragItemViewModel>(roomList);
-        InfrastItemViewModels.CollectionChanged += InfrastOrderSelectionChanged;
+        InfrastRoomModels = new ObservableCollection<InfrastRoomItemViewModel>(roomList);
+        InfrastRoomModels.CollectionChanged += InfrastOrderSelectionChanged;
     }
 
     /// <summary>
     /// Gets or sets the infrast item view models.
     /// </summary>
-    public ObservableCollection<DragItemViewModel> InfrastItemViewModels { get; set; } = [];
+    public ObservableCollection<InfrastRoomItemViewModel> InfrastRoomModels { get; set; } = [];
 
     /// <summary>
     /// Gets the list of uses of drones.
@@ -122,37 +131,28 @@ public class InfrastSettingsUserControlModel : TaskViewModel
             new() { Display = LocalizationHelper.GetString("333Time3"), Value = "333_layout_for_Orundum_3_times_a_day.json" },
         ];
 
-    private int _dormThreshold = Convert.ToInt32(ConfigurationHelper.GetValue(ConfigurationKeys.DormThreshold, "30"));
-
     /// <summary>
     /// Gets or sets the threshold to enter dormitory.
     /// </summary>
     public int DormThreshold
     {
-        get => _dormThreshold;
-        set
-        {
-            SetAndNotify(ref _dormThreshold, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.DormThreshold, value.ToString());
-        }
+        get => GetTaskConfig<InfrastTask>().DormThreshold;
+        set => SetTaskConfig<InfrastTask>(t => t.DormThreshold == value, t => t.DormThreshold = value);
     }
 
     /// <summary>
     /// Gets infrast order list.
     /// </summary>
     /// <returns>The infrast order list.</returns>
-    public List<string> GetInfrastOrderList()
-    {
-        return [.. InfrastItemViewModels.Where(i => i.IsChecked).Select(i => i.OriginalName)];
-    }
+    public List<string> GetInfrastOrderList() => [.. InfrastRoomModels.Where(i => i.IsEnabled).Select(i => i.Name)];
 
     // UI 绑定的方法
     [UsedImplicitly]
     public void InfrastItemSelectedAll()
     {
-        foreach (var item in InfrastItemViewModels)
+        foreach (var item in InfrastRoomModels)
         {
-            item.IsChecked = true;
+            item.IsEnabled = true;
         }
     }
 
@@ -160,26 +160,21 @@ public class InfrastSettingsUserControlModel : TaskViewModel
     [UsedImplicitly]
     public void InfrastItemUnselectedAll()
     {
-        foreach (var item in InfrastItemViewModels)
+        foreach (var item in InfrastRoomModels)
         {
-            item.IsChecked = false;
+            item.IsEnabled = false;
         }
     }
 
     /// <summary>
-    /// 实时更新基建换班顺序
+    /// 基建房间顺序、启用变更后存一下
     /// </summary>
     /// <param name="sender">ignored object</param>
     /// <param name="e">ignored NotifyCollectionChangedEventArgs</param>
-    public void InfrastOrderSelectionChanged(object? sender = null, NotifyCollectionChangedEventArgs? e = null)
+    private void InfrastOrderSelectionChanged(object? sender, NotifyCollectionChangedEventArgs? e)
     {
-        _ = (sender, e);
-        int index = 0;
-        foreach (var item in InfrastItemViewModels)
-        {
-            ConfigurationHelper.SetValue("Infrast.Order." + item.OriginalName, index.ToString());
-            ++index;
-        }
+        var list = InfrastRoomModels.Select<InfrastRoomItemViewModel, InfrastTask.RoomInfo>(i => new(i.RoomType, i.IsEnabled)).ToList();
+        SetTaskConfig<InfrastTask>(t => t.RoomList.SequenceEqual(list), t => t.RoomList = list);
     }
 
     /// <summary>
@@ -192,93 +187,57 @@ public class InfrastSettingsUserControlModel : TaskViewModel
         new() { Display = LocalizationHelper.GetString("InfrastModeCustom"), Value = Mode.Custom },
     ];
 
-    // 5.16.0-b1，后续版本直接使用 ConfigurationHelper.GetValue(ConfigurationKeys.InfrastMode, Mode.Normal);
-    private Mode _infrastMode = GetInfrastMode();
-
-    private static Mode GetInfrastMode()
-    {
-        if (ConfigurationHelper.ContainsKey(ConfigurationKeys.CustomInfrastEnabled) &&
-            ConfigurationHelper.DeleteValue(ConfigurationKeys.CustomInfrastEnabled, out string outStr) &&
-            bool.TryParse(outStr, out bool enable) && enable)
-        {
-            ConfigurationHelper.SetValue(ConfigurationKeys.InfrastMode, Mode.Custom.ToString());
-            return Mode.Custom;
-        }
-
-        return ConfigurationHelper.GetValue(ConfigurationKeys.InfrastMode, Mode.Normal);
-    }
-
     /// <summary>
     /// Gets or sets the infrast mode.
     /// </summary>
     public Mode InfrastMode
     {
-        get => _infrastMode;
-        set
-        {
-            if (!SetAndNotify(ref _infrastMode, value))
+        get => GetTaskConfig<InfrastTask>().Mode;
+        set {
+            if (!SetTaskConfig<InfrastTask>(t => t.Mode == value, t => t.Mode = value))
             {
                 return;
             }
 
             ConfigurationHelper.SetValue(ConfigurationKeys.InfrastMode, value.ToString());
-            RefreshCustomInfrastPlan();
-            NotifyOfPropertyChange(nameof(CustomInfrastPlanIndex));
+            ParseCustomInfrastPlan();
         }
     }
-
-    private string _usesOfDrones = ConfigurationHelper.GetValue(ConfigurationKeys.UsesOfDrones, "Money");
 
     /// <summary>
     /// Gets or sets the uses of drones.
     /// </summary>
     public string UsesOfDrones
     {
-        get => _usesOfDrones;
-        set
-        {
-            SetAndNotify(ref _usesOfDrones, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.UsesOfDrones, value);
-        }
+        get => GetTaskConfig<InfrastTask>().UsesOfDrones;
+        set => SetTaskConfig<InfrastTask>(t => t.UsesOfDrones == value, t => t.UsesOfDrones = value);
     }
-
-    private bool _receptionMessageBoardReceive = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.InfrastReceptionMessageBoardReceive, bool.TrueString));
 
     public bool ReceptionMessageBoardReceive
     {
-        get => _receptionMessageBoardReceive;
-        set
-        {
-            SetAndNotify(ref _receptionMessageBoardReceive, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.InfrastReceptionMessageBoardReceive, value.ToString());
-        }
+        get => GetTaskConfig<InfrastTask>().ReceptionMessageBoard;
+        set => SetTaskConfig<InfrastTask>(t => t.ReceptionMessageBoard == value, t => t.ReceptionMessageBoard = value);
     }
-
-    private bool _receptionClueExchange = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.InfrastReceptionClueExchange, bool.TrueString));
 
     public bool ReceptionClueExchange
     {
-        get => _receptionClueExchange;
-        set
-        {
-            SetAndNotify(ref _receptionClueExchange, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.InfrastReceptionClueExchange, value.ToString());
-        }
+        get => GetTaskConfig<InfrastTask>().ReceptionClueExchange;
+        set => SetTaskConfig<InfrastTask>(t => t.ReceptionClueExchange == value, t => t.ReceptionClueExchange = value);
     }
 
-    private bool _continueTraining = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.ContinueTraining, bool.FalseString));
+    public bool ReceptionSendClue
+    {
+        get => GetTaskConfig<InfrastTask>().SendClue;
+        set => SetTaskConfig<InfrastTask>(t => t.SendClue == value, t => t.SendClue = value);
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether to continue training after current training completed.
     /// </summary>
     public bool ContinueTraining
     {
-        get => _continueTraining;
-        set
-        {
-            SetAndNotify(ref _continueTraining, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.ContinueTraining, value.ToString());
-        }
+        get => GetTaskConfig<InfrastTask>().ContinueTraining;
+        set => SetTaskConfig<InfrastTask>(t => t.ContinueTraining == value, t => t.ContinueTraining = value);
     }
 
     private string _defaultInfrast = ConfigurationHelper.GetValue(ConfigurationKeys.DefaultInfrast, UserDefined);
@@ -291,8 +250,7 @@ public class InfrastSettingsUserControlModel : TaskViewModel
     public string DefaultInfrast
     {
         get => _defaultInfrast;
-        set
-        {
+        set {
             SetAndNotify(ref _defaultInfrast, value);
             if (_defaultInfrast != UserDefined)
             {
@@ -306,49 +264,31 @@ public class InfrastSettingsUserControlModel : TaskViewModel
     [PropertyDependsOn(nameof(DefaultInfrast))]
     public bool IsCustomInfrastFileReadOnly => _defaultInfrast != UserDefined;
 
-    private bool _dormFilterNotStationedEnabled = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.DormFilterNotStationedEnabled, bool.TrueString));
-
     /// <summary>
     /// Gets or sets a value indicating whether the not stationed filter in dorm is enabled.
     /// </summary>
     public bool DormFilterNotStationedEnabled
     {
-        get => _dormFilterNotStationedEnabled;
-        set
-        {
-            SetAndNotify(ref _dormFilterNotStationedEnabled, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.DormFilterNotStationedEnabled, value.ToString());
-        }
+        get => GetTaskConfig<InfrastTask>().DormFilterNotStationed;
+        set => SetTaskConfig<InfrastTask>(t => t.DormFilterNotStationed == value, t => t.DormFilterNotStationed = value);
     }
-
-    private bool _dormTrustEnabled = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.DormTrustEnabled, bool.FalseString));
 
     /// <summary>
     /// Gets or sets a value indicating whether trust in dorm is enabled.
     /// </summary>
     public bool DormTrustEnabled
     {
-        get => _dormTrustEnabled;
-        set
-        {
-            SetAndNotify(ref _dormTrustEnabled, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.DormTrustEnabled, value.ToString());
-        }
+        get => GetTaskConfig<InfrastTask>().DormTrustEnabled;
+        set => SetTaskConfig<InfrastTask>(t => t.DormTrustEnabled == value, t => t.DormTrustEnabled = value);
     }
-
-    private bool _originiumShardAutoReplenishment = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.OriginiumShardAutoReplenishment, bool.TrueString));
 
     /// <summary>
     /// Gets or sets a value indicating whether Originium shard auto replenishment is enabled.
     /// </summary>
     public bool OriginiumShardAutoReplenishment
     {
-        get => _originiumShardAutoReplenishment;
-        set
-        {
-            SetAndNotify(ref _originiumShardAutoReplenishment, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.OriginiumShardAutoReplenishment, value.ToString());
-        }
+        get => GetTaskConfig<InfrastTask>().OriginiumShardAutoReplenishment;
+        set => SetTaskConfig<InfrastTask>(t => t.OriginiumShardAutoReplenishment == value, t => t.OriginiumShardAutoReplenishment = value);
     }
 
     /// <summary>
@@ -358,8 +298,7 @@ public class InfrastSettingsUserControlModel : TaskViewModel
     [UsedImplicitly]
     public void SelectCustomInfrastFile()
     {
-        var dialog = new OpenFileDialog
-        {
+        var dialog = new OpenFileDialog {
             Filter = LocalizationHelper.GetString("CustomInfrastFile") + "|*.json",
         };
 
@@ -371,291 +310,243 @@ public class InfrastSettingsUserControlModel : TaskViewModel
         DefaultInfrast = UserDefined;
     }
 
-    private string _customInfrastFile = ConfigurationHelper.GetValue(ConfigurationKeys.CustomInfrastFile, string.Empty);
-
     public string CustomInfrastFile
     {
-        get => _customInfrastFile;
-        set
-        {
-            SetAndNotify(ref _customInfrastFile, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.CustomInfrastFile, value);
-            RefreshCustomInfrastPlan();
+        get => GetTaskConfig<InfrastTask>().Filename;
+        set {
+            SetTaskConfig<InfrastTask>(t => t.Filename == value, t => t.Filename = value);
+            ParseCustomInfrastPlan(true);
 
-            // SetAndNotify 在值没有变化时不会触发 PropertyChanged 事件，所以这里手动触发一下
-            NeedAddCustomInfrastPlanInfo = false;
-            NotifyOfPropertyChange(nameof(CustomInfrastPlanIndex));
-            NeedAddCustomInfrastPlanInfo = true;
+            int index = CustomInfrastPlanList.Any(i => i.Period.Count > 0) ? -1 : 0;
+            if (index != CustomInfrastPlanSelect)
+            {
+                CustomInfrastPlanSelect = index;
+            }
+            else
+            {
+                NotifyOfPropertyChange(nameof(CustomInfrastPlanSelect));
+            }
         }
     }
 
-    public bool NeedAddCustomInfrastPlanInfo { get; set; } = true;
-
-    private int _customInfrastPlanIndex = Convert.ToInt32(ConfigurationHelper.GetValue(ConfigurationKeys.CustomInfrastPlanIndex, "0"));
-
-    public int CustomInfrastPlanIndex
+    /// <summary>
+    /// Gets or sets 手动指定的自定义配置, -1: 时间轮换, 0~n: index轮换
+    /// </summary>
+    public int CustomInfrastPlanSelect
     {
-        get
-        {
-            if (CustomInfrastPlanInfoList.Count == 0)
+        get => GetTaskConfig<InfrastTask>().PlanSelect;
+        set {
+            if (value < -1)
             {
-                return 0;
+                value = -1;
+            }
+            else if (value >= CustomInfrastPlanList.Count)
+            {
+                value = 0;
             }
 
-            if (_customInfrastPlanIndex >= CustomInfrastPlanInfoList.Count || _customInfrastPlanIndex < 0)
-            {
-                CustomInfrastPlanIndex = _customInfrastPlanIndex;
-            }
-
-            return _customInfrastPlanIndex;
-        }
-
-        set
-        {
-            if (CustomInfrastPlanInfoList.Count == 0)
-            {
-                return;
-            }
-
-            if (value >= CustomInfrastPlanInfoList.Count || value < 0)
-            {
-                var count = CustomInfrastPlanInfoList.Count;
-                value = ((value % count) + count) % count;
-                _logger.Warning("CustomInfrastPlanIndex out of range, reset to Index % Count: {Value}", value);
-            }
-
-            if (value != _customInfrastPlanIndex && NeedAddCustomInfrastPlanInfo)
-            {
-                var plan = CustomInfrastPlanInfoList[value];
-                Instances.TaskQueueViewModel.AddLog(plan.Name, UiLogColor.Message);
-
-                foreach (var period in plan.PeriodList)
-                {
-                    Instances.TaskQueueViewModel.AddLog($"[ {period.BeginHour:D2}:{period.BeginMinute:D2} - {period.EndHour:D2}:{period.EndMinute:D2} ]");
-                }
-
-                if (plan.Description != string.Empty)
-                {
-                    Instances.TaskQueueViewModel.AddLog(plan.Description);
-                }
-            }
-
-            SetAndNotify(ref _customInfrastPlanIndex, value);
-            ConfigurationHelper.SetValue(ConfigurationKeys.CustomInfrastPlanIndex, value.ToString());
+            SetTaskConfig<InfrastTask>(t => t.PlanSelect == value, t => t.PlanSelect = value);
         }
     }
 
-    public ObservableCollection<GenericCombinedData<int>> CustomInfrastPlanList { get; } = [];
+    private readonly GenericCombinedData<int> _defaultItem = new() { Display = LocalizationHelper.GetStringFormat("CustomInfrastTimeSchedule", string.Empty), Value = -1 };
 
-    public struct CustomInfrastPlanInfo
+    public List<CustomInfrastConfig.Plan> CustomInfrastPlanList
     {
-        // ReSharper disable InconsistentNaming
-        public int Index;
-
-        public string Name;
-        public string Description;
-        public string DescriptionPost;
-
-        // 有效时间段
-        public struct Period
-        {
-            public int BeginHour;
-            public int BeginMinute;
-            public int EndHour;
-            public int EndMinute;
+        get => GetTaskConfig<InfrastTask>().InfrastPlan;
+        set {
+            SetTaskConfig<InfrastTask>(t => t.InfrastPlan == value, t => t.InfrastPlan = value);
+            RefreshCustomInfrastPlanList();
         }
-
-        public List<Period> PeriodList;
-
-        // ReSharper restore InconsistentNaming
     }
 
-    public List<CustomInfrastPlanInfo> CustomInfrastPlanInfoList { get; } = [];
+    private readonly ObservableCollection<GenericCombinedData<int>> _customInfrastPlanListDisplay = [];
 
-    private bool _customInfrastPlanHasPeriod;
-    private bool _customInfrastInfoOutput;
-
-    public void RefreshCustomInfrastPlan()
+    public ObservableCollection<GenericCombinedData<int>> CustomPlanListDisplay
     {
-        CustomInfrastPlanInfoList.Clear();
-        CustomInfrastPlanList.Clear();
-        _customInfrastPlanHasPeriod = false;
+        get => _customInfrastPlanListDisplay;
+    }
 
-        if (InfrastMode != Mode.Custom)
+    public void ParseCustomInfrastPlan(bool output = false)
+    {
+        if (InfrastMode != Mode.Custom || !File.Exists(CustomInfrastFile))
         {
-            return;
-        }
-
-        if (!File.Exists(CustomInfrastFile))
-        {
+            CustomInfrastPlanList = [];
             return;
         }
 
         try
         {
             string jsonStr = File.ReadAllText(CustomInfrastFile);
-            var root = (JObject?)JsonConvert.DeserializeObject(jsonStr);
-
-            if (root != null && _customInfrastInfoOutput && root.TryGetValue("title", out var title))
+            if (JsonConvert.DeserializeObject<CustomInfrastConfig>(jsonStr) is not CustomInfrastConfig root)
             {
-                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CustomInfrastTitle"), UiLogColor.Message);
-                Instances.TaskQueueViewModel.AddLog($"title: {title}", UiLogColor.Info);
-                if (root.TryGetValue("description", out var value))
+                throw new JsonException("DeserializeObject returned null");
+            }
+
+            if (output)
+            {
+                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CustomInfrastTitle"), UiLogColor.Message, splitMode: UI.TaskQueueViewModel.LogCardSplitMode.Before);
+                Instances.TaskQueueViewModel.AddLog($"title: {root.Title}", UiLogColor.Info);
+                Instances.TaskQueueViewModel.AddLog($"description: {root.Description}", UiLogColor.Info);
+            }
+
+            var planList = root.Plans;
+            var list = new List<CustomInfrastConfig.Plan>();
+            var now = TimeOnly.FromDateTime(DateTime.Now.ToLocalTime());
+            for (int i = 0; i < planList.Count; ++i)
+            {
+                var plan = planList[i];
+                plan.Index = i;
+                plan.Name ??= "Plan " + ((char)('A' + i));
+                plan.Description ??= string.Empty;
+                plan.DescriptionPost ??= string.Empty;
+                list.Add(plan);
+
+                if (output)
                 {
-                    Instances.TaskQueueViewModel.AddLog($"description: {value}", UiLogColor.Info);
+                    Instances.TaskQueueViewModel.AddLog(plan.Name, UiLogColor.Message);
+                    foreach (var period in plan.Period)
+                    {
+                        Instances.TaskQueueViewModel.AddLog($"[ {period[0]:HH:mm} - {period[1]:HH:mm} ]");
+                    }
+
+                    Instances.TaskQueueViewModel.AddLog(plan.Description);
+                    Instances.TaskQueueViewModel.AddLog(plan.DescriptionPost);
                 }
             }
 
-            var planList = (JArray?)root?["plans"];
-            if (planList != null)
+            if (list.Any(i => i.Period.Count > 0) && list.Any(p => p.Period.Count == 0))
             {
-                for (int i = 0; i < planList.Count; ++i)
-                {
-                    var plan = (JObject)planList[i];
-                    string display = plan.TryGetValue("name", out var name) ? name.ToString() : ("Plan " + ((char)('A' + i)));
-                    CustomInfrastPlanList.Add(new GenericCombinedData<int> { Display = display, Value = i });
-                    string desc = plan.TryGetValue("description", out var description) ? description.ToString() : string.Empty;
-                    string descPost = plan.TryGetValue("description_post", out var descriptionPost) ? descriptionPost.ToString() : string.Empty;
-
-                    if (_customInfrastInfoOutput)
-                    {
-                        Instances.TaskQueueViewModel.AddLog(display, UiLogColor.Message);
-                    }
-
-                    var periodList = new List<CustomInfrastPlanInfo.Period>();
-                    if (plan.TryGetValue("period", out var token))
-                    {
-                        var periodArray = (JArray)token;
-                        foreach (var periodJson in periodArray)
-                        {
-                            var period = default(CustomInfrastPlanInfo.Period);
-                            var beginTime = periodJson[0]?.ToString();
-                            if (beginTime != null)
-                            {
-                                var beginSplit = beginTime.Split(':');
-                                period.BeginHour = int.Parse(beginSplit[0]);
-                                period.BeginMinute = int.Parse(beginSplit[1]);
-                            }
-
-                            var endTime = periodJson[1]?.ToString();
-                            if (endTime != null)
-                            {
-                                var endSplit = endTime.Split(':');
-                                period.EndHour = int.Parse(endSplit[0]);
-                                period.EndMinute = int.Parse(endSplit[1]);
-                            }
-
-                            periodList.Add(period);
-                            if (_customInfrastInfoOutput)
-                            {
-                                Instances.TaskQueueViewModel.AddLog($"[ {period.BeginHour:D2}:{period.BeginMinute:D2} - {period.EndHour:D2}:{period.EndMinute:D2} ]");
-                            }
-                        }
-
-                        if (periodList.Count != 0)
-                        {
-                            _customInfrastPlanHasPeriod = true;
-                        }
-                    }
-
-                    if (_customInfrastInfoOutput && desc != string.Empty)
-                    {
-                        Instances.TaskQueueViewModel.AddLog(desc);
-                    }
-
-                    if (_customInfrastInfoOutput && descPost != string.Empty)
-                    {
-                        Instances.TaskQueueViewModel.AddLog(descPost);
-                    }
-
-                    CustomInfrastPlanInfoList.Add(new CustomInfrastPlanInfo
-                    {
-                        Index = i,
-                        Name = display,
-                        Description = desc,
-                        DescriptionPost = descPost,
-                        PeriodList = periodList,
-                    });
-                }
+                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CustomInfrastFileHasPlanNoPeriod"), UiLogColor.Warning);
             }
 
-            _customInfrastInfoOutput = true;
+            Instances.TaskQueueViewModel.AddLog(string.Empty, splitMode: UI.TaskQueueViewModel.LogCardSplitMode.After);
+
+            CustomInfrastPlanList = [.. list];
         }
         catch (Exception)
         {
-            _customInfrastInfoOutput = true;
+            CustomInfrastPlanList = [];
             Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CustomInfrastFileParseFailed"), UiLogColor.Error);
-            return;
         }
-
-        RefreshCustomInfrastPlanIndexByPeriod();
     }
 
-    public void RefreshCustomInfrastPlanIndexByPeriod()
+    private void RefreshCustomInfrastPlanList()
     {
-        if (InfrastMode != Mode.Custom || !_customInfrastPlanHasPeriod || CustomInfrastPlanInfoList.Count == 0)
+        _customInfrastPlanListDisplay.Clear();
+        if (CustomInfrastPlanList.Any(i => i.Period.Count > 0))
         {
-            return;
+            var now = TimeOnly.FromDateTime(DateTime.Now.ToLocalTime());
+            var plan = CustomInfrastPlanList.FirstOrDefault(i => i.Period.Any(p => p[0] <= now && now <= p[1]));
+            plan ??= CustomInfrastPlanList.FirstOrDefault();
+            plan ??= new();
+            _defaultItem.Display = LocalizationHelper.GetStringFormat("CustomInfrastTimeSchedule", plan.Name ?? "???");
+            _customInfrastPlanListDisplay.Add(_defaultItem);
         }
 
-        if (!_runningState.GetIdle() &&
-             Instances.AsstProxy.TasksStatus.FirstOrDefault(i => i.Value.Type == AsstProxy.TaskType.Infrast).Value.Status != TaskStatus.Completed)
+        foreach (var item in CustomInfrastPlanList)
         {
-            return;
+            _customInfrastPlanListDisplay.Add(new GenericCombinedData<int> {
+                Display = item.Name,
+                Value = item.Index,
+            });
         }
 
-        var now = DateTime.Now;
-
-        if (CustomInfrastPlanIndex >= CustomInfrastPlanInfoList.Count || CustomInfrastPlanIndex < 0)
+        if (_customInfrastPlanListDisplay.Any(i => i.Value == CustomInfrastPlanSelect))
         {
-            CustomInfrastPlanIndex = 0;
+            NotifyOfPropertyChange(nameof(CustomInfrastPlanSelect));
         }
-
-        var currentPlan = CustomInfrastPlanInfoList.First(p => p.Index == CustomInfrastPlanIndex);
-        foreach (var period in currentPlan.PeriodList)
+        else
         {
-            if (TimeLess(period.BeginHour, period.BeginMinute, now.Hour, now.Minute) &&
-                TimeLess(now.Hour, now.Minute, period.EndHour, period.EndMinute))
-            {
-                return; // 当前 index 仍在有效时间内，不需要切换
-            }
+            CustomInfrastPlanSelect = -1;
         }
-
-        foreach (var plan in CustomInfrastPlanInfoList.Where(
-                     plan => plan.PeriodList.Any(
-                         period => TimeLess(period.BeginHour, period.BeginMinute, now.Hour, now.Minute) &&
-                                   TimeLess(now.Hour, now.Minute, period.EndHour, period.EndMinute))))
-        {
-            CustomInfrastPlanIndex = plan.Index;
-            return;
-        }
-
-        return;
-
-        static bool TimeLess(int lHour, int lMin, int rHour, int rMin) => (lHour != rHour) ? (lHour < rHour) : (lMin <= rMin);
     }
 
-    public void IncreaseCustomInfrastPlanIndex()
+    /// <summary>
+    /// 刷新自定义基建计划第一个时间轮换项显示, 每分钟调用一次
+    /// </summary>
+    public void RefreshInfrastTimeRotationDisplay()
     {
-        if (InfrastMode != Mode.Custom || _customInfrastPlanHasPeriod || CustomInfrastPlanInfoList.Count == 0)
+        if (InfrastMode != Mode.Custom || !CustomInfrastPlanList.Any(i => i.Period.Count > 0) || CustomPlanListDisplay.Count == 0 || CustomPlanListDisplay[0].Value != -1)
+        {
+            return;
+        }
+
+        var now = TimeOnly.FromDateTime(DateTime.Now.ToLocalTime());
+        var plan = CustomInfrastPlanList.FirstOrDefault(i => i.Period.Any(p => p[0] <= now && now <= p[1]));
+        plan ??= CustomInfrastPlanList.FirstOrDefault();
+        plan ??= new();
+        _defaultItem.Display = LocalizationHelper.GetStringFormat("CustomInfrastTimeSchedule", plan.Name ?? "???");
+    }
+
+    /// <summary>
+    /// 基建任务完成一次后, 自动切换到下一个; 仅非时间轮换有效
+    /// </summary>
+    /// <param name="infrast">基建任务</param>
+    public static void IncreaseCustomInfrastPlanIndex(InfrastTask? infrast)
+    {
+        if (infrast is null || infrast.Mode != Mode.Custom || infrast.PlanSelect == -1 || infrast.PlanSelect >= infrast.InfrastPlan.Count)
         {
             return;
         }
 
         Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CustomInfrastPlanIndexAutoSwitch"), UiLogColor.Message);
-        var prePlanPostDesc = CustomInfrastPlanInfoList[CustomInfrastPlanIndex].DescriptionPost;
-        if (prePlanPostDesc != string.Empty)
-        {
-            Instances.TaskQueueViewModel.AddLog(prePlanPostDesc);
-        }
+        Instances.TaskQueueViewModel.AddLog(infrast.InfrastPlan[infrast.PlanSelect].DescriptionPost);
 
-        ++CustomInfrastPlanIndex;
+        ++infrast.PlanSelect;
+        if (infrast.PlanSelect >= infrast.InfrastPlan.Count)
+        {
+            infrast.PlanSelect = 0;
+        }
+        if (TaskSettingVisibilityInfo.CurrentTask == infrast)
+        {
+            Instance.NotifyOfPropertyChange(nameof(CustomInfrastPlanSelect));
+        }
+        OutputCurrentCustomPlanInfo(infrast);
     }
 
+    private static void OutputCurrentCustomPlanInfo(InfrastTask infrast)
+    {
+        if (infrast.Mode != Mode.Custom || infrast.PlanSelect >= infrast.InfrastPlan.Count)
+        {
+            return;
+        }
+
+        var now = TimeOnly.FromDateTime(DateTime.Now.ToLocalTime());
+        CustomInfrastConfig.Plan? plan;
+        if (infrast.PlanSelect == -1)
+        {
+            plan = infrast.InfrastPlan.FirstOrDefault(i => i.Period.Any(p => p[0] <= now && now <= p[1]));
+            plan ??= infrast.InfrastPlan.First();
+        }
+        else
+        {
+            plan = infrast.InfrastPlan[infrast.PlanSelect];
+        }
+
+        Instances.TaskQueueViewModel.AddLog(plan.Name, UiLogColor.Message);
+        foreach (var period in plan.Period)
+        {
+            Instances.TaskQueueViewModel.AddLog($"[ {period[0]:HH:mm} - {period[1]:HH:mm} ]");
+        }
+
+        Instances.TaskQueueViewModel.AddLog(plan.Description);
+    }
+
+    public override void RefreshUI(BaseTask baseTask)
+    {
+        if (baseTask is InfrastTask)
+        {
+            RefreshInfrastRoomList();
+            RefreshCustomInfrastPlanList();
+            Refresh();
+        }
+    }
+
+    [Obsolete("使用SerializeTask作为代替")]
     public override (AsstTaskType Type, JObject Params) Serialize()
     {
-        return new AsstInfrastTask
-        {
+        var task = new AsstInfrastTask {
             Mode = InfrastMode,
             Facilitys = GetInfrastOrderList(),
             UsesOfDrones = UsesOfDrones,
@@ -666,9 +557,92 @@ public class InfrastSettingsUserControlModel : TaskViewModel
             OriginiumShardAutoReplenishment = OriginiumShardAutoReplenishment,
             ReceptionMessageBoard = ReceptionMessageBoardReceive,
             ReceptionClueExchange = ReceptionClueExchange,
+            ReceptionSendClue = ReceptionSendClue,
             Filename = CustomInfrastFile,
-            PlanIndex = CustomInfrastPlanIndex,
-        }.Serialize();
+        };
+
+        if (InfrastMode != Mode.Custom)
+        {
+        }
+        else if (CustomInfrastPlanSelect != -1 && CustomInfrastPlanList.Count <= CustomInfrastPlanSelect)
+        {
+            throw new InvalidOperationException("CustomInfrastPlanSelect is out of range");
+        }
+        else if (CustomInfrastPlanSelect >= 0)
+        {
+            task.PlanIndex = CustomInfrastPlanSelect;
+        }
+        else
+        {
+            var now = TimeOnly.FromDateTime(DateTime.Now.ToLocalTime());
+            if (CustomInfrastPlanList.FirstOrDefault(i => i.Period.Any(p => p[0] <= now && now <= p[1])) is { } plan)
+            {
+                task.PlanIndex = plan.Index;
+            }
+            else
+            {
+                task.PlanIndex = 0;
+                _logger.Warning("No valid plan found for current time, use PlanIndex 0");
+                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CustomInfrastPlanNotFoundByPeriod"), UiLogColor.Error);
+            }
+        }
+
+        return task.Serialize();
+    }
+
+    public override bool? SerializeTask(BaseTask? baseTask, int? taskId = null)
+    {
+        if (baseTask is not InfrastTask infrast)
+        {
+            return null;
+        }
+
+        var task = new AsstInfrastTask {
+            Mode = infrast.Mode,
+            Facilitys = [.. infrast.RoomList.Where(i => i.IsEnabled).Select(i => i.Room.ToString())],
+            UsesOfDrones = infrast.UsesOfDrones,
+            ContinueTraining = infrast.ContinueTraining,
+            DormThreshold = infrast.DormThreshold / 100.0,
+            DormFilterNotStationedEnabled = infrast.DormFilterNotStationed,
+            DormTrustEnabled = infrast.DormTrustEnabled,
+            OriginiumShardAutoReplenishment = infrast.OriginiumShardAutoReplenishment,
+            ReceptionMessageBoard = infrast.ReceptionMessageBoard,
+            ReceptionClueExchange = infrast.ReceptionClueExchange,
+            ReceptionSendClue = infrast.SendClue,
+            Filename = infrast.Filename,
+        };
+
+        if (infrast.Mode != Mode.Custom)
+        {
+        }
+        else if (infrast.PlanSelect != -1 && infrast.InfrastPlan.Count <= infrast.PlanSelect)
+        {
+            throw new InvalidOperationException(LocalizationHelper.GetString("CustomInfrastPlanSelectOutOfIndex"));
+        }
+        else if (infrast.PlanSelect >= 0)
+        {
+            task.PlanIndex = infrast.PlanSelect;
+        }
+        else
+        {
+            var now = TimeOnly.FromDateTime(DateTime.Now.ToLocalTime());
+            if (infrast.InfrastPlan.FirstOrDefault(i => i.Period.Any(p => p[0] <= now && now <= p[1])) is { } plan)
+            {
+                task.PlanIndex = plan.Index;
+            }
+            else
+            {
+                task.PlanIndex = 0;
+                _logger.Warning("No valid plan found for current time, use PlanIndex 0");
+                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CustomInfrastFileHasPlanNoPeriod"), UiLogColor.Error);
+            }
+        }
+
+        return taskId switch {
+            int id when id > 0 => Instances.AsstProxy.AsstSetTaskParamsEncoded(id, task),
+            null => Instances.AsstProxy.AsstAppendTaskWithEncoding(TaskType.Infrast, task),
+            _ => null,
+        };
     }
 }
 

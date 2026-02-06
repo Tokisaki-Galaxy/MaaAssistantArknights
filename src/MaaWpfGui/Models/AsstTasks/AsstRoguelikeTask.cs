@@ -180,6 +180,11 @@ public class AsstRoguelikeTask : AsstBaseTask
     public bool DeepExplorationAutoIterate { get; set; }
 
     /// <summary>
+    /// Gets or sets FindPlaytime 模式的目标常乐节点子类型
+    /// </summary>
+    public RoguelikeBoskySubNodeType FindPlaytimeTarget { get; set; } = RoguelikeBoskySubNodeType.Ling;
+
+    /// <summary>
     /// Gets or sets a value indicating whether 是否在五层BOSS前停下来
     /// </summary>
     public bool StopAtFinalBoss { get; set; }
@@ -190,9 +195,9 @@ public class AsstRoguelikeTask : AsstBaseTask
     public bool StopAtMaxLevel { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether 是否使用刷钱种子
+    /// Gets or sets 开局时使用的种子
     /// </summary>
-    public bool StartWithSeed { get; set; }
+    public string? StartWithSeed { get; set; }
 
     public override (AsstTaskType TaskType, JObject Params) Serialize()
     {
@@ -253,6 +258,11 @@ public class AsstRoguelikeTask : AsstBaseTask
             taskParams["deep_exploration_auto_iterate"] = DeepExplorationAutoIterate;
         }
 
+        if (Mode == RoguelikeMode.FindPlaytime)
+        {
+            taskParams["find_playTime_target"] = (int)FindPlaytimeTarget;
+        }
+
         if (SamiFirstFloorFoldartal && SamiStartFloorFoldartal.Length > 0)
         {
             taskParams["first_floor_foldartal"] = SamiStartFloorFoldartal;
@@ -271,6 +281,10 @@ public class AsstRoguelikeTask : AsstBaseTask
         taskParams["use_support"] = UseSupport;
         taskParams["use_nonfriend_support"] = UseSupportNonFriend;
         taskParams["refresh_trader_with_dice"] = Theme == RoguelikeTheme.Mizuki && RefreshTraderWithDice;
+        if (!string.IsNullOrEmpty(StartWithSeed))
+        {
+            taskParams["start_with_seed"] = StartWithSeed;
+        }
 
         return (TaskType, taskParams);
     }

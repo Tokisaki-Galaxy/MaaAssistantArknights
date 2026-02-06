@@ -12,8 +12,8 @@
 #include "Vision/OCRer.h"
 
 #include <algorithm>
+#include <boost/regex.hpp>
 #include <ranges>
-#include <regex>
 
 namespace asst::recruit_calc
 {
@@ -985,15 +985,15 @@ void asst::AutoRecruitTask::upload_to_penguin(Rng&& tags)
             });
     }
     body["source"] = UploadDataSource;
-    body["version"] = Version;
+    body["version"] = MAA_VERSION;
 
     std::unordered_map<std::string, std::string> extra_headers;
     if (!m_penguin_id.empty()) {
         extra_headers = { { "authorization", "PenguinID " + m_penguin_id } };
     }
 
-    std::string version = Version;
-    if (version.find("DEBUG VERSION") != std::string::npos) {
+    std::string version = MAA_VERSION;
+    if (version.find("DEBUG_VERSION") != std::string::npos) {
         version = "dev";
     }
     else if (!version.empty() && version[0] == 'v') {
@@ -1022,8 +1022,8 @@ void asst::AutoRecruitTask::upload_to_yituliu(const json::value& details)
     json::value body = details;
     body["server"] = m_server;
     body["source"] = UploadDataSource;
-    body["version"] = Version;
-    body["uuid"] = /* m_yituliu_id */ m_penguin_id;
+    body["version"] = MAA_VERSION;
+    body["uuid"] = m_yituliu_id;
 
     if (!m_report_yituliu_task_ptr) {
         m_report_yituliu_task_ptr = std::make_shared<ReportDataTask>(report_yituliu_callback, this);

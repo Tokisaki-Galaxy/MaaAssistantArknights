@@ -62,6 +62,8 @@
     <system:String x:Key="ExternalNotificationDiscordBotToken">Bot Token</system:String>
     <system:String x:Key="ExternalNotificationDiscordUserId">User ID</system:String>
     <system:String x:Key="ExternalNotificationDiscordWebhookUrl">Webhook URL</system:String>
+    <system:String x:Key="ExternalNotificationDingTalkAccessToken">Access Token</system:String>
+    <system:String x:Key="ExternalNotificationDingTalkSecret">Secret</system:String>
     <system:String x:Key="ExternalNotificationTelegramBotToken">Bot Token</system:String>
     <system:String x:Key="ExternalNotificationTelegramChatId">Chat ID</system:String>
     <system:String x:Key="ExternalNotificationTelegramTopicId">Topic ID (Optional)</system:String>
@@ -69,6 +71,8 @@
     <system:String x:Key="ExternalNotificationQmsgKey">Qmsg Key</system:String>
     <system:String x:Key="ExternalNotificationQmsgUser">User QQ</system:String>
     <system:String x:Key="ExternalNotificationQmsgBot">Bot QQ</system:String>
+    <system:String x:Key="ExternalNotificationGotifyServer">Server URL</system:String>
+    <system:String x:Key="ExternalNotificationGotifyToken">Application Token</system:String>
     <system:String x:Key="ExternalNotificationCustomWebhook">Custom Webhook</system:String>
     <system:String x:Key="ExternalNotificationCustomWebhookUrl">Webhook URL</system:String>
     <system:String x:Key="ExternalNotificationCustomWebhookBody">Message body template</system:String>
@@ -78,9 +82,12 @@
     <system:String x:Key="GpuOptionDisable">Don’t use</system:String>
     <system:String x:Key="GpuOptionSystemDefault">System default GPU</system:String>
     <system:String x:Key="GpuDeprecatedMessage">The selected GPU ({0}) for inference acceleration has known compatibility issues, which may cause recognition errors, misalignment, or other unexpected results.\n\nIt is recommended to switch to a different GPU in ｢{key=Settings} - {key=PerformanceSettings}｣.</system:String>
+    <system:String x:Key="GpuDriverOutdatedMessage">The driver version ({1}, release date: {2}) of the selected GPU ({0}) for inference acceleration is over two years old, which may cause compatibility issues.\n\nIt is recommended to update the graphics driver or switch to a different GPU in ｢{key=Settings} - {key=PerformanceSettings}｣.</system:String>
     <system:String x:Key="GpuAllowDeprecated">Allow deprecated GPU</system:String>
     <system:String x:Key="Copy">Copy</system:String>
     <!--  Settings Guide  -->
+    <system:String x:Key="LeftClick">Left Click</system:String>
+    <system:String x:Key="RightClick">Right Click</system:String>
     <system:String x:Key="TaskSettings">Task Settings</system:String>
     <system:String x:Key="SettingsGuide">Settings Guide</system:String>
     <system:String x:Key="GuideStepClarification" xml:space="preserve">Make sure ADB is enabled:
@@ -90,10 +97,22 @@
     <system:String x:Key="NextGuide">Next</system:String>
     <system:String x:Key="DoneGuide">Done</system:String>
     <system:String x:Key="ToolTipGuide">Prompt appears when hovered↓→</system:String>
-    <system:String x:Key="TaskGuide">↑Task</system:String>
-    <system:String x:Key="OftenUsedGuide">↓Often Used</system:String>
-    <system:String x:Key="SometimesUsedGuide">Sometimes Used↑</system:String>
+    <system:String x:Key="TaskGuide">↑ Task</system:String>
+    <system:String x:Key="OftenUsedGuide">↓ Often Used</system:String>
+    <system:String x:Key="SometimesUsedGuide">Sometimes Used ↑</system:String>
     <system:String x:Key="LinkStartGuide">← Start Tasks</system:String>
+    <system:String x:Key="RightClickRenameDelete">↓ Right Click to Rename/Delete</system:String>
+    <system:String x:Key="UserGuide">User Guide</system:String>
+    <system:String x:Key="GuideDocumentationTitle">📖 Website &amp; Documentation</system:String>
+    <system:String x:Key="GuideDocumentationPath">You can find MAA's official website and complete documentation at "{key=Settings} - {key=AboutUs} - {key=Website}".</system:String>
+    <system:String x:Key="GuideIssueReportSubtitle">🔧 When You Encounter Problems</system:String>
+    <system:String x:Key="GuideViewLog">You can go to "{key=Settings} - {key=IssueReport} - {key=OpenDebugFolder}" to view logs and understand the specific cause of the error.</system:String>
+    <system:String x:Key="GuideGenerateReport">Please use "{key=Settings} - {key=IssueReport} - {key=GenerateSupportPayload}" to generate an error report, and click the blue "{key=Issue}" link to submit feedback.</system:String>
+    <system:String x:Key="GuideGitHubIssueTitle">⚠️ Feedback Guidelines</system:String>
+    <system:String x:Key="GuideGitHubIssueDescription">MAA Team only accepts feedback submitted by users through GitHub platform following the Issue template specifications, and reserves the right to decide on all feedback.</system:String>
+    <system:String x:Key="GuideOpenSourceTitle">💡 Participate in Open Source</system:String>
+    <system:String x:Key="GuideOpenSourceDescription">As an open source project, users can participate in MAA's development on GitHub platform under the AGPL-3.0 license. MAA Team encourages users to contribute valuable code instead of just reporting issues.</system:String>
+    <system:String x:Key="GuideUserAgreement">By using MAA, you agree to comply with the "User Agreement". The complete agreement can be found in the link at the bottom of the official website.</system:String>
     <!--  !Settings Guide  -->
     <system:String x:Key="Dorm">Dormitory</system:String>
     <system:String x:Key="Mfg">Factory</system:String>
@@ -117,6 +136,9 @@
     <system:String x:Key="OriginiumShardAutoReplenishment">Originium Shard auto replenishment</system:String>
     <system:String x:Key="InfrastReceptionMessageBoardReceive">Credit collection from message board in Reception Room</system:String>
     <system:String x:Key="InfrastReceptionClueExchange">Conduct Clue Exchange</system:String>
+    <system:String x:Key="ClueExchangeUnlocked">Clue Exchange Unlocked</system:String>
+    <system:String x:Key="InfrastReceptionSendClue">Send Clues</system:String>
+    <system:String x:Key="ReceptionOptionsRequireInfrast">The following functions require configuration and execution within {key=Infrast}.</system:String>
     <system:String x:Key="ContinueTraining">After training is complete, try to continue mastering the current skill</system:String>
     <system:String x:Key="TrainingIdle">Training room is vacant</system:String>
     <system:String x:Key="TrainingCompleted">Training completed</system:String>
@@ -138,7 +160,11 @@ To customize rotation schedules, please use ｢{key=InfrastModeCustom}｣.</syst
     <system:String x:Key="243Time4">243 4 times a day</system:String>
     <system:String x:Key="333Time3">333 3 times a day</system:String>
     <system:String x:Key="CustomInfrastFile">Base Configuration</system:String>
+    <system:String x:Key="CustomInfrastTimeSchedule">Rotation time ({0})</system:String>
     <system:String x:Key="CustomInfrastFileParseFailed">Base Configuration Parsing Error!</system:String>
+    <system:String x:Key="CustomInfrastFileHasPlanNoPeriod">Some rotations in the {Key=InfrastModeCustom} configuration have time periods set, which may lead to unexpected behavior. To set shift change time periods, ensure all rotations have time periods configured; otherwise, leave them all blank.</system:String>
+    <system:String x:Key="CustomInfrastPlanSelectOutOfIndex">Custom infrast plan selection is out of index</system:String>
+    <system:String x:Key="CustomInfrastPlanNotFoundByPeriod">No plan was found for the specified time period in the custom infrastructure configuration.</system:String>
     <system:String x:Key="CustomInfrastTitle" xml:space="preserve">Base Configuration:&#160;</system:String>
     <system:String x:Key="CustomInfrastPlan">Base Plan</system:String>
     <system:String x:Key="CustomInfrastPlanToolTip">
@@ -153,6 +179,7 @@ To customize rotation schedules, please use ｢{key=InfrastModeCustom}｣.</syst
     <system:String x:Key="Nox">Nox</system:String>
     <system:String x:Key="XYAZ">MEmu</system:String>
     <system:String x:Key="WSA">Old version of WSA</system:String>
+    <system:String x:Key="PC">PC Client</system:String>
     <system:String x:Key="MaaTouch">MaaTouch</system:String>
     <system:String x:Key="Compatible">Compatible Mode</system:String>
     <system:String x:Key="SecondResolution">2nd Resolution</system:String>
@@ -161,11 +188,17 @@ To customize rotation schedules, please use ｢{key=InfrastModeCustom}｣.</syst
     <system:String x:Key="InfrastThresholdTip">If custom shifts are enabled, this field is only valid for rooms with autofill and {key=Operator} groups</system:String>
     <system:String x:Key="RoguelikeStrategyExp">Gain Experience Points, clear as many nodes as possible</system:String>
     <system:String x:Key="RoguelikeStrategyGold">Invests coins, exits automatically after investment completes</system:String>
-    <system:String x:Key="RoguelikeStrategyLastReward">Grind to obtain Hot Water Kettle or Elite II {key=Operator}s</system:String>
+    <system:String x:Key="RoguelikeStrategyLastReward">Grind to obtain Hot Water Kettle or Elite 2 {key=Operator}s</system:String>
     <system:String x:Key="RoguelikeStrategyCollapse">Farm collapse paradigms, restart immediately after encountering a non-rare collapse paradigm</system:String>
     <system:String x:Key="RoguelikeCollectibleModeSquad">Squad to get collectibles</system:String>
     <system:String x:Key="RoguelikeStrategyMonthlySquad">Grind Monthly Squad, clear as far as possible</system:String>
     <system:String x:Key="RoguelikeStrategyDeepExploration">Grind Deep Investigation, clear as far as possible</system:String>
+    <system:String x:Key="RoguelikeStrategyFindPlaytime">Farm playtime nodes, enter the cave on the first floor, restart if target node not found</system:String>
+    <system:String x:Key="RoguelikeFindPlaytimeTarget">Target playtime node</system:String>
+    <system:String x:Key="RoguelikePlaytimeLing">Ling - Resounding Words</system:String>
+    <system:String x:Key="RoguelikePlaytimeShu">Shu - Reap What You Sow</system:String>
+    <system:String x:Key="RoguelikePlaytimeNian">Nian - Mahjong Trio</system:String>
+    <system:String x:Key="RoguelikeJieGardenTargetFound">Target playtime node found {0}</system:String>
     <system:String x:Key="StartingSquad">Starting Squad</system:String>
     <system:String x:Key="StartingRoles">Starting Roles</system:String>
     <system:String x:Key="StartingCoreChar">Starting {key=Operator}</system:String>
@@ -184,7 +217,8 @@ To customize rotation schedules, please use ｢{key=InfrastModeCustom}｣.</syst
     <system:String x:Key="RoguelikeDelayAbortUntilCombatComplete">Don't abort Auto IS until the end of battle</system:String>
     <system:String x:Key="RoguelikeStopAtFinalBoss">Stop before final boss</system:String>
     <system:String x:Key="RoguelikeStopAtMaxLevel">Stop when max level is achieved</system:String>
-    <system:String x:Key="RoguelikeStartWithSeed">Enable Investment Seed</system:String>
+    <system:String x:Key="RoguelikeStartWithSeed">Start with seed</system:String>
+    <!--<system:String x:Key="RoguelikeStartWithSeed">Enable Investment Seed</system:String>-->
     <system:String x:Key="RoguelikeMonthlySquadAutoIterate">Monthly Squad Auto-Switch</system:String>
     <system:String x:Key="RoguelikeMonthlySquadCheckComms">Monthly Squad Communication</system:String>
     <system:String x:Key="RoguelikeDeepExplorationAutoIterate">Deep Investigation Auto-Switch</system:String>
@@ -207,12 +241,18 @@ To customize rotation schedules, please use ｢{key=InfrastModeCustom}｣.</syst
     <system:String x:Key="IS4NewSquad6">Ingots Squad</system:String>
     <system:String x:Key="IS4NewSquad7">Collection Squad</system:String>
     <system:String x:Key="IS4NewSquad8">Top Gun Squad</system:String>
-    <system:String x:Key="IS5NewSquad1">High Ground Breakthrough Squad (高台突破分队)</system:String>
-    <system:String x:Key="IS5NewSquad2">Ground Breakthrough Squad (地面突破分队)</system:String>
-    <system:String x:Key="IS5NewSquad3">Tourist Squad (游客分队)</system:String>
-    <system:String x:Key="IS5NewSquad4">Sisuitai Squad (司岁台分队)</system:String>
-    <system:String x:Key="IS5NewSquad5">Tianshifu Squad (天师府分队)</system:String>
-    <system:String x:Key="SpecialForceSquad">Special Service Squad (特勤分队)</system:String>
+    <system:String x:Key="IS5NewSquad1">High Ground Breaching Squad</system:String>
+    <system:String x:Key="IS5NewSquad2">Ground Breaching Squad</system:String>
+    <system:String x:Key="IS5NewSquad3">Tourist Squad</system:String>
+    <system:String x:Key="IS5NewSquad4">Sui Regulator Squad</system:String>
+    <system:String x:Key="IS5NewSquad5">Tianshi Bureau Squad</system:String>
+    <system:String x:Key="IS5NewSquad6">Cluster of Blooms Squad (花团锦簇分队)</system:String>
+    <system:String x:Key="IS5NewSquad7">Daring Gambit Squad (棋行险着分队)</system:String>
+    <system:String x:Key="IS5NewSquad8">Echoes of Time Squad (岁影回音分队)</system:String>
+    <system:String x:Key="IS5NewSquad9">Agent Squad (代理人分队)</system:String>
+    <system:String x:Key="IS5NewSquad10">Knowledge Squad (知学分队)</system:String>
+    <system:String x:Key="IS5NewSquad11">Merchant Squad (商贾分队)</system:String>
+    <system:String x:Key="SpecialForceSquad">Special Squad</system:String>
     <system:String x:Key="LeaderSquad">Leader Squad</system:String>
     <system:String x:Key="GatheringSquad">Gathering Squad</system:String>
     <system:String x:Key="SupportSquad">Support Squad</system:String>
@@ -224,18 +264,18 @@ To customize rotation schedules, please use ｢{key=InfrastModeCustom}｣.</syst
     <system:String x:Key="ResearchSquad">Research Squad</system:String>
     <system:String x:Key="First-ClassSquad">First-Class Squad</system:String>
     <system:String x:Key="DefaultRoles">Default Roles</system:String>
-    <system:String x:Key="FirstMoveAdvantage">First Move Advantage</system:String>
-    <system:String x:Key="SlowAndSteadyWinsTheRace">Slow and Steady Wins the Race</system:String>
-    <system:String x:Key="OvercomingYourWeaknesses">Overcoming Your Weaknesses</system:String>
-    <system:String x:Key="AsYourHeartDesires">As Your Heart Desires</system:String>
-    <system:String x:Key="FlexibleDeployment">灵活部署（先锋、辅助、特种）</system:String>
-    <system:String x:Key="Unbreakable">坚不可摧（重装、术师、医疗）</system:String>
+    <system:String x:Key="FirstMoveAdvantage">First Move Advantage (Vanguard, Sniper, Specialist)</system:String>
+    <system:String x:Key="SlowAndSteadyWinsTheRace">Slow and Steady Wins the Race (Defender, Caster, Sniper)</system:String>
+    <system:String x:Key="OvercomingYourWeaknesses">Overcoming Your Weaknesses (Guard, Supporter, Medic)</system:String>
+    <system:String x:Key="AsYourHeartDesires">As Your Heart Desires (Random)</system:String>
+    <system:String x:Key="FlexibleDeployment">Flexible Deployment (Vanguard, Supporter, Specialist)</system:String>
+    <system:String x:Key="Unbreakable">Indestructible (Defender, Caster, Medic)</system:String>
     <system:String x:Key="AlgorithmFinish">Algorithm Finish</system:String>
     <system:String x:Key="AlgorithmBadge">Algorithm Badge</system:String>
     <system:String x:Key="AlgorithmConstructionPoint">Algorithm Construction Point</system:String>
     <system:String x:Key="AlgorithmDoneSmeltGold">Forging Red Gold</system:String>
-    <system:String x:Key="ReclamationPnsModeError">当前使用无存档任务模式。请手动删除现有存档后再尝试。若您希望保留存档，请考虑切换模式。</system:String>
-    <system:String x:Key="ReclamationPisModeError">当前任务模式需要您拥有可合成道具的存档。请考虑切换模式。</system:String>
+    <system:String x:Key="ReclamationPnsModeError">Currently using no-save task mode. Please manually delete existing save and try again. If you wish to keep the save, please consider switching modes.</system:String>
+    <system:String x:Key="ReclamationPisModeError">Current task mode requires you to have a save with craftable items. Please consider switching modes.</system:String>
     <system:String x:Key="NotSwitch">Don't Switch</system:String>
     <system:String x:Key="NotSelected">Not selected</system:String>
     <system:String x:Key="Official">Official (CN)</system:String>
@@ -263,6 +303,14 @@ To customize rotation schedules, please use ｢{key=InfrastModeCustom}｣.</syst
     <system:String x:Key="Ok">OK</system:String>
     <system:String x:Key="Cancel">Cancel</system:String>
     <system:String x:Key="Confirm">Confirm</system:String>
+    <system:String x:Key="Rename">Rename</system:String>
+    <system:String x:Key="Delete">Delete</system:String>
+    <system:String x:Key="RenameTask">Rename Task</system:String>
+    <system:String x:Key="RenameTaskPrompt">Please enter a new task name:</system:String>
+    <system:String x:Key="ConfirmDeleteTask">Confirm Delete</system:String>
+    <system:String x:Key="ConfirmDeleteTaskMessage">Are you sure you want to delete {0} task "{1}"?</system:String>
+    <system:String x:Key="TaskRenamed">Task renamed to: {0}</system:String>
+    <system:String x:Key="TaskDeleted">Task deleted: {0}</system:String>
     <system:String x:Key="HotKeyShowGui">[HotKey] Show/collapse MAA</system:String>
     <system:String x:Key="HotKeyLinkStart">[HotKey] Link start/stop</system:String>
     <system:String x:Key="HotKeyChangingTip">Press Backspace / Esc / Delete to clear the current value</system:String>
@@ -296,6 +344,7 @@ You can cancel this popup by clicking the ｢{key=Settings} - {key=IssueReport}�
     <system:String x:Key="UpdateCheckNow">Software update</system:String>
     <system:String x:Key="ShowChangelog">Changelog</system:String>
     <system:String x:Key="ResourceUpdate">Resource update</system:String>
+    <system:String x:Key="ResourceUpdateTip">Resource updated during a task will be automatically loaded when the system is idle and will take effect from the next task.</system:String>
     <system:String x:Key="ResourceRepository">Resource Repository</system:String>
     <system:String x:Key="UpdateSource">Update Source</system:String>
     <system:String x:Key="UpdateSourceTip" xml:space="preserve">
@@ -362,6 +411,7 @@ You can cancel this popup by clicking the ｢{key=Settings} - {key=IssueReport}�
     <system:String x:Key="TimerCustomConfigTip">Restart and switch configuration two minutes in advance</system:String>
     <system:String x:Key="Timer">Timer</system:String>
     <system:String x:Key="GlobalConfigTip">This option page is for global config</system:String>
+    <system:String x:Key="MultiTasksShareTip">The following options are for multiple tasks.</system:String>
     <system:String x:Key="SwitchConfiguration">Configuration</system:String>
     <system:String x:Key="ConfigurationName">Config</system:String>
     <system:String x:Key="AddConfiguration">Add</system:String>
@@ -381,6 +431,7 @@ If you are concerned about leftover entries, please disable this option before d
     <system:String x:Key="ClientType">Client Type</system:String>
     <system:String x:Key="StartGameLaunchClient">Launch Client on Start</system:String>
     <system:String x:Key="AutoRestartOption">Restart when game disconnects</system:String>
+    <system:String x:Key="UseWeeklySchedule">Enable Weekly Schedule</system:String>
     <system:String x:Key="HelpUsWithOverseasServersTip">The adaptation for Overseas clients is very difficult and we need your help! No programming knowledge is required.</system:String>
     <system:String x:Key="OpenEmulatorAfterLaunch">Startup Emulator after launched</system:String>
     <system:String x:Key="WaitForEmulator">Delay time (s)</system:String>
@@ -412,8 +463,52 @@ If you are concerned about leftover entries, please disable this option before d
     <system:String x:Key="RoguelikeThemeMizuki">Mizuki</system:String>
     <system:String x:Key="RoguelikeThemeSami">Sami</system:String>
     <system:String x:Key="RoguelikeThemeSarkaz">Sarkaz</system:String>
-    <system:String x:Key="RoguelikeThemeJieGarden">JieGarden</system:String>
+    <system:String x:Key="RoguelikeThemeJieGarden">Sui's Garden</system:String>
+    <system:String x:Key="RoguelikeThemeTipPhantom" xml:space="preserve">{key=RoguelikeThemePhantom} recommended configuration:
+
+{key=StartingSquad}: {key=LeaderSquad} / {key=TacticalAssaultOperative}
+{key=StartingRoles}: {key=OvercomingYourWeaknesses}
+{key=StartingCoreChar}: Togawa Sakiko / Thorns
+
+When difficulty ≥ N3, you may be unable to recruit a 6★ operator at the start, which can cause errors or failures</system:String>
+    <system:String x:Key="RoguelikeThemeTipMizuki" xml:space="preserve">{key=RoguelikeThemeMizuki} recommended configuration:
+
+{key=StartingSquad}: {key=IS2NewSquad3} / {key=IS2NewSquad1}
+{key=StartingRoles}: {key=SlowAndSteadyWinsTheRace}
+{key=StartingCoreChar}: Wiš'adel
+
+1. {key=IS2NewSquad3} is recommended when your box has many strong 6★ operators
+2. When difficulty ≥ N4, 6★ Hope cost +1; some squads may be unable to recruit a 6★ operator at the start, which can cause errors or failures</system:String>
+    <system:String x:Key="RoguelikeThemeTipSami" xml:space="preserve">{key=RoguelikeThemeSami} recommended configuration:
+
+{key=StartingSquad}: {key=IS3NewSquad4} / {key=TacticalRangedOperative}
+{key=StartingRoles}: {key=SlowAndSteadyWinsTheRace}
+{key=StartingCoreChar}: Wiš'adel
+
+When difficulty ≥ N6, 6★ Hope cost +1; some squads may be unable to recruit a 6★ operator at the start, which can cause errors or failures</system:String>
+    <system:String x:Key="RoguelikeThemeTipSarkaz" xml:space="preserve">{key=RoguelikeThemeSarkaz} recommended configuration:
+
+{key=StartingSquad}: {key=IS4NewSquad3} / {key=TacticalRangedOperative}
+{key=StartingRoles}: {key=SlowAndSteadyWinsTheRace}
+{key=StartingCoreChar}: Wiš'adel
+
+1. Using ｢{key=IS4NewSquad3}｣ fully avoids combat; suitable for quick leveling without aiming to clear
+2. Using ｢{key=IS4NewSquad6}｣ can improve ingot farming efficiency, but note the strategy must be set to "Farm Originium Ingots"
+3. When difficulty ≥ N15, 6★ Hope cost +1; some squads may be unable to recruit a 6★ operator at the start, which can cause errors or failures</system:String>
+    <system:String x:Key="RoguelikeThemeTipJieGarden" xml:space="preserve">{key=RoguelikeThemeJieGarden} recommended configuration:
+
+{key=StartingSquad}: {key=LeaderSquad} / {key=TacticalRangedOperative}
+{key=StartingRoles}: {key=SlowAndSteadyWinsTheRace}
+{key=StartingCoreChar}: Wiš'adel
+
+1. When the strategy is "Farm Originium Ingots", difficulty is ≥ N3 or "MAX", and {key=StartingSquad} is ｢{key=LeaderSquad}｣, the command-avoid-combat strategy will be enabled
+2. The command-avoid-combat strategy greatly improves ingot farming efficiency and can also be used for quick leveling (without aiming to clear), but note the strategy must be set to "Farm Originium Ingots"
+3. If the highest unlocked difficulty is &lt; N3 or the relevant tech is not unlocked, do not use the command-avoid-combat strategy; otherwise, it may cause errors
+4. When difficulty ≥ N15, 6★ Hope cost +1; using some squads may make it impossible to recruit a 6★ operator at the start, causing errors or failures</system:String>
     <system:String x:Key="RoguelikeDifficulty">Difficulty</system:String>
+    <system:String x:Key="RoguelikeJieGardenDifficultyTip" xml:space="preserve">After unlocking the ｢Structural Classics｣ tech, related to ｢{key=RoguelikeThemeJieGarden}｣, using {key=LeaderSquad} to explore at difficulty N3 or higher will carry an additional ｢End of Time｣, enabling a ｢one-battle-one-skip｣ saving strategy.
+If this tech is not unlocked, do not select difficulty N3 or above (including ｢MAX｣);
+To enable this mechanism, make sure the selected difficulty is N3 or higher (excluding ｢{key=NotSwitch} (-1)｣).</system:String>
     <system:String x:Key="Strategy">Strategy</system:String>
     <system:String x:Key="StartTimesLimit">Stops after starting N times</system:String>
     <system:String x:Key="GoldTimesLimit">Stops after investing N times</system:String>
@@ -430,7 +525,7 @@ If you are concerned about leftover entries, please disable this option before d
     <system:String x:Key="RoguelikeStartWithKey">Key</system:String>
     <system:String x:Key="RoguelikeStartWithDice">Dice</system:String>
     <system:String x:Key="RoguelikeStartWithIdea">Thought</system:String>
-    <system:String x:Key="RoguelikeStartWithTicket">Ticket[i18n]</system:String>
+    <system:String x:Key="RoguelikeStartWithTicket">Coupon</system:String>
     <system:String x:Key="RefreshTraderWithDice">Refresh Rogue Trader with Dice</system:String>
     <system:String x:Key="PenguinId">Penguin Report ID (Number part)</system:String>
     <system:String x:Key="EnablePenguin">Report Penguin</system:String>
@@ -441,9 +536,9 @@ If you are concerned about leftover entries, please disable this option before d
     <system:String x:Key="OnlyOnceADay">Only once a day</system:String>
     <system:String x:Key="CreditFight">Combat with Support to earn Credits</system:String>
     <system:String x:Key="CreditFightTip" xml:space="preserve">Combat with Support Unit in OF-1 after Visit Friends to earn 30 credits.
-Only once a day.
 This function is invalid when the stage is selected as ｢{key=DefaultStage}｣.
 Please do not check it when the stage OF-1 is not unlocked.</system:String>
+    <system:String x:Key="CreditFightWhenOF-1Warning">A ｢{key=Fight}｣ task has ｢{key=DefaultStage}｣ in its stage list, ｢{key=Mall}｣ task will skip the Combat with Support Unit in OF-1. Task: {0} (index: {1}), Stage index in list: {2}</system:String>
     <system:String x:Key="HighPriority">Whitelist (split by semicolon)</system:String>
     <system:String x:Key="Blacklist">Blacklist (split by semicolon)</system:String>
     <system:String x:Key="HighPriorityDefault">Recruitment Permit</system:String>
@@ -479,6 +574,8 @@ Then delete the entries corresponding to the paths.
     <system:String x:Key="WindowTitleScrollable">Window Title Scrolling</system:String>
     <system:String x:Key="MainTasksNullFunctionality">Reverse right-click effect for main task</system:String>
     <system:String x:Key="MainTasksNullFunctionalityTip">Default: Apply once; Checked: Skip once</system:String>
+    <system:String x:Key="UseCardLog">Use card style log</system:String>
+    <system:String x:Key="MaxNumberOfLogThumbnails">Maximum number of log thumbnails</system:String>
     <system:String x:Key="TitleBarDisplayContent">Title Bar Display Content</system:String>
     <system:String x:Key="CustomBackgroundTip">Manually create a ｢background｣ folder and place ｢background.png｣ inside to customize the background</system:String>
     <system:String x:Key="UseLogItemDateFormat">Custom log date format</system:String>
@@ -489,12 +586,10 @@ Then delete the entries corresponding to the paths.
     <system:String x:Key="AllowUseStoneSave">Save ｢Use Originium｣</system:String>
     <system:String x:Key="AllowUseStoneSaveWarning">This function is considered dangerous. Pressing the ｢{key=Confirm}｣ button indicates that you understand and are willing to accept the potential risks.</system:String>
     <system:String x:Key="UseAlternateStage">Use alternative stage</system:String>
-    <system:String x:Key="UseRemainingSanityStage">Use remaining sanity stage</system:String>
-    <system:String x:Key="UseRemainingSanityStageTip">Farm the specified stage after completing the main task, won't use sanity potion or Originium</system:String>
     <system:String x:Key="UseExpiringMedicine">Unlimited use of expiring (&lt;48h) sanity potion</system:String>
     <system:String x:Key="HideUnavailableStage">Hide today's not open stages</system:String>
+    <system:String x:Key="FightStageResetMode">Unopened stage is reset to</system:String>
     <system:String x:Key="HideSeries">Hide series</system:String>
-    <system:String x:Key="CustomInfrastPlanShowInFightSettings">Show Base Plan</system:String>
     <system:String x:Key="MainViewButtonFeature">Variable function button</system:String>
     <system:String x:Key="CustomStageCode">Manual entry of stage names</system:String>
     <system:String x:Key="CustomStageCodeTip" xml:space="preserve">Support most main stage names + stage names from the original list (e.g. 4-10, AP-5, H10-1-Hard, etc.)
@@ -518,6 +613,11 @@ Only supports Official(CN) and Bilibili server. Login account is not supported.<
     <system:String x:Key="ConnectionPreset">Connection Preset</system:String>
     <system:String x:Key="ScreenshotTest">Screenshot test</system:String>
     <system:String x:Key="MuMu12ExtrasEnabled">Enable MuMu's screenshot enhancement mode</system:String>
+    <system:String x:Key="MuMuEmulatorPathNotFound">MuMu Emulator 12 path not found.</system:String>
+    <system:String x:Key="MuMuExternalRendererMissing" xml:space="preserve">external_renderer_ipc.dll was not found under the selected MuMu installation.\n
+Expected relative path: nx_device/12.0/shell/sdk/external_renderer_ipc/external_renderer_ipc.dll or
+shell/sdk/external_renderer_ipc/external_renderer_ipc.dll\n
+Please verify the installation directory.</system:String>
     <system:String x:Key="MuMu12ExtrasEnabledTip" xml:space="preserve">
 MuMu V4.0.0 or later is required.
 It's strongly recommended to run a screenshot test immediately after enabling this feature.
@@ -538,6 +638,8 @@ Note:
     <system:String x:Key="MuMu12Display">Display Number</system:String>
     <system:String x:Key="MuMuExtrasNotEnabledMessage">Mumu screenshot enhancement not enabled, please check related settings</system:String>
     <system:String x:Key="LdExtrasEnabled">Enable LD's screenshot enhancement mode</system:String>
+    <system:String x:Key="LdPlayerEmulatorPathNotFound">LDPlayer emulator path not found.</system:String>
+    <system:String x:Key="LdPlayerOpenglMissing">ldopengl64.dll was not found in the selected LDPlayer path. Please verify the installation directory.</system:String>
     <system:String x:Key="LdExtrasEnabledTip" xml:space="preserve">
 LDPlayer 9 V9.1.32 or later is required.
 It's strongly recommended to run a screenshot test immediately after enabling this feature.
@@ -548,13 +650,15 @@ then it should be filled in as
 C:\\leidian\\LDPlayer9。\n
 The instance number can be viewed in LDPlayer Multi-Instance Manager,
 The primary instance is 0, and other instances are the numbers after the version/instance ID.\n
+The screenshot enhancement feature requires the emulator resolution to be set to landscape mode and the screen orientation not to be changed during connection.
+If the game is launched in portrait mode and then switched to landscape, it may cause screen tearing or other issues.
     </system:String>
     <system:String x:Key="LdEmulatorPath">LD Emulator exec path</system:String>
     <system:String x:Key="LdManualSetIndex">Manually enter ｢{key=LdIndex}｣</system:String>
     <system:String x:Key="LdIndex">Instance Index</system:String>
     <system:String x:Key="LdExtrasNotEnabledMessage">LD screenshot enhancement not enabled, please check related settings</system:String>
     <system:String x:Key="RetryOnDisconnected">Retry launching the emulator when ADB connection fails</system:String>
-    <system:String x:Key="RetryOnDisconnectedTip">Try restarting the emulator after 20 failed reconnect attempts, must be checked when using a background timed task and setting the task to close the emulator when finished</system:String>
+    <system:String x:Key="RetryOnDisconnectedTip">Try restarting the emulator after failed reconnect attempt, must be checked when using a background timed task and setting the task to close the emulator when finished</system:String>
     <system:String x:Key="RetryOnDisconnectedEmulatorPathEmptyError">Emulator path is empty! Please fill in ｢{key=Settings} - {key=StartupSettings} - {key=EmulatorPath}｣ and reselect.</system:String>
     <system:String x:Key="AllowAdbRestart">Attempt to restart ADB Server after connection failure</system:String>
     <system:String x:Key="AllowAdbHardRestart">Attempt to kill and restart ADB process after connection failure</system:String>
@@ -636,18 +740,22 @@ If the number of battles is not enough to complete the set multiplier (such as o
 • {key=NotSwitch}:
 Do not adjust the proxy multiplier setting in the game</system:String>
     <system:String x:Key="StageSelect">Stage</system:String>
-    <system:String x:Key="StageSelect2">Alternative</system:String>
+    <system:String x:Key="StageSelect2">Candidates</system:String>
+    <system:String x:Key="AddStage">Add candidate</system:String>
     <system:String x:Key="RemainingSanityStage">Remaining Sanity</system:String>
     <system:String x:Key="NoUse">No Use</system:String>
     <!--<system:String x:Key="Amend">Amend</system:String>-->
     <!--<system:String x:Key="CurrentStage">Current Stage</system:String>-->
     <!--<system:String x:Key="LastBattle">Last Battle</system:String>-->
     <system:String x:Key="DefaultStage">Cur/Last</system:String>
+    <system:String x:Key="InvalidStage">Invalid</system:String>
     <system:String x:Key="ClosedStage">The event is not open</system:String>
     <system:String x:Key="UnsupportedStages">Unsupported stages</system:String>
     <system:String x:Key="LowVersion">Old Version, Update required</system:String>
     <system:String x:Key="MinimumRequirements" xml:space="preserve">Minimum Requirements:&#160;</system:String>
     <system:String x:Key="DaysLeftOpen" xml:space="preserve">Days left open:&#160;</system:String>
+    <system:String x:Key="Inventory">Inventory</system:String>
+    <system:String x:Key="InventoryUpdateTip">Inventory data can be updated via  ｢{key=Toolbox}-{key=DepotRecognition}｣</system:String>
     <system:String x:Key="LessThanOneDay">Less than 1 day</system:String>
     <system:String x:Key="1-7">1-7</system:String>
     <system:String x:Key="CE-6">CE-6</system:String>
@@ -666,20 +774,20 @@ Do not adjust the proxy multiplier setting in the game</system:String>
     <system:String x:Key="AnnihilationStage">Annihilation Stage</system:String>
     <system:String x:Key="UseCustomAnnihilation">Custom {key=AnnihilationStage}</system:String>
     <system:String x:Key="AnnihilationMode">Annihilation Mode</system:String>
-    <system:String x:Key="Annihilation">Current Annihilation</system:String>
+    <system:String x:Key="Annihilation.Current">Current Annihilation</system:String>
     <system:String x:Key="Chernobog">Chernobog</system:String>
     <system:String x:Key="LungmenOutskirts">Lungmen Outskirts</system:String>
     <system:String x:Key="LungmenDowntown">Lungmen Downtown</system:String>
     <system:String x:Key="TodaysStageTip" xml:space="preserve">Today's open stages:&#160;</system:String>
-    <system:String x:Key="CETip">CE (LMD)</system:String>
-    <system:String x:Key="APTip">AP (Purchase Certificate)</system:String>
-    <system:String x:Key="CATip">CA (Skill Summary)</system:String>
-    <system:String x:Key="LSTip">LS (Battle Record)</system:String>
-    <system:String x:Key="SKTip">SK (Carbon)</system:String>
-    <system:String x:Key="PR-ATip">PR-A (Med/Def Chip)</system:String>
-    <system:String x:Key="PR-BTip">PR-B (Cst/Sni Chip)</system:String>
-    <system:String x:Key="PR-CTip">PR-C (Pio/Sup Chip)</system:String>
-    <system:String x:Key="PR-DTip">PR-D (Grd/Spc Chip)</system:String>
+    <system:String x:Key="CETip">CE-6: LMD</system:String>
+    <system:String x:Key="APTip">AP-5: Purchase Certificate</system:String>
+    <system:String x:Key="CATip">CA-5: Skill Summary</system:String>
+    <system:String x:Key="LSTip">LS-6: Battle Record</system:String>
+    <system:String x:Key="SKTip">SK-5: Carbon</system:String>
+    <system:String x:Key="PR-ATip">PR-A-1/2: Med&amp;Def Chip</system:String>
+    <system:String x:Key="PR-BTip">PR-B-1/2: Cst&amp;Sni Chip</system:String>
+    <system:String x:Key="PR-CTip">PR-C-1/2: Pio&amp;Sup Chip</system:String>
+    <system:String x:Key="PR-DTip">PR-D-1/2: Grd&amp;Spc Chip</system:String>
     <system:String x:Key="Pormpt1">It's Monday: time to clear the Annihilation</system:String>
     <system:String x:Key="Pormpt2">It's Sunday: don't forget about Annihilation</system:String>
     <!--  !FightSettings  -->
@@ -689,6 +797,8 @@ Do not adjust the proxy multiplier setting in the game</system:String>
     <system:String x:Key="ConnectingToEmulator">Connecting to emulator……</system:String>
     <system:String x:Key="UnselectedTask">Unselected task</system:String>
     <system:String x:Key="Running">Running……</system:String>
+    <system:String x:Key="TaskAppend.Skip">{0}: {1} task skip</system:String>
+    <system:String x:Key="TaskAppend.Error">{0}: {1} append task failed</system:String>
     <system:String x:Key="AdbReplacementTips">If nothing happens or appears stuck, please go to ｢{key=Settings} - {key=ConnectionSettings} - {key=ForcedReplaceAdb}｣, or turn on ADB Input (Deprecated).</system:String>
     <system:String x:Key="Waiting">Waiting for the mission completion…</system:String>
     <system:String x:Key="Stopping">Stopping……</system:String>
@@ -703,8 +813,13 @@ Do not adjust the proxy multiplier setting in the game</system:String>
     <system:String x:Key="HibernatePrompt">Task(s) completed, about to hibernate</system:String>
     <system:String x:Key="SleepPrompt">Completed, about to sleep</system:String>
     <system:String x:Key="UnknownActionAfterCompleted">Unknown ending action</system:String>
-    <system:String x:Key="AnnihilationTaskTip">The stage selected is an annihilation task. After the task is completed, the remaining alternative stages will be attempted. Some battle settings will not take effect.</system:String>
-    <system:String x:Key="AnnihilationTaskFailed">Annihilation task failed, will try to use alternate stage, some combat settings will not be effective.</system:String>
+    <system:String x:Key="ProcessPickerTitle">Select Window</system:String>
+    <system:String x:Key="ProcessPickerRefresh">Refresh</system:String>
+    <system:String x:Key="ProcessPickerConfirm">OK</system:String>
+    <system:String x:Key="ProcessPickerCancel">Cancel</system:String>
+    <system:String x:Key="ProcessPickerToolTip" xml:space="preserve">Left Click: Toggle Log Floating Window
+Right Click: Select Target Process</system:String>
+    <system:String x:Key="ToggleOverlay">Toggle Log Overlay</system:String>
     <!--  !Logs  -->
     <!--  !Farming  -->
     <system:String x:Key="Toolbox">Toolbox</system:String>
@@ -723,6 +838,7 @@ Do not adjust the proxy multiplier setting in the game</system:String>
     <!--  Depot Recognition  -->
     <system:String x:Key="DepotRecognition">Depot</system:String>
     <system:String x:Key="Depot">{key=DepotRecognition}</system:String>
+    <system:String x:Key="LastDepotSyncTime">Last Sync Time</system:String>
     <system:String x:Key="DepotRecognitionTip">This function is still in testing. If you encounter any unexpected results, please zip the ｢debug/depot｣ folder in the installation path and submit an issue on GitHub</system:String>
     <system:String x:Key="StartToDepotRecognition">Start to Identify</system:String>
     <system:String x:Key="ExportToArkplanner">Export to Arkplanner</system:String>
@@ -777,18 +893,34 @@ The video aspect ratio needs to be 16:9 without interference factors such as bla
     <system:String x:Key="PeepTip">See the world through Pallas?</system:String>
     <system:String x:Key="PeepTargetFps">Target Frame Rate</system:String>
     <!--  !Peep  -->
-    <!--  小游戏  -->
+    <!--  Minigame  -->
     <system:String x:Key="MiniGameName">Mini Game Name</system:String>
+    <system:String x:Key="MiniGameNameEmptyTip">Select a mini-game from above to start running.</system:String>
+    <system:String x:Key="MiniGame@PV">PV - Fireworks Organizing Committee</system:String>
+    <system:String x:Key="MiniGame@PVTip">Automatically clear from the selected stage. If you choose the first stage, start from the leftmost side of the event page; for other stages, enter the previous stage and then return to calibrate the position.</system:String>
+    <system:String x:Key="MiniGame@SPA">Stronghold Protocol: Alliance</system:String>
+    <system:String x:Key="MiniGame@SPATip" xml:space="preserve">Start the task from the main event screen (where ｢Independent Simulation｣ is located)
+Completing ｢Standard Simulation｣ manually allows faster score farming
+Only level rewards can be farmed; to get the Engraved Medal, all ｢Key Objectives｣ must be completed</system:String>
+    <system:String x:Key="MiniGame@OS">OS-Karlan Trade Technology R&amp;D Department</system:String>
+    <system:String x:Key="MiniGame@OSTip">Start the task at the main event interface (where there is "Start Rebuild" in the lower right corner).</system:String>
     <system:String x:Key="MiniGame@RM-TR-1">Secondary Plan RM-TR-1</system:String>
     <system:String x:Key="MiniGame@RM-TR-1Tip" xml:space="preserve">After finishing the tutorial, enter the Outpost Support Point and swipe to the far left of the screen.</system:String>
     <system:String x:Key="MiniGame@RM-1">Secondary Plan RM-1</system:String>
     <system:String x:Key="MiniGame@RM-1Tip" xml:space="preserve">Farm RM-TR-1 for about 3 hours. In the construction strategy, take the stone mining line to the bottom point,&#10;Special appointment specifies Wistoria, then try to E2 S3 as much as possible, carrying Skill 1,&#10;Bring a full 12 operators, the other 11's deployment costs need to be lower than Wistoria's,&#10;Each production module carries 1, manually enter the stage and exit,&#10;Place RM-1 in the center of the screen, run MAA.</system:String>
     <system:String x:Key="MiniGame@AT@ConversationRoom">AT - Mikage Consultation Office - Mini Game</system:String>
-    <system:String x:Key="MiniGame@AT@ConversationRoomTip" xml:space="preserve">Start the task from the event screen (there is a ｢Open for Business｣ button in the bottom right corner).</system:String>
+    <system:String x:Key="MiniGame@AT@ConversationRoomTip" xml:space="preserve">Start the task from the event screen (there is a ｢OPEN｣ button in the bottom right corner).</system:String>
     <system:String x:Key="MiniGame@ALL@GreenGrass">Duel Channel: Green Grassville</system:String>
     <system:String x:Key="MiniGame@ALL@GreenGrassTip" xml:space="preserve">Manually skip the tutorial dialogue, then you can exit directly.&#10;Start the task from the event screen (there is a ｢Join Event｣ button in the bottom right corner).&#10;&#10;Follow the Duck Lord's choice.</system:String>
-    <system:String x:Key="MiniGame@ALL@HoneyFruit">Contest Channel: Honeydew</system:String>
+    <system:String x:Key="MiniGame@ALL@HoneyFruit">Duel Channel: Honeydew</system:String>
     <system:String x:Key="MiniGame@ALL@HoneyFruitTip" xml:space="preserve">{key=MiniGame@ALL@GreenGrassTip}</system:String>
+    <system:String x:Key="MiniGame@SecretFront@Ending">Ending</system:String>
+    <system:String x:Key="MiniGame@SecretFront@Event">Priority for Series of Events</system:String>
+    <system:String x:Key="MiniGame@SecretFront@Event1">Support Platform</system:String>
+    <system:String x:Key="MiniGame@SecretFront@Event2">Knight-errant</system:String>
+    <system:String x:Key="MiniGame@SecretFront@Event3">Sly Shadows</system:String>
+    <system:String x:Key="MiniGame@SecretFront">Hidden Front</system:String>
+    <system:String x:Key="MiniGame@SecretFrontTip" xml:space="preserve">Start from the squad selection screen;&#10;If there is a saved game, please delete it manually.&#10;Close the tutorial after playing it for the first time.&#10;Recommended to enable in-game ｢Inherit previous squad's data｣.</system:String>
     <system:String x:Key="MiniGameNameGreenTicketStore">Green Ticket Store</system:String>
     <system:String x:Key="MiniGameNameGreenTicketStoreTip" xml:space="preserve">Buy everything on the 1st floor.&#10;Buy Headhunting Permits and Recruitment Permits on the 2nd floor.</system:String>
     <system:String x:Key="MiniGameNameYellowTicketStore">Yellow Ticket Store</system:String>
@@ -797,7 +929,7 @@ The video aspect ratio needs to be 16:9 without interference factors such as bla
     <system:String x:Key="MiniGameNameSsStoreTip" xml:space="preserve">Please start from the event shop page.&#10;Won't buy items with unlimited purchase quantities.</system:String>
     <system:String x:Key="MiniGameNameRAStore">Reclamation Algorithm Shop</system:String>
     <system:String x:Key="MiniGameNameRAStoreTip" xml:space="preserve">Please start from the event shop page.</system:String>
-    <!--  !小游戏  -->
+    <!--  !Minigame  -->
     <!--  Logs  -->
     <system:String x:Key="Identifying">Identifying……</system:String>
     <system:String x:Key="IdentificationCompleted">Identification completed</system:String>
@@ -806,22 +938,35 @@ The video aspect ratio needs to be 16:9 without interference factors such as bla
     <system:String x:Key="Operator">Operator</system:String>
     <system:String x:Key="Copilot">Copilot</system:String>
     <system:String x:Key="SSSCopilot">SSS {key=Copilot}</system:String>
+    <system:String x:Key="ParadoxCopilot">{key=ParadoxSimulation}</system:String>
     <system:String x:Key="CopilotLocation">Task file / URL</system:String>
     <system:String x:Key="CopilotTaskName">Stage Code</system:String>
     <system:String x:Key="CopilotTaskNameTip">Stage Code, e.g. 1-7</system:String>
     <system:String x:Key="SelectTheFile">Select task file</system:String>
     <system:String x:Key="SelectTheFileTip">Task files can be imported by dragging the mouse</system:String>
-    <system:String x:Key="PasteClipboardTip">Paste Clipboard, right click to add a copilot set</system:String>
+    <system:String x:Key="PasteClipboardTip">Read the clipboard and add it as a job</system:String>
+    <system:String x:Key="PasteClipboardCopilotSetTip">Read the clipboard and add it as a job set</system:String>
     <system:String x:Key="ImportFilesTip">Import task files</system:String>
     <system:String x:Key="DoYouLikeThisWebJson">Do you like this task file? Rate it!</system:String>
     <system:String x:Key="FailedToLikeWebJson">An error occurred, the like failed. : &lt;</system:String>
     <system:String x:Key="ThanksForLikeWebJson">Thanks for the likes!\nThe comment section is already open on the web page, please feel free to leave your comment!</system:String>
     <system:String x:Key="AutoSquad">Auto Squad</system:String>
     <system:String x:Key="AutoSquadTip">｢Favourite｣ marked {key=Operator}s may not be recognized</system:String>
+    <system:String x:Key="SupportUnitUsage">Use Support Unit</system:String>
+    <system:String x:Key="SupportUnitUsage.Tip">Missing one operator is manageable, but if two or more are missing, consider switching to a different job.</system:String>
+    <system:String x:Key="SupportUnitUsage.None">Never</system:String>
+    <system:String x:Key="SupportUnitUsage.WhenNeeded">When Needed</system:String>
+    <system:String x:Key="SupportUnitUsage.Random">Random</system:String>
     <system:String x:Key="AddTrust">Add low-trust {key=Operator}s</system:String>
     <system:String x:Key="Copilot.IgnoreRequirements">Ignore {key=Operator} requirements</system:String>
+    <system:String x:Key="Copilot.IgnoreRequirements.Tip" xml:space="preserve">Some jobs require specific Modules or other prerequisites.
+Enabling this will skip these checks, but may cause the job to fail.</system:String>
     <system:String x:Key="AddUserAdditional">Add custom {key=Operator}s</system:String>
     <system:String x:Key="AddUserAdditionalTip">Use ｢;｣ as the separator, ｢,｣ to separate the {key=Operator} name and skills, for example: W, 3; Ash, 2</system:String>
+    <system:String x:Key="UserAdditional.OperatorName">{key=Operator} Name</system:String>
+    <system:String x:Key="UserAdditional.Skill">Skill</system:String>
+    <system:String x:Key="UserAdditional.Action">Action</system:String>
+    <system:String x:Key="UserAdditional.Add">Add</system:String>
     <system:String x:Key="LoopTimes">Loop Times</system:String>
     <system:String x:Key="UseCopilotList">Battle list</system:String>
     <system:String x:Key="UseCopilotListTip" xml:space="preserve">Only supported in the following modes:
@@ -829,14 +974,17 @@ The video aspect ratio needs to be 16:9 without interference factors such as bla
   2. {key=SideStory}: Navigate within the current page (cannot jump between Normal/EX/S)
   3. {key=StoryCollection}: Navigate within the current page
   4. {key=ParadoxSimulation}: Start from the {key=Operator} list
-Please start from the corresponding screen. Cross-chapter navigation is not supported.</system:String>
+Please start from the corresponding screen. Cross-chapter navigation is not supported.
+
+When ｢{key=UseCopilotList}｣ is enabled, individual jobs will be automatically added to ｢{key=UseCopilotList}｣.</system:String>
     <system:String x:Key="CopilotTaskRaidStage">(Challenge)</system:String>
     <system:String x:Key="CopilotAddTask" xml:space="preserve">Left-click to add Normal difficulty
 Right click to add challenge difficulty</system:String>
-    <system:String x:Key="CopilotClearTask" xml:space="preserve">Left-click to clear all tasks
-Right-click to clear inactive tasks</system:String>
+    <system:String x:Key="CopilotClearTask" xml:space="preserve">Left-click to clear all jobs
+Right-click to clear inactive jobs</system:String>
     <system:String x:Key="Start">Start</system:String>
     <system:String x:Key="VideoLink">Video Link</system:String>
+    <system:String x:Key="CopilotFormationRequirement.Level">E{0} Lv.{1}</system:String>
     <system:String x:Key="CopilotSkill">Skill</system:String>
     <system:String x:Key="CopilotModule">Module</system:String>
     <system:String x:Key="CopilotWithoutModule">Without Module</system:String>
@@ -864,19 +1012,21 @@ Right-click to clear inactive tasks</system:String>
     <!--  Logs  -->
     <system:String x:Key="CopilotTip">
         Tips: \n\n
-        1. Before using, please confirm the task file matches your selected stage type.\n\n
+        1. Before using, please confirm the job file matches your selected stage type.\n\n
         2. {key=MainStage}, {key=StoryCollection}, {key=SideStory}: Please start from the screen where the blue "Start" button appears in the bottom right corner.\n\n
         3. {key=SSS}: Multiple built-in files are in the resource/copilot folder. First create your squad manually, then start from the screen where the "Start Deployment" button appears in the bottom right. Can be used with ｢{key=LoopTimes}｣.\n\n
-        4. {key=ParadoxSimulation}: After selecting skills, start from the skill selection screen where the "Start Simulation" button appears. For 1/2★ {key=Operator}s (without skills), start from the screen with the "Start Simulation" button in the bottom right. If using ｢{key=UseCopilotList}｣, please start from the {key=Operator} list page.\n\n
+        4. {key=ParadoxSimulation}: After selecting skills, start from the skill selection screen where the "Start Simulation" button appears. For 1/2★ {key=Operator}s (without skills), start from the screen with the "Start Simulation" button in the bottom right. If using ｢{key=UseCopilotList}｣, please start from the ｢Level/Rarity｣ tab in the {key=Operator} list.\n\n
         5. When using a support unit, turn off ｢{key=AutoSquad}｣ and ｢{key=UseCopilotList}｣, manually select the {key=Operator}, then start from the squad screen where the "Mission Start" button appears in the bottom right.\n\n
         6. {key=Operator}s marked as "Favorite" may affect ｢{key=AutoSquad}｣ recognition and selection. When using ｢{key=AutoSquad}｣, consider removing favorites, or if errors occur, turn off ｢{key=AutoSquad}｣ and manually supplement the missing {key=Operator}s as prompted.\n\n
-        7. In the Copilot workstation, you can paste the mysterious code by clicking the paste button on the right side of the input box: left-click to add a single job, right-click to add the entire job set.\n\n
+        7. In the Copilot workstation, you can paste codes by clicking the paste button on the right side of the input box:\n
+        ● Second button = Add a single job.\n
+        ● Third button = Add a job set.\n\n
         8. {key=UseCopilotList}:\n
-        - After selecting a task, check that the stage name below is correct (e.g.: CV-EX-1).\n
-        - Add: Left-click for normal difficulty, right-click for challenge mode.\n
-        - Clear: Left-click to clear all, right-click to remove only inactive tasks.\n
-        - Start from a screen where the target stage name is visible. Cross-chapter navigation is not supported.\n
-        - Operation will stop automatically when encountering insufficient sanity, battle failure, or failure to achieve 3-star clear.
+        ● After selecting a job, verify the stage name below is correct (e.g., CV-EX-1).\n
+        ● Add: Left-click for Normal difficulty, right-click for Challenge difficulty.\n
+        ● Clear: Left-click to clear all jobs, right-click to remove only inactive jobs.\n
+        ● Start from a screen where the target stage name is visible. Cross-chapter navigation is not supported.\n
+        ● Execution will stop automatically when sanity is insufficient, battle fails, or fails to achieve a 3★ clear.
     </system:String>
     <system:String x:Key="CopilotFileReadError">Failed to read file!</system:String>
     <system:String x:Key="CopilotNoFound">No corresponding file found!</system:String>
@@ -889,10 +1039,15 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="CopilotStageNameNotFound">{0} not found, and also no stage name specified</system:String>
     <system:String x:Key="CopilotStageNameNotEqualWithNavigateName">stageName NOT equal with navigateName, using navigateName</system:String>
     <system:String x:Key="CopilotEmptyError">copilot is empty</system:String>
+    <system:String x:Key="CopilotStartError">Failed to start copilot:</system:String>
+    <system:String x:Key="CopilotTaskTypeMismatch">The selected task does not match the current tab</system:String>
     <system:String x:Key="CopilotTasksWithEmptyName">copilot tasks with empty name</system:String>
     <system:String x:Key="CopilotCouldNotSaveFile" xml:space="preserve">Could not save copilot task to file: </system:String>
-    <system:String x:Key="Copilot.StartWithEmptyList">Using ｢{key=UseCopilotList}｣, but no tasks have been added</system:String>
+    <system:String x:Key="CopilotStartWithEmptyList">Using ｢{key=UseCopilotList}｣, but no tasks have been added</system:String>
     <system:String x:Key="CopilotSingleTaskWarning">You're using ｢{key=UseCopilotList}｣ to execute a single task, which is not recommended. For single tasks, please run them directly instead.</system:String>
+    <system:String x:Key="CopilotTaskListMixedModeNotAllowed">You're using ｢{key=UseCopilotList}｣, but mixing ｢{key=MainStageStoryCollectionSideStory}｣ and ｢{key=ParadoxSimulation}｣ is not allowed. Please create separate lists under the corresponding tabs before starting.</system:String>
+    <system:String x:Key="CopilotTaskListLegacyItemNotSupported">You're using ｢{key=UseCopilotList}｣, but the list contains legacy items (missing tab info). Please re-add these tasks under the correct tab before starting.</system:String>
+    <system:String x:Key="CopilotTaskListTabMismatch">You're using ｢{key=UseCopilotList}｣. Current tab is ｢{0}｣, but the list is from ｢{1}｣. Please switch to the corresponding tab before starting.</system:String>
     <!--  !Logs  -->
     <!--  !Copilot  -->
     <!--  ErrorView  -->
@@ -910,9 +1065,9 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="ErrorFeedbackLinkText">Create a GitHub issue</system:String>
     <system:String x:Key="ErrorQqGroupLinkText">Join QQ Group</system:String>
     <system:String x:Key="ErrorCrashMessageHeader">The above issue caused the program to crash.</system:String>
-    <system:String x:Key="ErrorCrashMessageOpenLog">You can go to “{key=Settings} - {key=Issue} - {key=OpenDebugFolder}” to view the logs and check the specific cause of the error.</system:String>
-    <system:String x:Key="ErrorCrashMessageGenerateReport">Please use “{key=Settings} - {key=Issue} - {key=GenerateSupportPayload}” to generate an error report, and click the blue ｢{key=Issue}｣ link to submit feedback.</system:String>
-    <system:String x:Key="ErrorCrashMessageHelpTip">If you need help from others, please send the generated error report file instead of sending a screenshot or photo of this window.</system:String>
+    <system:String x:Key="ErrorCrashMessageOpenLog">You can go to “{key=Settings} - {key=IssueReport} - {key=OpenDebugFolder}” to view the logs and check the specific cause of the error.</system:String>
+    <system:String x:Key="ErrorCrashMessageGenerateReport">Please use “{key=Settings} - {key=IssueReport} - {key=GenerateSupportPayload}” to generate an error report, and click the blue ｢{key=Issue}｣ link to submit feedback.</system:String>
+    <system:String x:Key="ErrorCrashMessageHelpTip">If you need help from others, please send the generated error report file instead of sending screenshots, screen recordings, photos of the screen, recorded videos, hand-drawn pictures, or transcribed content of this window.</system:String>
     <system:String x:Key="ErrorCrashDialogTitle">Reason for the last crash</system:String>
     <system:String x:Key="CopyErrorMessage">Copy error message</system:String>
     <!--  !ErrorView  -->
@@ -971,6 +1126,7 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="ExpiringMedicineUsed">Expiring medicine used</system:String>
     <system:String x:Key="StoneUsed">Originite Prime used</system:String>
     <system:String x:Key="ActingCommandError">PRTS error</system:String>
+    <system:String x:Key="FightMissionFailedAndStop">Proxy failed too many times, task stopped</system:String>
     <system:String x:Key="LabelsRefreshed">Labels refreshed</system:String>
     <system:String x:Key="RecruitConfirm">Recruit confirm</system:String>
     <system:String x:Key="InfrastDormDoubleConfirmed">{key=Operator} conflict</system:String>
@@ -979,6 +1135,7 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="ExplorationAbandoned">Abandoned this Exploration</system:String>
     <system:String x:Key="FightCompleted">Combat completed</system:String>
     <system:String x:Key="FightFailed">Combat failed</system:String>
+    <system:String x:Key="FightTimesMayNotExhausted">Battle count ({0} times) may not be exhausted, {key=Series}: {1}</system:String>
     <system:String x:Key="FightTimesUnused">Completed {0} battles, will execute {1} multiplier proxy next time, will complete {2} battles after entering, exceeds {3} limit, will not enter battle</system:String>
     <system:String x:Key="UpperLimit">Investment limit reached</system:String>
     <system:String x:Key="GameCrash">Game crashed pending restart</system:String>
@@ -994,10 +1151,23 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="Trader">Node: Rogue Trader</system:String>
     <system:String x:Key="SafeHouse">Node: Safe House</system:String>
     <system:String x:Key="FilterTruth">Node: Idea Filter</system:String>
-    <system:String x:Key="CombatDps">Node: Combat Operation</system:String>
-    <system:String x:Key="EmergencyDps">Node: Emergency Operation</system:String>
-    <system:String x:Key="DreadfulFoe">Node: Dreadful Foe</system:String>
+    <system:String x:Key="CombatOps">Node: Combat Operation</system:String>
+    <system:String x:Key="EmergencyOps">Stage: Emergency Operation</system:String>
+    <system:String x:Key="DreadfulFoe">Stage: Dreadful Foe</system:String>
+    <system:String x:Key="BoskyOmissions">Stage: Retrieve</system:String>
+    <system:String x:Key="BoskyLegend">Bosky: Legend</system:String>
+    <system:String x:Key="BoskyOldShop">Bosky: Tavern</system:String>
+    <system:String x:Key="BoskyYiTrader">Bosky: Trade</system:String>
+    <system:String x:Key="BoskyScheme">Bosky: Plan</system:String>
+    <system:String x:Key="BoskyPlaytime">Bosky: Leisure</system:String>
+    <system:String x:Key="BoskyDoubts">Bosky: Doubts</system:String>
+    <system:String x:Key="BoskyDisaster">Bosky: Turmoil</system:String>
+    <system:String x:Key="RoguelikeCoppersExchange">Tongbao Exchange: {0} → {1}</system:String>
+    <system:String x:Key="RoguelikeCoppersRecognitionError">Tongbao recognition failed: "{0}"</system:String>
     <system:String x:Key="RoguelikeEvent">Event:&#160;</system:String>
+    <system:String x:Key="RoguelikeEncounterOptions">Detected {0} options:</system:String>
+    <system:String x:Key="RoguelikeEncounterEnabledOption">Available option: {0}</system:String>
+    <system:String x:Key="RoguelikeEncounterDisabledOption">Unavailable option: {0}</system:String>
     <system:String x:Key="EncounterOcrError">Event Name OCR Failed</system:String>
     <system:String x:Key="FoldartalGainOcrNextLevel">Foldartal Foresee:&#160;</system:String>
     <system:String x:Key="RoguelikeInvestment">Invested {1}(+{0}), deposit: {2}</system:String>
@@ -1039,10 +1209,15 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="UseFormation">Use formation</system:String>
     <system:String x:Key="Current">Current</system:String>
     <system:String x:Key="BattleFormation">Start formation</system:String>
+    <system:String x:Key="BattleFormationParseFailed">Formation parse failed</system:String>
     <system:String x:Key="BattleFormationSelected" xml:space="preserve">Selected:&#160;</system:String>
     <system:String x:Key="BattleFormationOperUnavailable" xml:space="preserve">{key=Operator} unavailable: {0}, reason: {1}</system:String>
-    <system:String x:Key="BattleFormationModuleUnavailable">Module unavailable</system:String>
+    <system:String x:Key="BattleFormationOperUnavailable.Level">{key=Operator} level too low</system:String>
+    <system:String x:Key="BattleFormationOperUnavailable.SkillLevel">Skill level too low</system:String>
+    <system:String x:Key="BattleFormationOperUnavailable.Module">Required module not unlocked</system:String>
+    <system:String x:Key="CopilotUserAdditionalNameInvalid">Additional custom {key=Operator} name invalid: {0}, please check spelling</system:String>
     <system:String x:Key="CurrentSteps">Step: {0} {1}</system:String>
+    <system:String x:Key="ElapsedTime">Elapsed time: {0}ms</system:String>
     <system:String x:Key="Deploy">Deploy</system:String>
     <system:String x:Key="UseSkill">Use Skill</system:String>
     <system:String x:Key="Retreat">Retreat</system:String>
@@ -1062,6 +1237,31 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="RestartAdb">Trying to restart the ADB Server</system:String>
     <system:String x:Key="HardRestartAdb">Trying to kill and restart the ADB process</system:String>
     <system:String x:Key="CheckSettings">Please ｢Check connection settings｣ → ｢Try restarting the emulator and ADB｣ → ｢Restart the computer｣</system:String>
+    <system:String x:Key="AttachWindowNotFound">Window "{0}" not found, please ensure the game is running</system:String>
+    <system:String x:Key="AttachWindowMultipleFound">Found {0} "{1}" windows, using the first one</system:String>
+    <system:String x:Key="AttachWindowFound">Found window "{0}"</system:String>
+    <system:String x:Key="AttachWindowFailed">AttachWindow failed, please check screencap/input method settings</system:String>
+    <system:String x:Key="UseAttachWindowTip">Use Win32 window binding for Arknights PC client instead of ADB connection for emulators or phones</system:String>
+    <system:String x:Key="UseAttachWindowWarning" xml:space="preserve">PC connection (experimental feature, stability not guaranteed)
+Due to limited development resources within the MAA Team, PC support lacks dedicated maintenance and may experience instability or functional issues:
+● We may not be able to promptly respond to or fix PC-related issues
+● If unavailable, consider switching to ADB mode to connect via Android emulator or mobile device
+● We sincerely welcome Pull Requests from developers to help improve PC support
+
+Before use, please ensure:
+1. MAA is launched with administrator privileges
+2. The game window is not minimized
+3. Arknights Settings → Game → UI Scaling is set to 100%</system:String>
+    <system:String x:Key="AttachWindowScreencapMethod">Screencap Method</system:String>
+    <system:String x:Key="AttachWindowMouseMethod">Mouse Input Method</system:String>
+    <system:String x:Key="AttachWindowKeyboardMethod">Keyboard Input Method</system:String>
+    <system:String x:Key="AttachWindowScreencapFramePool">FramePool (Default, Background)</system:String>
+    <system:String x:Key="AttachWindowScreencapPrintWindow">PrintWindow (Background, Backup 1)</system:String>
+    <system:String x:Key="AttachWindowScreencapScreenDC">ScreenDC (Background, Backup 2)</system:String>
+    <system:String x:Key="AttachWindowScreencapDesktopDupWindow">DesktopWindow (Foreground, More Stable)</system:String>
+    <system:String x:Key="AttachWindowInputSeize">Seize (Foreground, More Stable)</system:String>
+    <system:String x:Key="AttachWindowInputPostWithCursor">PostMessageWithCursor (Semi-background)</system:String>
+    <system:String x:Key="AttachWindowInputSendWithCursor">SendMessageWithCursor (Semi-background, Backup)</system:String>
     <!--  !AsstProxy  -->
     <!--  TrayIcon  -->
     <system:String x:Key="ForceShow">Force display of MAA</system:String>
@@ -1088,6 +1288,10 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="OpenDebugFolder">Open Debug Folder</system:String>
     <system:String x:Key="GenerateSupportPayloadSuccessful">Support payload generated successfully</system:String>
     <system:String x:Key="GenerateSupportPayloadException">An error occurred while generating the support payload:</system:String>
+    <system:String x:Key="ClearCache">Clear Cache</system:String>
+    <system:String x:Key="ClearCacheSuccessful">Cache cleared successfully</system:String>
+    <system:String x:Key="ClearCacheAlreadyEmpty">Cache directories are already empty</system:String>
+    <system:String x:Key="ClearCacheException">An error occurred while clearing cache: </system:String>
     <!--  !Issues  -->
     <!--  AutoRecruitSettings  -->
     <system:String x:Key="AutoRefresh">Auto refresh 3★ Tags</system:String>
@@ -1134,6 +1338,8 @@ Right-click to clear inactive tasks</system:String>
     <!--  RootViewModel  -->
     <system:String x:Key="ConfirmExitTitle">MAA is running tasks</system:String>
     <system:String x:Key="ConfirmExitText">Are you sure want to exit?</system:String>
+    <system:String x:Key="UpdateConfirmExitTitle">MAA is updating</system:String>
+    <system:String x:Key="UpdateConfirmExitText">An update is in progress. Exiting MAA now may cause resource damage.\nAre you sure you want to exit?</system:String>
     <!--  !RootViewModel  -->
     <!--  Api  -->
     <system:String x:Key="ApiUpdateSuccess">Hot update data retrieval successful</system:String>
@@ -1175,6 +1381,9 @@ Right-click to clear inactive tasks</system:String>
     <system:String x:Key="Announcement">Announcement</system:String>
     <system:String x:Key="CheckAndDownloadAnnouncement">View Announcement</system:String>
     <system:String x:Key="DoNotRemindThisAnnouncementAgain">Do not show this announcement again</system:String>
+    <system:String x:Key="AnnouncementNotFinishedConfirm">You haven't finished reading. Please confirm after you finish.</system:String>
+    <system:String x:Key="AnnouncementNotFinishedConfirm2">Yes, you — still clicking</system:String>
+    <system:String x:Key="AnnouncementNotFinishedConfirm3">Still clicking</system:String>
     <!--  !Announcement  -->
     <!--  Reclamation  -->
     <system:String x:Key="ReclamationEarlyTip" xml:space="preserve">
@@ -1201,13 +1410,14 @@ With save file: farm points through crafting (advanced).
     <system:String x:Key="UnknownDllDetected" xml:space="preserve">Unknown DLL files have been detected in the MAA runtime directory, which may cause DLL hijacking and unexpected consequences.
 Please extract MAA into a separate new folder, or remove any DLL files that do not belong to MAA.
     </system:String>
-    <system:String x:Key="VC++NotInstalled" xml:space="preserve">Detected that Microsoft Visual C++ Redistributable 2015-2022 (x64) is NOT installed or the version is too low.
+    <system:String x:Key="VC++NotInstalled" xml:space="preserve">Detected that Microsoft Visual C++ V14 Redistributable (x64) is NOT installed or the version is too low.
 Click "{key=Confirm}" to execute the installation script and exit MAA. Click "{key=Cancel}" to exit MAA directly.
     </system:String>
     <system:String x:Key="MultiInstanceUnderSamePath" xml:space="preserve">Only one instance can be launched under the same path!
 If you want to run multiple MAA at the same time, please copy the whole MAA and start under different path with the same adb and different connect address.
     </system:String>
     <system:String x:Key="SoftwareLocationWarning">The current software location cannot save data, which may cause settings loss or runtime errors. Please move the software to a writable directory. Do not place it in system-protected directories (e.g., Program Files, System32, or Windows directories).</system:String>
+    <system:String x:Key="RunningInTempDirectoryError">MAA cannot run from an archive or system temporary directory. Please fully extract MAA from the archive, or move MAA to a regular folder before running.</system:String>
     <!--  !Boot  -->
     <!--  SimpleEncryptionHelper  -->
     <system:String x:Key="EncryptionError">Encryption and decryption failed, please reconfigure the relevant settings, otherwise the encrypted content will be stored in plain text in the configuration file.</system:String>
@@ -1280,6 +1490,10 @@ If you want to run multiple MAA at the same time, please copy the whole MAA and 
     <system:String x:Key="Achievement.Martian.Description">How's that ancient version working for you?</system:String>
     <system:String x:Key="Achievement.Martian.Conditions">Resource or version date is more than 3 months old</system:String>
     <system:String x:Key="Achievement.Martian.ConditionsTip">Resource or version date is more than {0} months old</system:String>
+
+    <system:String x:Key="Achievement.AnnouncementStubbornClick.Title">Stubborn</system:String>
+    <system:String x:Key="Achievement.AnnouncementStubbornClick.Description">Even after being prompted so many times, you still choose not to read the announcement.</system:String>
+    <system:String x:Key="Achievement.AnnouncementStubbornClick.Conditions">Click the close button more than 20 times without scrolling to the bottom</system:String>
 
     <system:String x:Key="Achievement.Rules.Title">Serious Erro-</system:String>
     <system:String x:Key="Achievement.Rules.Description">I'll be watching you.</system:String>
@@ -1500,6 +1714,86 @@ If you want to run multiple MAA at the same time, please copy the whole MAA and 
     <system:String x:Key="Achievement.RoguelikeN15.Title">Immortal Arts Cup Contestant</system:String>
     <system:String x:Key="Achievement.RoguelikeN15.Description">Immortal MAA truly immortal.</system:String>
     <system:String x:Key="Achievement.RoguelikeN15.Conditions">Clear any I.S. at N15 difficulty or above using ｢{key=AutoRoguelike}｣</system:String>
+
+    <system:String x:Key="Achievement.LogSupervisor.Title">Supervisor</system:String>
+    <system:String x:Key="Achievement.LogSupervisor.Description">They say watching MAA's logs can effectively improve auto-battle success rate.</system:String>
+    <system:String x:Key="Achievement.LogSupervisor.Conditions">Complete a task with the log floating window open</system:String>
+
+    <system:String x:Key="Achievement.RecruitGambler.Title">Recruitment Gambler</system:String>
+    <system:String x:Key="Achievement.RecruitGambler.Description">All in! Turn a bicycle into a motorcycle.</system:String>
+    <system:String x:Key="Achievement.RecruitGambler.Conditions">Refresh tags 50 times in public recruitment</system:String>
+
+    <system:String x:Key="Achievement.ClueCollector.Title">Clue Collector</system:String>
+    <system:String x:Key="Achievement.ClueCollector.Description">Rhodes Island socialite.</system:String>
+    <system:String x:Key="Achievement.ClueCollector.Conditions">Open clue exchange 20 times in total</system:String>
+
+    <system:String x:Key="Achievement.CluePhilosopher.Title">Clue Philosopher</system:String>
+    <system:String x:Key="Achievement.CluePhilosopher.Description">What is the meaning of gathering?</system:String>
+    <system:String x:Key="Achievement.CluePhilosopher.Conditions">Open clue exchange 50 times in total</system:String>
+
+    <system:String x:Key="Achievement.ClueSharer.Title">Clue Sharer</system:String>
+    <system:String x:Key="Achievement.ClueSharer.Description">Good things should be shared with friends.</system:String>
+    <system:String x:Key="Achievement.ClueSharer.Conditions">Send clues to friends 20 times in total</system:String>
+
+    <system:String x:Key="Achievement.CluePhilanthropist.Title">Clue Philanthropist</system:String>
+    <system:String x:Key="Achievement.CluePhilanthropist.Description">Take it, no need to thank me.</system:String>
+    <system:String x:Key="Achievement.CluePhilanthropist.Conditions">Send clues to friends 50 times in total</system:String>
+
+    <system:String x:Key="Achievement.TaskChainKing.Title">Task Chain King</system:String>
+    <system:String x:Key="Achievement.TaskChainKing.Description">One click to start, everything done.</system:String>
+    <system:String x:Key="Achievement.TaskChainKing.Conditions">Select more than 7 tasks in a single run</system:String>
+
+    <system:String x:Key="Achievement.UpdateObsession.Title">Update Obsession</system:String>
+    <system:String x:Key="Achievement.UpdateObsession.Description">Update available? Update!</system:String>
+    <system:String x:Key="Achievement.UpdateObsession.Conditions">Complete update within 1 day after release</system:String>
+
+    <system:String x:Key="Achievement.UpdateEarlyBird.Title">Update Early Bird</system:String>
+    <system:String x:Key="Achievement.UpdateEarlyBird.Description">Be the first to experience!</system:String>
+    <system:String x:Key="Achievement.UpdateEarlyBird.Conditions">Complete update within 1 hour after release</system:String>
+
+    <system:String x:Key="Achievement.SanityPlanner.Title">Sanity Planner</system:String>
+    <system:String x:Key="Achievement.SanityPlanner.Description">Precise, perfect, not a single point off.</system:String>
+    <system:String x:Key="Achievement.SanityPlanner.Conditions">Complete {key=Combat} with exactly all sanity consumed</system:String>
+
+    <system:String x:Key="Achievement.HotkeyMagician.Title">Hotkey Magician</system:String>
+    <system:String x:Key="Achievement.HotkeyMagician.Description">Ctrl + Shift + Alt + Win + F13</system:String>
+    <system:String x:Key="Achievement.HotkeyMagician.Conditions">Set and use a hotkey combination with more than 4 modifier keys</system:String>
+
+    <system:String x:Key="Achievement.WarehouseMiser.Title">Warehouse Miser</system:String>
+    <system:String x:Key="Achievement.WarehouseMiser.Description">Not a single one shall be used!</system:String>
+    <system:String x:Key="Achievement.WarehouseMiser.Conditions">Warehouse recognition detects more than 10000 of a material</system:String>
+
+    <system:String x:Key="Achievement.HrSpecialist.Title">HR Specialist</system:String>
+    <system:String x:Key="Achievement.HrSpecialist.Description">Why are they all Reserve Action Teams!</system:String>
+    <system:String x:Key="Achievement.HrSpecialist.Conditions">Recruit 10 times consecutively in a single recruitment task</system:String>
+
+    <system:String x:Key="Achievement.HrSeniorSpecialist.Title">HR Senior Specialist</system:String>
+    <system:String x:Key="Achievement.HrSeniorSpecialist.Description">Where is the Senior Operator tag? Where is it?🎶</system:String>
+    <system:String x:Key="Achievement.HrSeniorSpecialist.Conditions">Recruit 20 times consecutively in a single recruitment task</system:String>
+
+    <system:String x:Key="Achievement.WarehouseKeeper.Title">I'm the Warehouse Keeper!</system:String>
+    <system:String x:Key="Achievement.WarehouseKeeper.Description">MAA found MAA!</system:String>
+    <system:String x:Key="Achievement.WarehouseKeeper.Conditions">Operator recognition includes operator "Pallas"</system:String>
+
+    <system:String x:Key="Achievement.NotFound404.Title">404!</system:String>
+    <system:String x:Key="Achievement.NotFound404.Description">This task seems to be missing</system:String>
+    <system:String x:Key="Achievement.NotFound404.Conditions">Use remote protocol to call a task with incorrect id</system:String>
+
+    <system:String x:Key="Achievement.Linguist.Title">Linguist</system:String>
+    <system:String x:Key="Achievement.Linguist.Description">MAA, but internationalized.</system:String>
+    <system:String x:Key="Achievement.Linguist.Conditions">Try switching interface language</system:String>
+
+    <system:String x:Key="Achievement.StartupBoot.Title">Startup Boot</system:String>
+    <system:String x:Key="Achievement.StartupBoot.Description">Theoretically, your boot time just got a bit slower</system:String>
+    <system:String x:Key="Achievement.StartupBoot.Conditions">Set MAA to start on boot</system:String>
+
+    <system:String x:Key="Achievement.ClueObsession.Title">Clue Obsession</system:String>
+    <system:String x:Key="Achievement.ClueObsession.Description">Seven-color team, assemble!</system:String>
+    <system:String x:Key="Achievement.ClueObsession.Conditions">Collect and open clue exchange every day for 7 consecutive days</system:String>
+
+    <system:String x:Key="Achievement.Time325.Title">325</system:String>
+    <system:String x:Key="Achievement.Time325.Description">You know what this number means, right?</system:String>
+    <system:String x:Key="Achievement.Time325.Conditions">Still using MAA at 3/13/23:25</system:String>
     <!--  !Achievement  -->
 
     <!--  BadModules  -->
@@ -1507,5 +1801,17 @@ If you want to run multiple MAA at the same time, please copy the whole MAA and 
     <system:String x:Key="BadModules.Warning.Prolog">The following DLL(s) injected into MAA may crash MAA or corrupt MAA user interface:</system:String>
     <system:String x:Key="BadModules.Warning.Epilog">If you encounter such issues with MAA, please try adding MAA to the exclusion list of the relevant software, or uninstall the related software and check if the problem persists.</system:String>
     <system:String x:Key="BadModules.Warning.DoNotShowAgain">Do not show this warning again</system:String>
+    <system:String x:Key="BadModules.Confirmation.Heading">Warning: Performance Impact</system:String>
+    <system:String x:Key="BadModules.Confirmation.Text" xml:space="preserve">If you choose to suppress this warning, MAA will use software rendering instead of hardware rendering. This will cause:&#x0a;&#x0a;• Performance degradation&#x0a;• UI lag&#x0a;• Increased CPU usage&#x0a;&#x0a;&#x0a;Do you confirm to suppress the warning and accept these consequences?</system:String>
+    <system:String x:Key="BadModules.UseSoftwareRendering">Use Software Rendering</system:String>
+    <system:String x:Key="BadModules.UseSoftwareRenderingTip">When enabled, bad module warnings will be suppressed and software rendering mode will be used. This causes performance degradation, UI lag, and increased CPU usage. Uncheck to restore hardware rendering.</system:String>
+    <system:String x:Key="BadModules.ResetWarning">Software rendering mode is now enabled. Restart MAA to apply this setting.</system:String>
+    <system:String x:Key="BadModules.ResetSuccess">Hardware rendering mode has been restored. Restart MAA to apply changes. Restart now?</system:String>
     <!--  !BadModules  -->
+
+    <!--  EmulatorPathSelection  -->
+    <system:String x:Key="SelectEmulatorPath">Select Emulator Path</system:String>
+    <system:String x:Key="MultipleEmulatorsDetected">Multiple emulator installation paths detected, please select the path you want to use:</system:String>
+    <system:String x:Key="PleaseSelectPath">Please select a path</system:String>
+    <!--  !EmulatorPathSelection  -->
 </ResourceDictionary>

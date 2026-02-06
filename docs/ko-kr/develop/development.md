@@ -3,19 +3,39 @@ order: 1
 icon: iconoir:developer
 ---
 
-# 개발 환경 구축
+# 개발 가이드
 
 ::: tip
 본 페이지는 주로 PR 과정 및 MAA의 파일 포맷 요구사항을 설명합니다. MAA의 실행 로직 변경에 대한 구체적인 내용은 [프로토콜 문서](../protocol/)를 참고하세요.
 :::
 
-## Github Pull Request 진행 과정
+::: tip
+[DeepWiki에 문의하여](https://deepwiki.com/MaaAssistantArknights/MaaAssistantArknights) MAA 프로젝트의 전체적인 아키텍처를 개략적으로 이해할 수 있습니다.
+:::
 
-### 프로그래밍을 잘 모르지만, json 파일과 docs 문서를 수정하고싶어요. 어떻게 해야하나요?
+## 프로그래밍을 잘 모르지만, json 파일과 docs 문서를 수정하고싶어요. 어떻게 해야하나요?
 
 [웹 기반 PR 가이드](./pr-tutorial.md)를 참고하세요! (GitHub.com 웹사이트에서만 가능합니다)
 
-### 프로그래밍을 할 줄 알지만 GitHub/C++/...에 익숙하지 않아요. 어떻게 해야 하나요?
+## 몇 줄의 코드만 간단하게 수정하고 싶지만 환경 설정이 너무 복잡하고, 순수 웹 편집도 불편해요. 어떻게 해야 하나요?
+
+[GitHub Codespaces](https://github.com/codespaces) 온라인 개발 환경을 사용해보세요!
+
+다음과 같은 다양한 개발 환경을 사전에 설정했습니다：
+
+- 빈 환경 (순수 Linux 컨테이너) (기본값)
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2Fdevcontainer.json)
+
+- 경량 환경, 문서 사이트 프론트엔드 개발에 적합
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F0%2Fdevcontainer.json)
+
+- 전체 환경, MAA Core 관련 개발에 적합 (사용 권장하지 않음, 로컬 개발 권장, 관련 환경을 완전히 설정, 다음 섹션 참조)
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F1%2Fdevcontainer.json)
+
+## 완전한 환경 설정 (Windows)
 
 1. 이전에 fork 한 기록이 있다면 저장소 Settings 맨 아래에서 삭제
 2. [MAA 메인 저장소](https://github.com/MaaAssistantArknights/MaaAssistantArknights)에서 Fork → Create fork 클릭
@@ -43,32 +63,45 @@ icon: iconoir:developer
    ```
 
 5. 개발 환경 구성
-   - Visual Studio 2022 Community 설치 시 `C++ 데스크톱 개발` 및 `.NET 데스크톱 개발` 필수 선택
+   - `CMake` 다운로드 및 설치
+   - Visual Studio 2026 Community 설치 시 `C++ 데스크톱 개발` 및 `.NET 데스크톱 개발` 필수 선택
 
-6. MAA.sln 파일 더블클릭 → Visual Studio에서 프로젝트 자동 로드
-7. VS 설정
-   - 상단 구성에서 RelWithDebInfo x64 선택 (릴리스 빌드/ARM 플랫폼 시 생략)
-   - MaaWpfGui 우클릭 → 속성 → 디버그 → 네이티브 디버깅 활성화 (C++ 코어 중단점 사용 가능)
+6. cmake 프로젝트 구성 실행
 
-8. 이제 자유롭게 ~~개조~~ 개발 시작!
-9. 주기적 커밋 (메시지 필수 작성)  
-   Git 초보자는 dev 브랜치 대신 새 브랜치 생성 권장:
-
-   ```bash
-   git branch your_own_branch
-   git checkout your_own_branch
+   ```cmd
+   mkdir -p build
+   cmake -G "Visual Studio 18 2026" -B build -DBUILD_WPF_GUI=ON -DBUILD_DEBUG_DEMO=ON
    ```
 
-   dev 브랜치 업데이트 영향에서 자유로움
+7. `build/MAA.slnx` 파일을 더블 클릭하여 엽니다. Visual Studio가 자동으로 전체 프로젝트를 로드합니다.
+8. VS 설정
+   - 상단 구성에서 `Debug` `x64` 선택
+   - `MaaWpfGui` 우클릭 → 시작 프로젝트로 설정
+   - F5 키를 눌러 실행
 
-10. 개발 완료 후 변경사항 원격 저장소로 푸시:
+   ::: tip
+   Win32Controller(Windows 창 제어) 관련 기능을 디버깅하려면 [MaaFramework Releases](https://github.com/MaaXYZ/MaaFramework/releases)에서 해당 플랫폼 압축 파일을 다운로드하고, `bin` 디렉토리의 `MaaWin32ControlUnit.dll`을 MAA DLL과 같은 디렉토리(예: `build/bin/Debug`)에 배치해야 합니다. 자동 다운로드 스크립트 PR 환영!
+   :::
+
+9. 이제 자유롭게 ~~개조~~ 개발 시작!
+10. 주기적 커밋 (메시지 필수 작성)  
+    Git 초보자는 dev 브랜치 대신 새 브랜치 생성 권장:
+
+    ```bash
+    git branch your_own_branch
+    git checkout your_own_branch
+    ```
+
+    dev 브랜치 업데이트 영향에서 자유로움
+
+11. 개발 완료 후 변경사항 원격 저장소로 푸시:
 
     ```bash
     git push origin dev
     ```
 
-11. [MAA 메인 저장소](https://github.com/MaaAssistantArknights/MaaAssistantArknights)에서 Pull Request 제출 (master 대신 dev 브랜치 지정 필수)
-12. 업스트림 저장소 변경사항 동기화 방법:
+12. [MAA 메인 저장소](https://github.com/MaaAssistantArknights/MaaAssistantArknights)에서 Pull Request 제출 (master 대신 dev 브랜치 지정 필수)
+13. 업스트림 저장소 변경사항 동기화 방법:
     1. 업스트림 저장소 추가:
 
        ```bash
@@ -93,7 +126,7 @@ icon: iconoir:developer
        git merge
        ```
 
-    4. 단계 7, 8, 9, 10 반복 수행
+    4. 단계 8, 9, 10, 11 반복 수행
 
 ::: tip
 Visual Studio 실행 시 Git 작업은 "Git 변경" 탭에서 명령어 없이 처리 가능
@@ -128,7 +161,7 @@ pip 설치 후에도 Pre-commit을 실행할 수 없다면, PIP 설치 경로가
 
 이제, 매번 커밋할 때마다 포매팅 도구가 자동으로 실행되어 코드 형식이 규칙에 맞는지 확인합니다.
 
-## Visual Studio에서 clang-format 사용 설정
+### Visual Studio에서 clang-format 사용 설정
 
 1. clang-format 20.1.0 또는 그 이상 버전을 설치합니다.
 
@@ -148,9 +181,3 @@ pip 설치 후에도 Pre-commit을 실행할 수 없다면, PIP 설치 경로가
 또한 프로젝트 루트에서 `tools\ClangFormatter\clang-formatter.py`를 실행하여 직접 clang-format을 호출하여 포맷팅할 수도 있습니다.
 
 - `python tools\ClangFormatter\clang-formatter.py --clang-format=PATH\TO\YOUR\clang-format.exe --input=src\MaaCore`
-
-## GitHub codespace를 사용하여 온라인으로 개발하기
-
-GitHub codespace를 사용하여 자동으로 C++ 개발 환경을 구성하세요.
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg?color=green)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F1%2Fdevcontainer.json)

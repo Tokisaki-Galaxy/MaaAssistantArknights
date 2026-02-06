@@ -7,6 +7,12 @@ icon: material-symbols:summarize
 
 maa-cli의 주요 기능은 MaaCore를 호출하여 명일방주의 게임 작업을 자동화하는 것입니다. 또한 사용의 편의성을 위해 MaaCore 관리 기능도 제공합니다.
 
+::: tip
+
+Windows 패키지 관리자 (winget) 를 통해 maa-cli를 설치한 사용자는 다음 명령에서 `maa` 를 `maa-cli` 로 대체해야 합니다.
+
+:::
+
 ## MaaCore 관리
 
 maa-cli는 MaaCore 및 리소스를 설치하고 업데이트할 수 있습니다. 다음 명령어를 실행하세요:
@@ -47,7 +53,7 @@ MaaCore의 설치 및 구성을 완료하면 작업을 실행할 준비가 된 �
 - `maa startup [client]`: 게임을 시작하고 메인 화면으로 이동합니다. `[client]`는 클라이언트 유형이며, 생략하면 게임 클라이언트를 시작하지 않습니다.
 - `maa closedown [client]`: 게임 클라이언트를 종료합니다. `[client]`는 클라이언트 유형이며, 기본값은 `Official`입니다.
 - `maa fight [stage]`: 전투 작업을 실행합니다. `[stage]`는 스테이지 이름이며, 예를 들어 `1-7`입니다. 생략하면 이전 또는 현재 스테이지를 선택합니다.
-- `maa copilot <maa_uri>...`: 자동 전투 작업을 실행합니다. `<maa_uri>`는 작업의 URI이며, 여러 URI는 순차적으로 실행됩니다. `maa_uri`는 `maa://1234` 또는 로컬 파일 경로 `./1234.json`일 수 있습니다.
+- `maa copilot <maa_uri>...`: 자동지휘 작업을 실행합니다. `<maa_uri>`는 작업의 URI이며, 여러 URI는 순차적으로 실행됩니다. `maa_uri`는 `maa://1234` 또는 로컬 파일 경로 `./1234.json`일 수 있습니다.
 - `maa sscopilot <maa_uri>`: 자동 보안 파견을 실행합니다. `<maa_uri>`는 보안 파견 작업의 URI입니다.
 - `maa roguelike <theme>`: 자동 통합 전략을 실행합니다. `<theme>`는 통합 전략의 주제이며, 선택 가능한 값은 `Phantom`, `Mizuki`, `Sami`, `Sarkaz`, `JieGarden`입니다.
 - `maa reclamation <theme>`: 자동 생활 게임을 실행합니다. `<theme>`는 생활 게임의 주제이며, 현재 사용 가능한 값은 `Tales`입니다.
@@ -96,7 +102,7 @@ maa-cli는 기본적으로 표준 오류(stderr)에 로그를 출력합니다. `
 - `maa cleanup`: `maa-cli` 및 `MaaCore`의 캐시를 정리합니다.
 - `maa import <file> [-t <type>]:` 설정 파일을 가져옵니다. `file`은 설정 파일의 경로입니다. `-t` 옵션을 통해 설정 파일의 유형(`cli`, `profile`, `infrast` 등)을 지정할 수 있습니다.
 
-더 많은 명령어 사용 방법은 `maa help`를 통해 확인할 수 있으며, 특정 명령어의 사용 방법은 `maa help <command`>를 통해 확인할 수 있습니다.
+더 많은 명령어 사용 방법은 `maa help`를 통해 확인할 수 있으며, 특정 명령어의 사용 방법은 `maa help <command>`를 통해 확인할 수 있습니다.
 
 [config-core]: config.md#maacore-관련-설정
 [custom-task]: config.md#사용자-정의-작업

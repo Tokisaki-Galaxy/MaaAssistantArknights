@@ -34,9 +34,11 @@ public static class ExternalNotificationService
         {
             IExternalNotificationProvider provider = enabledProvider switch
             {
+                "Gotify" => new GotifyNotificationProvider(Instances.HttpService),
                 "ServerChan" => new ServerChanNotificationProvider(Instances.HttpService),
                 "Telegram" => new TelegramNotificationProvider(Instances.HttpService),
                 "Discord" => new DiscordNotificationProvider(Instances.HttpService),
+                "DingTalk" => new DingTalkNotificationProvider(Instances.HttpService),
                 "Discord Webhook" => new DiscordWebhookNotificationProvider(Instances.HttpService),
                 "Custom Webhook" => new CustomWebhookNotificationProvider(Instances.HttpService),
                 "SMTP" => new SmtpNotificationProvider(),
@@ -55,9 +57,9 @@ public static class ExternalNotificationService
                 _logger.Error(ex, "Failed to send External Notifications");
             }
 
-            if (isTest is false && result)
+            if (!isTest && result)
             {
-                return;
+                continue;
             }
 
             ToastNotification.ShowDirect(

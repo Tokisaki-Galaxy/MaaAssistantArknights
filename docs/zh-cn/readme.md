@@ -36,7 +36,7 @@ MAA 的意思是 MAA Assistant Arknights
 
 ## 亮点功能
 
-- 刷理智，掉落识别及上传 [企鹅物流](https://penguin-stats.cn/)，[一图流](https://ark.yituliu.cn/)
+- 理智作战，掉落识别及上传 [企鹅物流](https://penguin-stats.cn/)，[一图流](https://ark.yituliu.cn/)
 - 智能基建换班，自动计算干员效率，单设施内最优解；同时也支持 [自定义排班](./protocol/base-scheduling-schema.md)
 - 自动公招，可选使用加急许可，一次全部刷完！公招数据自动上传 [企鹅物流](https://penguin-stats.cn/result/stage/recruit/recruit)，[一图流](https://ark.yituliu.cn/survey/maarecruitdata)
 - 支持手动识别公招界面，方便对高星公招做出选择 ~~（你的这个高资回费出的是推王呢还是推王呢）~~
@@ -90,7 +90,7 @@ MAA 支持命令行界面（CLI）操作，支持 Linux，macOS 和 Windows，�
 - 全新框架：[MaaFramework](https://github.com/MaaXYZ/MaaFramework)
 - [作业站](https://prts.plus) 前端：[zoot-plus-frontend](https://github.com/ZOOT-Plus/zoot-plus-frontend)
 - [作业站](https://prts.plus) 后端：[ZootPlusBackend](https://github.com/ZOOT-Plus/ZootPlusBackend)
-- [官网](https://maa.plus)：[前端](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/dev/website)
+- [官网](https://maa.plus)：[前端](https://github.com/MaaAssistantArknights/maa-website)
 - 深度学习：[MaaAI](https://github.com/MaaAssistantArknights/MaaAI)
 
 ### 多语言 (i18n)
@@ -99,15 +99,9 @@ MAA 以中文（简体）为第一语言，翻译词条均以中文（简体）�
 
 ### 参与开发
 
-#### Windows
+请参阅 [开发指南](./develop/development.md)。
 
-请参阅 [开发前须知](./develop/development.md)。
-
-#### Linux | macOS
-
-请参阅 [Linux 编译教程](./develop/linux-tutorial.md)。
-
-#### API
+### API
 
 - [C 接口](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/include/AsstCaller.h)：[集成示例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Cpp/main.cpp)
 - [Python 接口](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Python/asst/asst.py)：[集成示例](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/dev/src/Python/sample.py)
@@ -123,15 +117,11 @@ MAA 以中文（简体）为第一语言，翻译词条均以中文（简体）�
 - [任务流程协议](./protocol/task-schema.md)
 - [自动抄作业协议](./protocol/copilot-schema.md)
 
-#### 外服适配
+### 外服适配
 
 请参阅 [外服适配教程](./develop/overseas-client-adaptation.md)，对于国服已支持的功能，绝大部分的外服适配工作仅需要截图 + 简单的 JSON 修改即可。
 
-#### 想参与开发，但不太会用 GitHub?
-
-[GitHub Pull Request 流程简述](./develop/development.md#github-pull-request-流程简述)
-
-#### Issue bot
+### Issue bot
 
 请参阅 [Issue Bot 使用方法](./develop/issue-bot-usage.md)
 

@@ -10,80 +10,106 @@
     xmlns:local="clr-namespace:MaaWpfGui.Views.UserControl.TaskQueue"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:s="https://github.com/canton7/Stylet"
-    xmlns:setting="clr-namespace:MaaWpfGui.ViewModels.UI"
     xmlns:task="clr-namespace:MaaWpfGui.Configuration.Single.MaaTask"
-    xmlns:ui="clr-namespace:MaaWpfGui.ViewModels.UserControl.TaskQueue"
+    xmlns:taskQueue_vms="clr-namespace:MaaWpfGui.ViewModels.UserControl.TaskQueue"
+    xmlns:ui_vms="clr-namespace:MaaWpfGui.ViewModels.UI"
     d:Background="White"
-    d:DataContext="{d:DesignInstance {x:Type ui:RoguelikeSettingsUserControlModel}}"
+    d:DataContext="{d:DesignInstance {x:Type taskQueue_vms:RoguelikeSettingsUserControlModel}}"
     d:DesignWidth="220"
     s:View.ActionTarget="{Binding}"
     mc:Ignorable="d">
     <StackPanel>
         <StackPanel
             d:Visibility="Visible"
-            IsEnabled="{Binding Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+            IsEnabled="{Binding Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
             Visibility="{c:Binding !EnableAdvancedSettings,
-                                   Source={x:Static setting:TaskQueueViewModel.TaskSettingVisibilities}}">
+                                   Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingVisibilities}}">
             <hc:ComboBox
-                Margin="0,5"
+                Margin="0,3"
                 hc:InfoElement.Title="{DynamicResource RoguelikeTheme}"
                 DisplayMemberPath="Display"
-                IsHitTestVisible="{Binding Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+                IsHitTestVisible="{Binding Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
                 ItemsSource="{Binding RoguelikeThemeList}"
                 SelectedValue="{Binding RoguelikeTheme}"
                 SelectedValuePath="Value" />
+            <StackPanel Margin="0,3">
+                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                    <controls:TextBlock Margin="8,0,0,0" Text="{DynamicResource RoguelikeDifficulty}" />
+                    <controls:TooltipBlock
+                        d:Visibility="Visible"
+                        TooltipText="{DynamicResource RoguelikeJieGardenDifficultyTip}"
+                        Visibility="{c:Binding '(RoguelikeMode == task:RoguelikeMode.Investment) and (RoguelikeTheme == task:RoguelikeTheme.JieGarden)',
+                                               Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}" />
+                </StackPanel>
+                <hc:ComboBox
+                    DisplayMemberPath="Display"
+                    IsHitTestVisible="{Binding Path=Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
+                    ItemsSource="{Binding RoguelikeDifficultyList}"
+                    ScrollViewer.CanContentScroll="False"
+                    SelectedValue="{Binding RoguelikeDifficulty}"
+                    SelectedValuePath="Value" />
+            </StackPanel>
             <hc:ComboBox
-                Margin="0,5"
-                hc:InfoElement.Title="{DynamicResource RoguelikeDifficulty}"
-                DisplayMemberPath="Display"
-                IsHitTestVisible="{Binding Path=Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
-                ItemsSource="{Binding RoguelikeDifficultyList}"
-                ScrollViewer.CanContentScroll="False"
-                SelectedValue="{Binding RoguelikeDifficulty}"
-                SelectedValuePath="Value" />
-            <hc:ComboBox
-                Margin="0,5"
+                Margin="0,3"
                 hc:InfoElement.Title="{DynamicResource Strategy}"
                 DisplayMemberPath="Display"
-                IsHitTestVisible="{Binding Path=Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+                IsHitTestVisible="{Binding Path=Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
                 IsSynchronizedWithCurrentItem="True"
                 ItemsSource="{Binding RoguelikeModeList}"
                 SelectedValue="{Binding RoguelikeMode}"
                 SelectedValuePath="Value" />
             <hc:ComboBox
-                Margin="0,5"
+                Margin="0,3"
                 d:Visibility="Visible"
                 hc:InfoElement.Title="{DynamicResource RoguelikeCollectibleModeSquad}"
                 DisplayMemberPath="Display"
-                IsHitTestVisible="{Binding Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+                IsHitTestVisible="{Binding Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
                 IsSynchronizedWithCurrentItem="True"
                 ItemsSource="{Binding RoguelikeSquadList}"
                 MaxDropDownHeight="800"
                 SelectedValue="{Binding RoguelikeCollectibleModeSquad}"
                 SelectedValuePath="Value"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Collectible',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}" />
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}" />
             <hc:ComboBox
-                Margin="0,5"
+                Margin="0,3"
                 hc:InfoElement.Title="{DynamicResource StartingSquad}"
                 DisplayMemberPath="Display"
-                IsHitTestVisible="{Binding Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+                IsHitTestVisible="{Binding Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
                 ItemsSource="{Binding RoguelikeSquadList}"
                 MaxDropDownHeight="800"
                 SelectedValue="{Binding RoguelikeSquad}"
                 SelectedValuePath="Value" />
             <hc:ComboBox
-                Margin="0,5"
+                Margin="0,3"
                 hc:InfoElement.Title="{DynamicResource StartingRoles}"
                 DisplayMemberPath="Display"
-                IsHitTestVisible="{Binding Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+                IsHitTestVisible="{Binding Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
                 ItemsSource="{Binding RoguelikeRolesList}"
                 SelectedValue="{Binding RoguelikeRoles}"
                 SelectedValuePath="Value" />
-            <StackPanel Margin="0,5">
+            <hc:ComboBox
+                Margin="0,3"
+                d:Visibility="Visible"
+                hc:InfoElement.Title="{DynamicResource RoguelikeFindPlaytimeTarget}"
+                DisplayMemberPath="Display"
+                IsHitTestVisible="{Binding Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
+                ItemsSource="{Binding RoguelikeFindPlaytimeTargetList}"
+                SelectedValue="{Binding RoguelikeFindPlaytimeTarget}"
+                SelectedValuePath="Value"
+                Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.FindPlaytime and RoguelikeTheme == task:RoguelikeTheme.JieGarden',
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}" />
+            <StackPanel Margin="0,3">
                 <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                     <controls:TextBlock Margin="8,0,0,0" Text="{DynamicResource StartingCoreChar}" />
-                    <controls:TooltipBlock TooltipText="{DynamicResource StartingCoreCharTip}" />
+                    <controls:TooltipBlock>
+                        <controls:TooltipBlock.TooltipText>
+                            <MultiBinding StringFormat="{}{0}&#x0a;&#x0a;{1}">
+                                <Binding Source="{StaticResource StartingCoreCharTip}" />
+                                <Binding Path="RoguelikeThemeTip" Source="{x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}" />
+                            </MultiBinding>
+                        </controls:TooltipBlock.TooltipText>
+                    </controls:TooltipBlock>
                 </StackPanel>
                 <hc:ComboBox
                     Name="StartingCoreCharComboBox"
@@ -93,7 +119,7 @@
                     IsTextSearchEnabled="False"
                     ItemsSource="{Binding RoguelikeCoreCharList}"
                     Loaded="{s:Action MakeComboBoxSearchable,
-                                      Target={x:Type setting:SettingsViewModel}}">
+                                      Target={x:Type ui_vms:SettingsViewModel}}">
                     <hc:ComboBox.Text>
                         <Binding Path="RoguelikeCoreChar" UpdateSourceTrigger="PropertyChanged">
                             <Binding.ValidationRules>
@@ -107,11 +133,11 @@
 
         <StackPanel
             d:Visibility="Visible"
-            IsEnabled="{Binding Idle, Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+            IsEnabled="{Binding Idle, Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
             Visibility="{c:Binding EnableAdvancedSettings,
-                                   Source={x:Static setting:TaskQueueViewModel.TaskSettingVisibilities}}">
+                                   Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingVisibilities}}">
             <hc:NumericUpDown
-                Margin="0,5"
+                Margin="0,3"
                 hc:InfoElement.Title="{DynamicResource StartTimesLimit}"
                 Maximum="99999"
                 Minimum="0"
@@ -122,13 +148,13 @@
                 Content="{DynamicResource InvestmentEnabled}"
                 IsChecked="{Binding RoguelikeInvestmentEnabled}"
                 IsEnabled="{c:Binding 'RoguelikeMode != task:RoguelikeMode.Investment',
-                                      Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}" />
+                                      Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}" />
             <CheckBox
                 Margin="0,10"
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeStopWhenInvestmentFull}"
                 Visibility="{c:Binding 'RoguelikeInvestmentEnabled and RoguelikeMode != task:RoguelikeMode.Collectible',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource StopOnGoldLimit}"
@@ -139,7 +165,7 @@
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeInvestmentWithMoreScoreRaw}"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Investment',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource InvestmentWithMoreScore}"
@@ -150,14 +176,14 @@
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeCollectibleModeShopping}"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Collectible',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource RoguelikeCollectibleModeShopping}"
                     TextWrapping="Wrap" />
             </CheckBox>
             <hc:NumericUpDown
-                Margin="0,5"
+                Margin="0,3"
                 d:Visibility="Visible"
                 hc:InfoElement.Title="{DynamicResource GoldTimesLimit}"
                 Maximum="999"
@@ -170,14 +196,14 @@
                 Content="{DynamicResource RefreshTraderWithDice}"
                 IsChecked="{Binding RoguelikeRefreshTraderWithDiceRaw}"
                 Visibility="{c:Binding 'RoguelikeTheme == task:RoguelikeTheme.Mizuki',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}" />
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}" />
             <StackPanel>
                 <CheckBox
                     Margin="0,10"
                     d:Visibility="Visible"
                     IsChecked="{Binding RoguelikeStartWithEliteTwo}"
                     Visibility="{c:Binding '(RoguelikeSquadIsProfessional) and ((RoguelikeTheme == task:RoguelikeTheme.Mizuki) or (RoguelikeTheme == task:RoguelikeTheme.Sami))',
-                                           Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                           Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                     <TextBlock
                         Block.TextAlignment="Left"
                         Text="{DynamicResource RoguelikeStartWithEliteTwo}"
@@ -188,7 +214,7 @@
                     d:Visibility="Visible"
                     IsChecked="{Binding RoguelikeOnlyStartWithEliteTwoRaw}"
                     Visibility="{c:Binding '(RoguelikeStartWithEliteTwo) and (RoguelikeMode == task:RoguelikeMode.Collectible) and ((RoguelikeTheme == task:RoguelikeTheme.Mizuki) or (RoguelikeTheme == task:RoguelikeTheme.Sami))',
-                                           Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                           Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                     <TextBlock
                         Block.TextAlignment="Left"
                         Text="{DynamicResource RoguelikeOnlyStartWithEliteTwo}"
@@ -204,14 +230,14 @@
                 DisplayMemberPath="Display"
                 ItemsSource="{Binding RoguelikeStartAwards}"
                 SelectedValuePath="Value"
-                Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Collectible and !RoguelikeOnlyStartWithEliteTwoRaw',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}" />
+                Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Collectible and !RoguelikeOnlyStartWithEliteTwo',
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}" />
             <CheckBox
                 Margin="0,10"
                 d:Visibility="Visible"
                 IsChecked="{Binding Roguelike3FirstFloorFoldartal}"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Collectible and RoguelikeTheme == task:RoguelikeTheme.Sami',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource Roguelike3FirstFloorFoldartal}"
@@ -220,65 +246,94 @@
             <hc:TextBox
                 d:Visibility="Visible"
                 IsReadOnly="{c:Binding !Idle,
-                                       Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+                                       Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
                 Style="{StaticResource TextBoxExtend}"
                 Text="{Binding Roguelike3FirstFloorFoldartals}"
                 Visibility="{c:Binding 'Roguelike3FirstFloorFoldartal and RoguelikeMode == task:RoguelikeMode.Collectible and RoguelikeTheme == task:RoguelikeTheme.Sami',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}" />
-            <CheckBox
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}" />
+            <StackPanel
                 Margin="0,10"
-                IsChecked="{Binding Roguelike3NewSquad2StartingFoldartal}"
+                Orientation="Horizontal"
                 Visibility="{c:Binding RoguelikeSquadIsFoldartal}">
-                <TextBlock
-                    Block.TextAlignment="Left"
-                    Text="{DynamicResource Roguelike3NewSquad2StartingFoldartal}"
-                    TextWrapping="Wrap" />
-            </CheckBox>
+                <CheckBox Grid.Column="0" IsChecked="{Binding Roguelike3NewSquad2StartingFoldartal}">
+                    <TextBlock
+                        Block.TextAlignment="Left"
+                        Text="{DynamicResource Roguelike3NewSquad2StartingFoldartal}"
+                        TextWrapping="Wrap" />
+                </CheckBox>
+                <controls:TooltipBlock Grid.Column="1" TooltipText="{DynamicResource Roguelike3NewSquad2StartingFoldartalTip}" />
+            </StackPanel>
+
             <TextBox
                 IsReadOnly="{c:Binding !Idle,
-                                       Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
+                                       Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
                 Text="{Binding Roguelike3NewSquad2StartingFoldartals}"
-                ToolTip="{DynamicResource Roguelike3NewSquad2StartingFoldartalTip}"
                 Visibility="{c:Binding 'Roguelike3NewSquad2StartingFoldartal and RoguelikeSquadIsFoldartal'}" />
-            <hc:TextBox
-                d:Visibility="Visible"
-                hc:InfoElement.Title="{DynamicResource RoguelikeCollapseList}"
-                IsReadOnly="{c:Binding !Idle,
-                                       Source={x:Static setting:TaskQueueViewModel.TaskSettingDataContext}}"
-                Text="{Binding RoguelikeExpectedCollapsalParadigms}"
-                ToolTip="{DynamicResource RoguelikeCollapseListTip}"
-                Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.CLP_PDS',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}" />
-            <StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox
-                        Margin="0,10"
-                        IsChecked="{Binding RoguelikeUseSupportUnit}"
-                        IsEnabled="{c:Binding 'RoguelikeCoreChar != &quot;&quot;'}">
-                        <TextBlock
-                            Block.TextAlignment="Left"
-                            Text="{DynamicResource RoguelikeUseSupportUnit}"
-                            TextWrapping="Wrap" />
-                    </CheckBox>
-                    <controls:TooltipBlock TooltipText="{DynamicResource RoguelikeRequireStartingCoreChar}" />
+
+            <Grid d:Visibility="Visible" Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.CLP_PDS', Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel
+                    Grid.Row="0"
+                    Margin="0,0,0,5"
+                    Orientation="Horizontal">
+                    <controls:TextBlock
+                        MaxWidth="{c:Binding '220 - 8 - ActualWidth',
+                                             ElementName=RoguelikeCollapseListTipTooltipBlock}"
+                        Margin="8,0,0,0"
+                        Block.TextAlignment="Left"
+                        Text="{DynamicResource RoguelikeCollapseList}"
+                        TextWrapping="Wrap" />
+                    <controls:TooltipBlock x:Name="RoguelikeCollapseListTipTooltipBlock" TooltipText="{DynamicResource RoguelikeCollapseListTip}" />
                 </StackPanel>
+                <hc:TextBox
+                    Grid.Row="1"
+                    IsReadOnly="{c:Binding !Idle,
+                                           Source={x:Static ui_vms:TaskQueueViewModel.TaskSettingDataContext}}"
+                    Text="{Binding RoguelikeExpectedCollapsalParadigms}" />
+            </Grid>
+
+            <StackPanel Orientation="Horizontal">
                 <CheckBox
+                    Grid.Column="0"
+                    MaxWidth="{c:Binding '220 - ActualWidth',
+                                         ElementName=RoguelikeRequireStartingCoreCharTooltipBlock}"
                     Margin="0,10"
-                    IsChecked="{Binding RoguelikeEnableNonfriendSupport}"
-                    IsEnabled="{c:Binding 'RoguelikeCoreChar != &quot;&quot;'}"
-                    Visibility="{c:Binding 'RoguelikeUseSupportUnit and RoguelikeCoreChar != &quot;&quot;'}">
+                    IsChecked="{Binding RoguelikeUseSupportUnit}"
+                    IsEnabled="{c:Binding 'RoguelikeCoreChar != &quot;&quot;'}">
+                    <TextBlock
+                        Block.TextAlignment="Left"
+                        Text="{DynamicResource RoguelikeUseSupportUnit}"
+                        TextWrapping="Wrap" />
+                </CheckBox>
+                <controls:TooltipBlock
+                    x:Name="RoguelikeRequireStartingCoreCharTooltipBlock"
+                    Grid.Column="1"
+                    TooltipText="{DynamicResource RoguelikeRequireStartingCoreChar}" />
+            </StackPanel>
+            <StackPanel
+                Margin="0,-2.5,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Orientation="Horizontal"
+                Visibility="{c:Binding 'RoguelikeUseSupportUnit and RoguelikeCoreChar != &quot;&quot;'}">
+                <controls:TextBlock Margin="2.5,0,7.5,0" Text="└" />
+                <CheckBox IsChecked="{Binding RoguelikeEnableNonfriendSupport}" IsEnabled="{c:Binding 'RoguelikeCoreChar != &quot;&quot;'}">
                     <TextBlock
                         Block.TextAlignment="Left"
                         Text="{DynamicResource RoguelikeUseNonFriendSupport}"
                         TextWrapping="Wrap" />
                 </CheckBox>
             </StackPanel>
+
             <CheckBox
                 Margin="0,10"
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeStopAtFinalBoss}"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Exp and RoguelikeTheme != task:RoguelikeTheme.Phantom',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource RoguelikeStopAtFinalBoss}"
@@ -289,7 +344,7 @@
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeMonthlySquadAutoIterate}"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Squad',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource RoguelikeMonthlySquadAutoIterate}"
@@ -300,7 +355,7 @@
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeMonthlySquadCheckComms}"
                 Visibility="{c:Binding 'RoguelikeMonthlySquadAutoIterate and RoguelikeMode == task:RoguelikeMode.Squad',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource RoguelikeMonthlySquadCheckComms}"
@@ -311,7 +366,7 @@
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeDeepExplorationAutoIterate}"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Exploration',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource RoguelikeDeepExplorationAutoIterate}"
@@ -322,21 +377,36 @@
                 d:Visibility="Visible"
                 IsChecked="{Binding RoguelikeStopAtMaxLevel}"
                 Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Exp',
-                                       Source={x:Static ui:RoguelikeSettingsUserControlModel.Instance}}">
+                                       Source={x:Static taskQueue_vms:RoguelikeSettingsUserControlModel.Instance}}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource RoguelikeStopAtMaxLevel}"
                     TextWrapping="Wrap" />
             </CheckBox>
-            <!--<CheckBox
+            <CheckBox
                 Margin="0,10"
                 IsChecked="{Binding RoguelikeStartWithSeed}"
-                Visibility="{c:Binding 'RoguelikeMode == task:RoguelikeMode.Investment and RoguelikeTheme == task:RoguelikeTheme.Sarkaz and (RoguelikeSquad == &quot;点刺成锭分队&quot; or RoguelikeSquad == &quot;后勤分队&quot;)'}">
+                Visibility="{c:Binding 'RoguelikeTheme == task:RoguelikeTheme.JieGarden'}">
                 <TextBlock
                     Block.TextAlignment="Left"
                     Text="{DynamicResource RoguelikeStartWithSeed}"
                     TextWrapping="Wrap" />
-            </CheckBox>-->
+            </CheckBox>
+            <hc:TextBox Margin="0,2,0,10" Visibility="{c:Binding RoguelikeStartWithSeed}">
+                <hc:TextBox.Text>
+                    <Binding Path="RoguelikeSeed" UpdateSourceTrigger="PropertyChanged">
+                        <Binding.ValidationRules>
+                            <hc:RegexRule Pattern="^[\da-zA-Z]+,rogue_\d,\d$" />
+                        </Binding.ValidationRules>
+                    </Binding>
+                </hc:TextBox.Text>
+            </hc:TextBox>
+            <controls:TextBlock
+                Margin="0,5"
+                HorizontalAlignment="Center"
+                FontWeight="Bold"
+                Text="{DynamicResource MultiTasksShareTip}"
+                TextAlignment="Center" />
             <CheckBox Margin="0,10" IsChecked="{Binding RoguelikeDelayAbortUntilCombatComplete}">
                 <TextBlock
                     Block.TextAlignment="Left"

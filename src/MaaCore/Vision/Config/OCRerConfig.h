@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common/AsstTypes.h"
-#include "Utils/NoWarningCVMat.h"
+#include "MaaUtils/NoWarningCVMat.hpp"
 
 #include <variant>
 
@@ -43,6 +43,7 @@ public:
 
     void set_without_det(bool without_det) noexcept;
     void set_use_char_model(bool enable) noexcept;
+    void set_use_raw(bool value) noexcept;
 
     void set_bin_threshold(int lower, int upper = 255);
     void set_bin_expansion(int expansion);

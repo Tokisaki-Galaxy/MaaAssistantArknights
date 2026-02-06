@@ -1,4 +1,4 @@
-name: Git Blame Ignore
+name: Blame Ignore Update
 
 on:
   schedule:
@@ -7,18 +7,20 @@ on:
 
 jobs:
   blame-ignore:
+    name: Update Git Blame Ignore Revs
     if: github.repository_owner == 'MaaAssistantArknights'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false # Needed to bypass protection rules in Push changes
 
       - name: Check blame
         id: check_changes
+        continue-on-error: true
         run: |
           LAST_CHECKED_COMMIT=$(cat .github/.last-blame-ignore-commit 2>/dev/null || git rev-list --max-parents=0 HEAD)
 
@@ -26,7 +28,7 @@ jobs:
 
           git diff --quiet .git-blame-ignore-revs
 
-      - name: Commit and Push changes
+      - name: Commit changes
         if: ${{ steps.check_changes.outcome == 'failure' }}
         run: |
           git config user.name "github-actions[bot]"

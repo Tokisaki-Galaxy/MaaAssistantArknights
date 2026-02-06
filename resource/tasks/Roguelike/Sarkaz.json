@@ -459,136 +459,6 @@
         "template": "Sarkaz@Roguelike@LastRewardConfirm.png"
     },
     "Sarkaz@Roguelike@RolesDefault": {},
-    "Sarkaz@Roguelike@Routing": {
-        "template": [
-            "Sarkaz@Roguelike@StageCombatDps.png",
-            "Sarkaz@Roguelike@StageEmergencyDps.png",
-            "Sarkaz@Roguelike@StageDreadfulFoe.png",
-            "Sarkaz@Roguelike@StageDreadfulFoe-5.png",
-            "Sarkaz@Roguelike@StageEncounter.png",
-            "Sarkaz@Roguelike@StageBoons.png",
-            "Sarkaz@Roguelike@StageSafeHouse.png",
-            "Sarkaz@Roguelike@StageSafeHouseCR.png",
-            "Sarkaz@Roguelike@StageSafeHouseHD.png",
-            "Sarkaz@Roguelike@StageGambling.png",
-            "Sarkaz@Roguelike@StageTrader.png",
-            "Sarkaz@Roguelike@StageTraderCR.png",
-            "Sarkaz@Roguelike@StageTraderHD.png",
-            "Sarkaz@Roguelike@StageWindAndRain.png",
-            "Sarkaz@Roguelike@StageEmergencyTransportation.png",
-            "Sarkaz@Roguelike@StageBoskyPassage.png",
-            "Sarkaz@Roguelike@StageProphecy.png",
-            "Sarkaz@Roguelike@StageFilterTruth.png",
-            "Sarkaz@Roguelike@StageFilterTruthCR.png",
-            "Sarkaz@Roguelike@StageFilterTruthHD.png",
-            "Sarkaz@Roguelike@StageConfrontation.png"
-        ],
-        "next": ["Sarkaz@Roguelike@RoutingAction"]
-    },
-    "Sarkaz@Roguelike@Routing-CombatOps": {
-        "doc": "点击普通战斗节点",
-        "baseTask": "Sarkaz@Roguelike@StageCombatDps",
-        "template": "Sarkaz@Roguelike@StageCombatDps.png",
-        "next": []
-    },
-    "Sarkaz@Roguelike@Routing-FastInvestment": {
-        "template": ["Sarkaz@Roguelike@StageCombatDps.png"],
-        "next": ["Sarkaz@Roguelike@RoutingAction"]
-    },
-    "Sarkaz@Roguelike@RoutingAction": {
-        "algorithm": "JustReturn"
-    },
-    "Sarkaz@Roguelike@RoutingAction-ExitThenAbandon": {
-        "doc": "用于替换 Sarkaz@Roguelike@RoutingAction 的 BaseTask",
-        "algorithm": "JustReturn",
-        "next": ["Sarkaz@Roguelike@ExitThenAbandon"]
-    },
-    "Sarkaz@Roguelike@RoutingAction-StageEncounterEnter": {
-        "algorithm": "JustReturn",
-        "next": ["Sarkaz@Roguelike@StageEncounterEnter"]
-    },
-    "Sarkaz@Roguelike@RoutingAction-StageTraderEnter": {
-        "doc": "用于替换 Sarkaz@Roguelike@RoutingAction 的 BaseTask",
-        "algorithm": "JustReturn",
-        "next": ["Sarkaz@Roguelike@StageTraderEnter"]
-    },
-    "Sarkaz@Roguelike@RoutingConfig": {
-        "doc": [
-            "RoguelikeRoutingTaskPlugin用参数",
-            "| specialParams[0]: 第一列节点的默认横坐标 (Rect.x)",
-            "| specialParams[1]: 中间列节点的默认横坐标 (Rect.x)",
-            "| specialParams[2]: 最后列节点的默认横坐标 (Rect.x)",
-            "| specialParams[3]: 节点 Rect.width",
-            "| specialParams[4]: 节点 Rect.height",
-            "| specialParams[5]: 两列节点之间的距离",
-            "| specialParams[6]: 节点 Rect 下边缘到节点铭牌下边缘的距离",
-            "| specialParams[7]: roi 的 margin offset",
-            "| specialParams[8]: 节点间连线方向判定的阈值"
-        ],
-        "template": "empty.png",
-        "specialParams": [321, 341, 586, 138, 47, 450, 32, 15, 7]
-    },
-    "Sarkaz@Roguelike@RoutingContinue": {
-        "template": "Sarkaz@Roguelike@Continue.png",
-        "roi": [1050, 550, 210, 100],
-        "action": "ClickSelf",
-        "next": ["Sarkaz@Roguelike@RoutingContinueConfirm"]
-    },
-    "Sarkaz@Roguelike@RoutingContinueConfirm": {
-        "Doc": "next 里的 RoutingNodeAnalyze 是为了确保回到地图",
-        "algorithm": "JustReturn",
-        "action": "ClickRect",
-        "specificRect": [50, 360, 0, 0],
-        "next": ["Sarkaz@Roguelike@RoutingNodeAnalyze", "Sarkaz@Roguelike@RoutingContinueConfirm"]
-    },
-    "Sarkaz@Roguelike@RoutingExitThenContinue": {
-        "template": "Roguelike@ExitThenAbandon.png",
-        "roi": [18, 8, 53, 53],
-        "action": "ClickSelf",
-        "next": ["Sarkaz@Roguelike@RoutingContinue"]
-    },
-    "Sarkaz@Roguelike@RoutingNodeAnalyze": {
-        "template": [
-            "Sarkaz@Roguelike@MapNodeCombatOps.png",
-            "Sarkaz@Roguelike@MapNodeCombatOpsGrey.png",
-            "Sarkaz@Roguelike@MapNodeEmergencyOps.png",
-            "Sarkaz@Roguelike@MapNodeEmergencyOpsGrey.png",
-            "Sarkaz@Roguelike@MapNodeEncounter.png",
-            "Sarkaz@Roguelike@MapNodeEncounterGrey.png",
-            "Sarkaz@Roguelike@MapNodeRogueTraderGrey.png"
-        ],
-        "roi": [246, 60, 288, 575],
-        "postDelay": 300
-    },
-    "Sarkaz@Roguelike@RoutingRefreshNode": {
-        "roi": [796, 130, 50, 170],
-        "action": "ClickSelf",
-        "next": ["Sarkaz@Roguelike@RoutingRefreshNodeConfirm"]
-    },
-    "Sarkaz@Roguelike@RoutingRefreshNodeCompleted": {
-        "algorithm": "JustReturn"
-    },
-    "Sarkaz@Roguelike@RoutingRefreshNodeConfirm": {
-        "algorithm": "OcrDetect",
-        "roi": [993, 472, 53, 26],
-        "text": ["确定"],
-        "action": "ClickSelf",
-        "postDelay": 300,
-        "next": ["Sarkaz@Roguelike@RoutingRefreshNodeWaiting", "Sarkaz@Roguelike@RoutingRefreshNodeCompleted"]
-    },
-    "Sarkaz@Roguelike@RoutingRefreshNodeWaiting": {
-        "baseTask": "LoadingText",
-        "postDelay": 300,
-        "next": ["Sarkaz@Roguelike@RoutingRefreshNodeWaiting", "Sarkaz@Roguelike@RoutingRefreshNodeCompleted"]
-    },
-    "Sarkaz@Roguelike@RoutingSwipeRight": {
-        "doc": "生成地图时向左滑动",
-        "algorithm": "JustReturn",
-        "action": "Swipe",
-        "specificRect": [1000, 360, 0, 0],
-        "rectMove": [570, 360, 0, 0],
-        "specialParams": [200, 1]
-    },
     "Sarkaz@Roguelike@SelectTheme": {
         "text": ["假说辑录"]
     },
@@ -598,10 +468,12 @@
         "roi": [848, 686, 46, 26]
     },
     "Sarkaz@Roguelike@SquadConfirm": {
+        "doc": "注意：在部分深入调查条目（如傀影主题的 <地面推进>）中有可能跳过招募组合直接开始初始招募",
         "template": "Sarkaz@Roguelike@LastRewardConfirm.png",
         "next": [
             "Sarkaz@Roguelike@LastReward-EnterPoint",
             "Sarkaz@Roguelike@RolesDefault",
+            "Sarkaz@Roguelike@RecruitMain",
             "Sarkaz@Roguelike@CloseCollection",
             "Sarkaz@Roguelike@MapObject"
         ]
@@ -692,7 +564,7 @@
         "roi": [786, 594, 120, 114],
         "next": ["Sarkaz@Roguelike@StageCanReconstructClose"]
     },
-    "Sarkaz@Roguelike@StageCombatDps": {
+    "Sarkaz@Roguelike@StageCombatOps": {
         "method": "HSVCount",
         "colorScales": [
             [
@@ -703,12 +575,12 @@
         "postDelay": 600,
         "next": [
             "Sarkaz@Roguelike@StageRefresh",
-            "Sarkaz@Roguelike@StageCombatDpsEnter",
-            "Sarkaz@Roguelike@StageEmergencyDpsEnter",
+            "Sarkaz@Roguelike@StageCombatOpsEnter",
+            "Sarkaz@Roguelike@StageEmergencyOpsEnter",
             "Sarkaz@Roguelike@Stages#next"
         ]
     },
-    "Sarkaz@Roguelike@StageCombatDpsEnter": {
+    "Sarkaz@Roguelike@StageCombatOpsEnter": {
         "method": "HSVCount",
         "colorScales": [
             [
@@ -731,8 +603,8 @@
         "next": [
             "Sarkaz@Roguelike@StageDreadfulFoe-5Enter",
             "Sarkaz@Roguelike@StageDreadfulFoeEnter",
-            "Sarkaz@Roguelike@StageEmergencyDpsEnter",
-            "Sarkaz@Roguelike@StageCombatDpsEnter",
+            "Sarkaz@Roguelike@StageEmergencyOpsEnter",
+            "Sarkaz@Roguelike@StageCombatOpsEnter",
             "Sarkaz@Roguelike@Stages#next"
         ]
     },
@@ -740,17 +612,17 @@
         "baseTask": "Sarkaz@Roguelike@StageEnterBattle"
     },
     "Sarkaz@Roguelike@StageDreadfulFoeEnter": {},
-    "Sarkaz@Roguelike@StageEmergencyDps": {
+    "Sarkaz@Roguelike@StageEmergencyOps": {
         "templThreshold": 0.95,
         "postDelay": 600,
         "next": [
             "Sarkaz@Roguelike@StageRefresh",
-            "Sarkaz@Roguelike@StageCombatDpsEnter",
-            "Sarkaz@Roguelike@StageEmergencyDpsEnter",
+            "Sarkaz@Roguelike@StageCombatOpsEnter",
+            "Sarkaz@Roguelike@StageEmergencyOpsEnter",
             "Sarkaz@Roguelike@Stages#next"
         ]
     },
-    "Sarkaz@Roguelike@StageEmergencyDpsEnter": {},
+    "Sarkaz@Roguelike@StageEmergencyOpsEnter": {},
     "Sarkaz@Roguelike@StageEmergencyTransportation": {
         "Doc": "先行一步，拒绝可以获取2希望",
         "baseTask": "Sarkaz@Roguelike@Stage",
@@ -766,7 +638,26 @@
     "Sarkaz@Roguelike@StageEncounter": {
         "templThreshold": 0.96
     },
+    "Sarkaz@Roguelike@StageEncounterClose": {
+        "Doc": "关掉进入事件可能弹出的窗口",
+        "baseTask": "Sarkaz@Roguelike@CloseCollectionClose",
+        "template": "Sarkaz@Roguelike@CloseCollectionClose.png",
+        "next": ["Sarkaz@Roguelike@StageEncounterJudgeOption"]
+    },
+    "Sarkaz@Roguelike@StageEncounterContinue": {
+        "Doc": "关掉进入事件可能弹出的窗口",
+        "baseTask": "Sarkaz@Roguelike@CloseCollectionContinue",
+        "template": "Sarkaz@Roguelike@CloseCollectionContinue.png",
+        "next": ["Sarkaz@Roguelike@StageEncounterJudgeOption"]
+    },
     "Sarkaz@Roguelike@StageEncounterEnter": {},
+    "Sarkaz@Roguelike@StageEncounterJudgeClick2": {
+        "next": [
+            "Sarkaz@Roguelike@StageEncounterContinue",
+            "Sarkaz@Roguelike@StageEncounterClose",
+            "Sarkaz@Roguelike@StageEncounterJudgeOption"
+        ]
+    },
     "Sarkaz@Roguelike@StageEncounterLeaveConfirm": {},
     "Sarkaz@Roguelike@StageEncounterOptionFree": {},
     "Sarkaz@Roguelike@StageEncounterOptionLeave": {},
@@ -781,8 +672,8 @@
             "Sarkaz@Roguelike@StageEncounterOptionLeave",
             "Sarkaz@Roguelike@StageEncounterOptionWonderland",
             "Sarkaz@Roguelike@ChooseOperFlag",
-            "Sarkaz@Roguelike@StageEmergencyDpsEnter",
-            "Sarkaz@Roguelike@StageCombatDpsEnter",
+            "Sarkaz@Roguelike@StageEmergencyOpsEnter",
+            "Sarkaz@Roguelike@StageCombatOpsEnter",
             "Sarkaz@Roguelike@CloseEvent",
             "Sarkaz@Roguelike@StageEncounterOptionUnknown"
         ]
@@ -867,7 +758,11 @@
     "Sarkaz@Roguelike@StageFilterTruthLeave": {
         "action": "ClickSelf",
         "roi": [1046, 443, 234, 204],
-        "next": ["Sarkaz@Roguelike@StageFilterTruthLeaveConfirm", "Sarkaz@Roguelike@StageFilterTruthLeave"]
+        "next": [
+            "Sarkaz@Roguelike@StageFilterTruthCloseCollection",
+            "Sarkaz@Roguelike@StageFilterTruthLeaveConfirm",
+            "Sarkaz@Roguelike@StageFilterTruthLeave"
+        ]
     },
     "Sarkaz@Roguelike@StageFilterTruthLeaveConfirm": {
         "action": "ClickSelf",
@@ -1081,8 +976,8 @@
             "Sarkaz@Roguelike@CloseCollectionClose",
             "Sarkaz@Roguelike@StageBurdenOperation#next",
             "Sarkaz@Roguelike@StageBoskyPassage",
-            "Sarkaz@Roguelike@StageEmergencyDps",
-            "Sarkaz@Roguelike@StageCombatDps",
+            "Sarkaz@Roguelike@StageEmergencyOps",
+            "Sarkaz@Roguelike@StageCombatOps",
             "Sarkaz@Roguelike@StageSafeHouseHD",
             "Sarkaz@Roguelike@StageSafeHouse",
             "Sarkaz@Roguelike@StageSafeHouseCR",
@@ -1129,8 +1024,8 @@
             "Sarkaz@Roguelike@StageEncounter",
             "Sarkaz@Roguelike@StageWindAndRain",
             "Sarkaz@Roguelike@StageConfrontation",
-            "Sarkaz@Roguelike@StageCombatDps",
-            "Sarkaz@Roguelike@StageEmergencyDps",
+            "Sarkaz@Roguelike@StageCombatOps",
+            "Sarkaz@Roguelike@StageEmergencyOps",
             "Sarkaz@Roguelike@StageDreadfulFoe",
             "Sarkaz@Roguelike@StageDreadfulFoe-5"
         ],
@@ -1158,7 +1053,7 @@
             "Sarkaz@Roguelike@DecreaseBurdenChaos",
             "Sarkaz@Roguelike@DecreaseBurdenRetardation",
             "Sarkaz@Roguelike@StageBoskyPassage",
-            "Sarkaz@Roguelike@StageCombatDps",
+            "Sarkaz@Roguelike@StageCombatOps",
             "Sarkaz@Roguelike@StageSafeHouseHD",
             "Sarkaz@Roguelike@StageSafeHouse",
             "Sarkaz@Roguelike@StageSafeHouseCR",
@@ -1175,7 +1070,7 @@
             "Sarkaz@Roguelike@StageWindAndRain",
             "Sarkaz@Roguelike@StageEmergencyTransportation",
             "Sarkaz@Roguelike@StageGambling",
-            "Sarkaz@Roguelike@StageEmergencyDps",
+            "Sarkaz@Roguelike@StageEmergencyOps",
             "Sarkaz@Roguelike@StageDreadfulFoe",
             "Sarkaz@Roguelike@StageDreadfulFoe-5"
         ],
@@ -1201,12 +1096,6 @@
         "template": "Sarkaz@Roguelike@StartExplore.png",
         "roi": [1014, 481, 266, 219]
     },
-    "Sarkaz@Roguelike@StartExploreWithSeed-ClickPen": {},
-    "Sarkaz@Roguelike@StartExploreWithSeed-Confirm": {},
-    "Sarkaz@Roguelike@StartExploreWithSeed-InputSeed": {
-        "inputText": "U1eIA1I29844Ae925i,rogue_4,6"
-    },
-    "Sarkaz@Roguelike@StartExploreWithSeed-SetDifficulty": {},
     "Sarkaz@Roguelike@StrategyChange-FastInvestment": {
         "baseTask": "Sarkaz@Roguelike@StrategyChange_mode1",
         "text": ["_fastInvestment", "_exit"],
@@ -1308,11 +1197,6 @@
     "Sarkaz@Roguelike@TodoEnter": {},
     "Sarkaz@Roguelike@WaitForStartButtonClicked": {
         "template": "Roguelike@QuickFormation.png"
-    },
-    "Sarkaz@RoguelikeRecruit-GiveUp": {
-        "doc": "在集成战略模式招募干员界面点击右下角 <放弃> 文字左侧图标位置，放弃招募机会",
-        "roi": [912, 648, 58, 58],
-        "action": "ClickSelf"
     },
     "Sarkaz@RoguelikeSettlementConfirm": {}
 }

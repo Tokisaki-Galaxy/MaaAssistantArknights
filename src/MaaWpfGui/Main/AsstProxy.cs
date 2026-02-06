@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,7 +32,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using HandyControl.Data;
+using MaaWpfGui.Configuration.Factory;
+using MaaWpfGui.Configuration.Single.MaaTask;
 using MaaWpfGui.Constants;
+using MaaWpfGui.Constants.Enums;
 using MaaWpfGui.Extensions;
 using MaaWpfGui.Helper;
 using MaaWpfGui.Models;
@@ -49,6 +51,7 @@ using Newtonsoft.Json.Linq;
 using ObservableCollections;
 using Serilog;
 using Stylet;
+using Windows.Win32;
 using static MaaWpfGui.Helper.Instances.Data;
 using AsstHandle = nint;
 using AsstInstanceOptionKey = System.Int32;
@@ -141,6 +144,16 @@ public class AsstProxy
         }
     }
 
+    private static bool AsstAttachWindow(AsstHandle handle, IntPtr hwnd, ulong screencapMethod, ulong mouseMethod, ulong keyboardMethod)
+    {
+        _logger.Information("handle: {Handle}, hwnd: {Hwnd}, screencapMethod: {ScreencapMethod}, mouseMethod: {MouseMethod}, keyboardMethod: {KeyboardMethod}",
+            (long)handle, hwnd, screencapMethod, mouseMethod, keyboardMethod);
+
+        bool ret = MaaService.AsstAttachWindow(handle, hwnd, screencapMethod, mouseMethod, keyboardMethod);
+        _logger.Information("handle: {Handle}, hwnd: {Hwnd}, return: {Ret}", (long)handle, hwnd, ret);
+        return ret;
+    }
+
     private static void AsstSetConnectionExtrasMuMu12(string extras)
     {
         AsstSetConnectionExtras("MuMuEmulator12", extras);
@@ -225,10 +238,22 @@ public class AsstProxy
         return AsstGetImage(_handle);
     }
 
+    public BitmapImage? AsstGetImage(bool forceScreencap)
+    {
+        // UI 端有两类取图场景：
+        // - 首页预览/缩略图：直接取 core 的缓存帧即可（避免频繁主动截图）
+        // - 监控/诊断：需要强制触发一次截图以拿到“此刻”的帧
+        if (forceScreencap)
+        {
+            MaaService.AsstAsyncScreencap(_handle, true);
+        }
+
+        return AsstGetImage(_handle);
+    }
+
     public BitmapImage? AsstGetFreshImage()
     {
-        MaaService.AsstAsyncScreencap(_handle, true);
-        return AsstGetImage(_handle);
+        return AsstGetImage(forceScreencap: true);
     }
 
     public static async Task<BitmapImage?> AsstGetImageAsync(AsstHandle handle)
@@ -241,10 +266,19 @@ public class AsstProxy
         return await AsstGetImageAsync(_handle);
     }
 
+    public async Task<BitmapImage?> AsstGetImageAsync(bool forceScreencap)
+    {
+        if (forceScreencap)
+        {
+            MaaService.AsstAsyncScreencap(_handle, true);
+        }
+
+        return await AsstGetImageAsync(_handle);
+    }
+
     public async Task<BitmapImage?> AsstGetFreshImageAsync()
     {
-        MaaService.AsstAsyncScreencap(_handle, true);
-        return await AsstGetImageAsync(_handle);
+        return await AsstGetImageAsync(forceScreencap: true);
     }
 
     // 需要外部调用 ArrayPool<byte>.Shared.Return(buffer)
@@ -278,11 +312,20 @@ public class AsstProxy
         return AsstGetImageBgrData(_handle);
     }
 
+    public byte[]? AsstGetImageBgrData(bool forceScreencap)
+    {
+        if (forceScreencap)
+        {
+            MaaService.AsstAsyncScreencap(_handle, true);
+        }
+
+        return AsstGetImageBgrData(_handle);
+    }
+
     // 需要外部调用 ArrayPool<byte>.Shared.Return(buffer)
     public byte[]? AsstGetFreshImageBgrData()
     {
-        MaaService.AsstAsyncScreencap(_handle, true);
-        return AsstGetImageBgrData(_handle);
+        return AsstGetImageBgrData(forceScreencap: true);
     }
 
     // 需要外部调用 ArrayPool<byte>.Shared.Return(buffer)
@@ -297,11 +340,20 @@ public class AsstProxy
         return await AsstGetImageBgrDataAsync(_handle);
     }
 
+    public async Task<byte[]?> AsstGetImageBgrDataAsync(bool forceScreencap)
+    {
+        if (forceScreencap)
+        {
+            MaaService.AsstAsyncScreencap(_handle, true);
+        }
+
+        return await AsstGetImageBgrDataAsync(_handle);
+    }
+
     // 需要外部调用 ArrayPool<byte>.Shared.Return(buffer)
     public async Task<byte[]?> AsstGetFreshImageBgrDataAsync()
     {
-        MaaService.AsstAsyncScreencap(_handle, true);
-        return await AsstGetImageBgrDataAsync(_handle);
+        return await AsstGetImageBgrDataAsync(forceScreencap: true);
     }
 
     public static WriteableBitmap WriteBgrToBitmap(byte[] bgrData, WriteableBitmap? targetBitmap)
@@ -320,6 +372,61 @@ public class AsstProxy
         return targetBitmap;
     }
 
+    public const int ScreencapWidth = 1280;
+    public const int ScreencapHeight = 720;
+    public const int ScreencapChannels = 3;
+
+    public static BitmapSource? CreateBgrBitmapSourceScaled(byte[] bgrData, int targetWidth, int targetHeight)
+    {
+        if (targetWidth <= 0 || targetHeight <= 0)
+        {
+            _logger.Warning("Invalid target size: {Width}x{Height}", targetWidth, targetHeight);
+            return null;
+        }
+
+        const int SrcWidth = ScreencapWidth;
+        const int SrcHeight = ScreencapHeight;
+        const int SrcStride = SrcWidth * ScreencapChannels;
+
+        if (bgrData.Length < SrcHeight * SrcStride)
+        {
+            _logger.Warning("Invalid bgrData size: {Size}, expected at least {ExpectedSize}", bgrData.Length, SrcHeight * SrcStride);
+            return null;
+        }
+
+        int dstStride = targetWidth * ScreencapChannels;
+
+        // 直接生成小图，避免先构建大图再缩放导致不必要的内存峰值。
+        var dst = new byte[targetHeight * dstStride];
+        for (int y = 0; y < targetHeight; y++)
+        {
+            int srcY = y * SrcHeight / targetHeight;
+            int srcRow = srcY * SrcStride;
+            int dstRow = y * dstStride;
+            for (int x = 0; x < targetWidth; x++)
+            {
+                int srcX = x * SrcWidth / targetWidth;
+                int srcIndex = srcRow + (srcX * ScreencapChannels);
+                int dstIndex = dstRow + (x * ScreencapChannels);
+                dst[dstIndex] = bgrData[srcIndex];
+                dst[dstIndex + 1] = bgrData[srcIndex + 1];
+                dst[dstIndex + 2] = bgrData[srcIndex + 2];
+            }
+        }
+
+        var bitmap = BitmapSource.Create(
+            targetWidth,
+            targetHeight,
+            96,
+            96,
+            PixelFormats.Bgr24,
+            null,
+            dst,
+            dstStride);
+        bitmap.Freeze();
+        return bitmap;
+    }
+
     private readonly MaaService.CallbackDelegate _callback;
 
     /// <summary>
@@ -329,11 +436,10 @@ public class AsstProxy
     {
         _callback = CallbackFunction;
         _runningState = RunningState.Instance;
-        _tasksStatus.CollectionChanged += (in NotifyCollectionChangedEventArgs<KeyValuePair<AsstTaskId, (TaskType, TaskStatus)>> args) =>
-        {
+        _tasksStatus.CollectionChanged += (in NotifyCollectionChangedEventArgs<KeyValuePair<AsstTaskId, (TaskType, TaskStatus)>> args) => {
             if (args.Action == NotifyCollectionChangedAction.Reset)
             {
-                TaskSettingVisibilityInfo.Instance.CurrentTask = string.Empty;
+                TaskSettingVisibilityInfo.Instance.NotifyOfTaskStatus();
             }
         };
 
@@ -363,7 +469,7 @@ public class AsstProxy
 
         string mainRes = PathsHelper.ResourceDir;
         string globalRes = Path.Combine(mainRes, "global", clientType, "resource");
-        string mainCacheRes = PathsHelper.CacheDir;
+        string mainCacheRes = PathsHelper.CacheResourceDir;
         string globalCacheRes = Path.Combine(mainCacheRes, "global", clientType, "resource");
 
         bool loaded;
@@ -381,6 +487,13 @@ public class AsstProxy
             CopyTasksJson(globalCacheRes);
             loaded = LoadResIfExists(mainRes) && LoadResIfExists(mainCacheRes);
             loaded &= LoadResIfExists(globalRes) && LoadResIfExists(globalCacheRes);
+        }
+
+        // 使用窗口绑定模式时，额外加载 PC 平台差异资源
+        if (SettingsViewModel.ConnectSettings.UseAttachWindow)
+        {
+            string pcPlatformRes = Path.Combine(mainRes, "platform_diff", "PC", "resource");
+            loaded &= LoadResIfExists(pcPlatformRes);
         }
 
         return loaded;
@@ -407,12 +520,12 @@ public class AsstProxy
         }
 
         // 新的目录结构为 tasks/tasks.json，api 为了兼容，仍然存在 resource/tasks.json
-        static void CopyTasksJson(string oldPath)
+        static void CopyTasksJson(string oldResPath)
         {
             try
             {
-                string tasksJsonPath = Path.Combine(oldPath, @"resource\tasks.json");
-                string tasksFolderPath = Path.Combine(oldPath, @"resource\tasks");
+                string tasksJsonPath = Path.Combine(oldResPath, @"tasks.json");
+                string tasksFolderPath = Path.Combine(oldResPath, @"tasks");
                 string newTasksJsonPath = Path.Combine(tasksFolderPath, "tasks.json");
 
                 if (!File.Exists(tasksJsonPath))
@@ -437,6 +550,30 @@ public class AsstProxy
     }
 
     /// <summary>
+    /// 异步加载资源
+    /// </summary>
+    /// <returns>是否成功。</returns>
+    public async Task<bool> LoadResourceAsync()
+    {
+        return await Task.Run(() => LoadResource());
+    }
+
+    /// <summary>
+    /// 等待系统空闲时异步加载资源，并返回操作是否成功的值。
+    /// Asynchronously loads the resource when the system is idle and returns a value indicating whether the operation succeeded.
+    /// </summary>
+    /// <returns>
+    /// 表示在系统空闲时异步加载操作的任务。如果资源加载成功，任务结果为 <see langword="true"/>；否则为 <see langword="false"/>。
+    /// A task that represents the asynchronous load operation when the system is idle. The task result is <see langword="true"/> if the
+    /// resource was loaded successfully; otherwise, <see langword="false"/>.
+    /// </returns>
+    public async Task<bool> LoadResourceWhenIdleAsync()
+    {
+        await _runningState.UntilIdleAsync();
+        return await LoadResourceAsync();
+    }
+
+    /// <summary>
     /// 初始化。
     /// </summary>
     public void Init()
@@ -458,6 +595,19 @@ public class AsstProxy
                 _logger.Information("Using GPU {0} (Driver {1} {2})", description, version, date);
             }
 
+            // Check if driver date is over two years old
+            if (info is { DriverDate: { } driverDate })
+            {
+                var twoYearsAgo = DateTime.Now.AddYears(-2);
+                if (driverDate < twoYearsAgo)
+                {
+                    var dateStr = driverDate.ToString("yyyy-MM-dd");
+                    var message = string.Format(LocalizationHelper.GetString("GpuDriverOutdatedMessage"), description, version ?? "Unknown", dateStr);
+                    Instances.TaskQueueViewModel.AddLog(message, UiLogColor.Warning);
+                    _logger.Warning("Using GPU {0} with outdated driver {1} (release date: {2}, over 2 years old)", description, version, dateStr);
+                }
+            }
+
             AsstSetStaticOption(AsstStaticOptionKey.GpuOCR, x.Index.ToString());
         }
 
@@ -468,11 +618,10 @@ public class AsstProxy
         if (loaded == false || _handle == AsstHandle.Zero)
         {
             Execute.OnUIThreadAsync(
-                () =>
-            {
-                MessageBoxHelper.Show(LocalizationHelper.GetString("ResourceBroken"), LocalizationHelper.GetString("Error"), iconKey: ResourceToken.FatalGeometry, iconBrushKey: ResourceToken.DangerBrush);
-                Bootstrapper.Shutdown();
-            });
+                () => {
+                    MessageBoxHelper.Show(LocalizationHelper.GetString("ResourceBroken"), LocalizationHelper.GetString("Error"), iconKey: ResourceToken.FatalGeometry, iconBrushKey: ResourceToken.DangerBrush);
+                    Bootstrapper.Shutdown();
+                });
         }
 
         _runningState.SetInit(true);
@@ -483,31 +632,30 @@ public class AsstProxy
         // TODO: 之后把这个 OnUIThread 拆出来
         // ReSharper disable once AsyncVoidLambda
         Execute.OnUIThread(
-            async () =>
-        {
-            if (SettingsViewModel.StartSettings.RunDirectly)
-            {
-                // 如果是直接运行模式，就先让按钮显示为运行
-                _runningState.SetIdle(false);
-            }
+            async () => {
+                if (SettingsViewModel.StartSettings.RunDirectly)
+                {
+                    // 如果是直接运行模式，就先让按钮显示为运行
+                    _runningState.SetIdle(false);
+                }
 
-            await Task.Run(() => SettingsViewModel.StartSettings.TryToStartEmulator(true));
+                await Task.Run(() => SettingsViewModel.StartSettings.TryToStartEmulator(true));
 
-            // 一般是点了“停止”按钮了
-            if (_runningState.GetStopping())
-            {
-                Instances.TaskQueueViewModel.SetStopped();
-                return;
-            }
+                // 一般是点了“停止”按钮了
+                if (_runningState.GetStopping())
+                {
+                    Instances.TaskQueueViewModel.SetStopped();
+                    return;
+                }
 
-            // ReSharper disable once InvertIf
-            if (SettingsViewModel.StartSettings.RunDirectly)
-            {
-                // 重置按钮状态，不影响LinkStart判断
-                _runningState.SetIdle(true);
-                await Instances.TaskQueueViewModel.LinkStart();
-            }
-        });
+                // ReSharper disable once InvertIf
+                if (SettingsViewModel.StartSettings.RunDirectly)
+                {
+                    // 重置按钮状态，不影响LinkStart判断
+                    _runningState.SetIdle(true);
+                    await Instances.TaskQueueViewModel.LinkStart();
+                }
+            });
     }
 
     /// <summary>
@@ -548,10 +696,9 @@ public class AsstProxy
         var json = (JObject?)JsonConvert.DeserializeObject(jsonStr ?? string.Empty);
         MaaService.ProcCallbackMsg dlg = ProcMsg;
         Execute.OnUIThread(
-            () =>
-        {
-            dlg((AsstMsg)msg, json);
-        });
+            () => {
+                dlg((AsstMsg)msg, json);
+            });
     }
 
     private AsstHandle _handle;
@@ -676,8 +823,7 @@ public class AsstProxy
                     var alternativesToken = details["details"]?["alternatives"];
                     if (alternativesToken is JArray { Count: > 1 } arr)
                     {
-                        screencapAlternatives = arr.Select(item =>
-                        {
+                        screencapAlternatives = arr.Select(item => {
                             string method1 = item?["method"]?.ToString() ?? "???";
                             string cost1 = item?["cost"]?.ToString() ?? "???";
                             return (method1, cost1);
@@ -756,8 +902,7 @@ public class AsstProxy
                     // 截图增强未生效禁止启动
                     if (needToStop)
                     {
-                        Execute.OnUIThreadAsync(async () =>
-                        {
+                        Execute.OnUIThreadAsync(async () => {
                             Connected = false;
                             await Instances.TaskQueueViewModel.Stop();
                             Instances.TaskQueueViewModel.SetStopped();
@@ -871,45 +1016,44 @@ public class AsstProxy
                 }
         }
 
-        bool isCopilotTaskChain = taskChain is "Copilot" or "VideoRecognition";
+        bool isCopilotTaskChain = taskChain is "Copilot" or "SSSCopilot"; /* or "VideoRecognition"; */
 
         switch (msg)
         {
             case AsstMsg.TaskChainStopped:
                 Instances.TaskQueueViewModel.SetStopped();
-                TaskStatusUpdate(taskId, TaskStatus.Completed);
+                UpdateTaskStatus(taskId, TaskStatus.Completed);
+                foreach (var i in Instances.TaskQueueViewModel.TaskItemViewModels)
+                {
+                    i.TaskId = 0;
+                    i.Status = (int)TaskStatus.Idle;
+                }
                 _tasksStatus.Clear();
                 break;
 
             case AsstMsg.TaskChainError:
                 {
-                    // 对剿灭的特殊处理，如果刷完了剿灭还选了剿灭会因为找不到入口报错
-                    TaskStatusUpdate(taskId, TaskStatus.Completed);
+                    UpdateTaskStatus(taskId, TaskStatus.Error);
                     _tasksStatus.TryGetValue(taskId, out var value);
-                    if (value is { Type: TaskType.Fight } &&
-                        TaskQueueViewModel.FightTask.Stage == "Annihilation" &&
-                        TaskQueueViewModel.FightTask.UseAlternateStage &&
-                        TaskQueueViewModel.FightTask.Stages.Any(stage =>
-                            Instances.TaskQueueViewModel.IsStageOpen(stage ?? string.Empty) &&
-                            stage != "Annihilation"))
+
+                    var log = LocalizationHelper.GetString("TaskError") + LocalizationHelper.GetString(taskChain);
+                    Task.Run(async () => {
+                        var screenshot = await AsstGetImageAsync();
+                        Execute.OnUIThread(() => {
+                            Instances.TaskQueueViewModel.AddLog(log, UiLogColor.Error, toolTip: screenshot?.CreateTooltip(), updateCardImage: true, fetchLatestImage: true);
+                        });
+                    });
+
+                    ToastNotification.ShowDirect(log);
+                    if (SettingsViewModel.ExternalNotificationSettings.ExternalNotificationSendWhenError)
                     {
-                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("AnnihilationTaskFailed"), UiLogColor.Warning);
+                        ExternalNotificationService.Send(log, log);
                     }
-                    else if (value is { Type: TaskType.Copilot } or { Type: TaskType.VideoRec })
+
+                    if (value is { Type: TaskType.Copilot })
                     {
                         Instances.CopilotViewModel.AddLog(LocalizationHelper.GetString("CombatError"), UiLogColor.Error);
                         AchievementTrackerHelper.Instance.Unlock(AchievementIds.CopilotError);
-                    }
-                    else
-                    {
-                        var log = LocalizationHelper.GetString("TaskError") + LocalizationHelper.GetString(taskChain);
-                        Instances.TaskQueueViewModel.AddLog(log, UiLogColor.Error);
-                        ToastNotification.ShowDirect(log);
-
-                        if (SettingsViewModel.ExternalNotificationSettings.ExternalNotificationSendWhenError)
-                        {
-                            ExternalNotificationService.Send(log, log);
-                        }
                     }
 
                     break;
@@ -917,39 +1061,64 @@ public class AsstProxy
 
             case AsstMsg.TaskChainStart:
                 {
-                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("StartTask") + LocalizationHelper.GetString(taskChain));
-                    TaskStatusUpdate(taskId, TaskStatus.InProgress);
+                    var taskIndex = Instances.TaskQueueViewModel.TaskItemViewModels.FirstOrDefault(t => t.TaskId == taskId)?.Index ?? -1;
+                    var task = taskIndex >= 0 && taskIndex < ConfigFactory.CurrentConfig.TaskQueue.Count
+                        ? ConfigFactory.CurrentConfig.TaskQueue[taskIndex]
+                        : null;
+                    var taskName = task?.Name ?? $"({LocalizationHelper.GetString(taskChain)})";
+                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("StartTask") + taskName, splitMode: TaskQueueViewModel.LogCardSplitMode.Before);
+                    UpdateTaskStatus(taskId, TaskStatus.InProgress);
+
+                    // LinkStart 按钮也会修改，但小工具中的日志源需要在这里修改
+                    Instances.OverlayViewModel.LogItemsSource = (taskChain is "Copilot" or "SSSCopilot") /* or "VideoRecognition") */
+                        ? Instances.CopilotViewModel.LogItemViewModels
+                        : Instances.TaskQueueViewModel.LogItemViewModels;
+
                     break;
                 }
 
             case AsstMsg.TaskChainCompleted:
                 {
                     // 判断 _latestTaskId 中是否有元素的值和 details["taskid"] 相等，如果有再判断这个 id 对应的任务是否在 _mainTaskTypes 中
-                    TaskStatusUpdate(taskId, TaskStatus.Completed);
-                    if (_tasksStatus.TryGetValue(taskId, out var task))
+                    UpdateTaskStatus(taskId, TaskStatus.Completed);
+                    if (_tasksStatus.TryGetValue(taskId, out var taskInfo))
                     {
-                        if (_mainTaskTypes.Contains(task.Type))
+                        if (_mainTaskTypes.Contains(taskInfo.Type))
                         {
                             Instances.TaskQueueViewModel.UpdateMainTasksProgress();
                         }
                     }
 
+                    var taskIndex = Instances.TaskQueueViewModel.TaskItemViewModels.FirstOrDefault(t => t.TaskId == taskId)?.Index ?? -1;
+                    var task = taskIndex >= 0 && taskIndex < ConfigFactory.CurrentConfig.TaskQueue.Count
+                        ? ConfigFactory.CurrentConfig.TaskQueue[taskIndex]
+                        : null;
                     switch (taskChain)
                     {
                         case "Infrast":
-                            InfrastSettingsUserControlModel.Instance.IncreaseCustomInfrastPlanIndex();
-                            InfrastSettingsUserControlModel.Instance.RefreshCustomInfrastPlanIndexByPeriod();
-                            break;
+                            {
+                                if (task is InfrastTask infrastTask)
+                                {
+                                    InfrastSettingsUserControlModel.IncreaseCustomInfrastPlanIndex(infrastTask);
+                                }
+                                break;
+                            }
                     }
 
+                    var taskName = task?.Name ?? $"({LocalizationHelper.GetString(taskChain)})";
                     if (taskChain == "Fight" && FightTask.SanityReport is not null)
                     {
                         var sanityLog = "\n" + string.Format(LocalizationHelper.GetString("CurrentSanity"), FightTask.SanityReport.SanityCurrent, FightTask.SanityReport.SanityMax);
-                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + LocalizationHelper.GetString(taskChain) + sanityLog);
+                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + taskName + sanityLog);
+
+                        if (FightTask.SanityReport.SanityCurrent == 0)
+                        {
+                            AchievementTrackerHelper.Instance.Unlock(AchievementIds.SanityPlanner);
+                        }
                     }
                     else
                     {
-                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + LocalizationHelper.GetString(taskChain));
+                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + taskName);
                     }
 
                     if (isCopilotTaskChain)
@@ -1006,6 +1175,11 @@ public class AsstProxy
                 }
 
                 bool buyWine = _tasksStatus.Any(t => t.Value.Type == TaskType.Mall) && Instances.SettingsViewModel.DidYouBuyWine();
+                foreach (var i in Instances.TaskQueueViewModel.TaskItemViewModels)
+                {
+                    i.TaskId = 0;
+                    i.Status = (int)TaskStatus.Idle;
+                }
                 _tasksStatus.Clear();
 
                 Instances.TaskQueueViewModel.ResetAllTemporaryVariable();
@@ -1035,7 +1209,7 @@ public class AsstProxy
                         sanityReport = sanityReport.Replace("{DateTime}", recoveryTime.ToString("yyyy-MM-dd HH:mm")).Replace("{TimeDiff}", (recoveryTime - DateTimeOffset.Now).ToString(@"h\h\ m\m"));
 
                         allTaskCompleteLog = allTaskCompleteLog + Environment.NewLine + sanityReport;
-                        Instances.TaskQueueViewModel.AddLog(allTaskCompleteLog);
+                        Instances.TaskQueueViewModel.AddLog(allTaskCompleteLog, splitMode: TaskQueueViewModel.LogCardSplitMode.Both);
 
                         if (SettingsViewModel.ExternalNotificationSettings.ExternalNotificationSendWhenComplete)
                         {
@@ -1055,8 +1229,7 @@ public class AsstProxy
                         var interval = recoveryTime - DateTimeOffset.Now.AddMinutes(6);
                         if (interval > TimeSpan.Zero)
                         {
-                            _toastNotificationTimer = new DispatcherTimer
-                            {
+                            _toastNotificationTimer = new DispatcherTimer {
                                 Interval = interval,
                             };
                             _toastNotificationTimer.Tick += OnToastNotificationTimerTick;
@@ -1065,7 +1238,7 @@ public class AsstProxy
                     }
                     else
                     {
-                        Instances.TaskQueueViewModel.AddLog(allTaskCompleteLog);
+                        Instances.TaskQueueViewModel.AddLog(allTaskCompleteLog, splitMode: TaskQueueViewModel.LogCardSplitMode.Both);
 
                         if (SettingsViewModel.ExternalNotificationSettings.ExternalNotificationSendWhenComplete)
                         {
@@ -1099,6 +1272,11 @@ public class AsstProxy
 
                     // Instances.TaskQueueViewModel.CheckAndShutdown();
                     _ = Instances.TaskQueueViewModel.CheckAfterCompleted();
+
+                    if (Instances.OverlayViewModel.IsCreated)
+                    {
+                        AchievementTrackerHelper.Instance.Unlock(AchievementIds.LogSupervisor);
+                    }
                 }
                 else if (isCopilotTaskChain)
                 {
@@ -1218,6 +1396,7 @@ public class AsstProxy
     private static void ProcSubTaskError(JObject details)
     {
         string subTask = details["subtask"]?.ToString() ?? string.Empty;
+        AsstTaskId taskId = details["taskid"]?.ToObject<AsstTaskId>() ?? 0;
         switch (subTask)
         {
             case "StartGameTask":
@@ -1242,6 +1421,19 @@ public class AsstProxy
             case "ReportToPenguinStats":
                 {
                     var why = details["why"]!.ToString();
+
+                    // 剿灭放弃上传企鹅物流的特殊处理
+                    Instances.AsstProxy.TasksStatus.TryGetValue(taskId, out var value);
+                    if (value is { Type: TaskType.Fight }
+                        && (Instances.TaskQueueViewModel.TaskItemViewModels.FirstOrDefault(t => t.TaskId == taskId)?.Index ?? -1) is int index and > -1
+                        && index <= ConfigFactory.CurrentConfig.TaskQueue.Count
+                        && ConfigFactory.CurrentConfig.TaskQueue[index] is Configuration.Single.MaaTask.FightTask fight
+                        && FightTask.GetFightStage(fight.StagePlan) is "Annihilation")
+                    {
+                        Instances.TaskQueueViewModel.AddLog("AnnihilationStage, " + LocalizationHelper.GetString("GiveUpUploadingPenguins"));
+                        break;
+                    }
+
                     Instances.TaskQueueViewModel.AddLog(why + ", " + LocalizationHelper.GetString("GiveUpUploadingPenguins"), UiLogColor.Warning);
                     break;
                 }
@@ -1281,13 +1473,21 @@ public class AsstProxy
                             Instances.CopilotViewModel.AddLog(LocalizationHelper.GetString("MissingOperators"), UiLogColor.Error);
                         }
 
-                        /*
                         if (missingOpers is not null && missingOpers.Count >= 2)
                         {
                             AchievementTrackerHelper.Instance.Unlock(AchievementIds.Irreplaceable);
-                        }*/
+                        }
                     }
-
+                    break;
+                }
+            case "CopilotTask":
+                {
+                    var what = details["what"]?.ToString() ?? string.Empty;
+                    if (what == "UserAdditionalOperInvalid")
+                    {
+                        var operName = details["details"]?["name"]?.ToString();
+                        Instances.CopilotViewModel.AddLog(LocalizationHelper.GetStringFormat("CopilotUserAdditionalNameInvalid", operName ?? string.Empty), UiLogColor.Error);
+                    }
                     break;
                 }
         }
@@ -1337,7 +1537,7 @@ public class AsstProxy
                                 missionStartLogBuilder.AppendFormat(LocalizationHelper.GetString("StoneUsedTimes"), StoneUsedTimes);
                             }
 
-                            Instances.TaskQueueViewModel.AddLog(missionStartLogBuilder.ToString().TrimEnd(), UiLogColor.Info);
+                            Instances.TaskQueueViewModel.AddLog(missionStartLogBuilder.ToString().TrimEnd(), UiLogColor.Info, splitMode: TaskQueueViewModel.LogCardSplitMode.Before);
                             break;
 
                         case "StoneConfirm":
@@ -1349,11 +1549,22 @@ public class AsstProxy
                             Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("ActingCommandError"), UiLogColor.Error);
                             break;
 
+                        case "FightMissionFailedAndStop":
+                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("FightMissionFailedAndStop"), UiLogColor.Error);
+                            ToastNotification.ShowDirect(LocalizationHelper.GetString("FightMissionFailedAndStop"));
+                            break;
+
                         case "RecruitRefreshConfirm":
                             Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("LabelsRefreshed"), UiLogColor.Info);
                             break;
 
                         case "RecruitConfirm":
+                            RecruitConfirmTime++;
+                            if (RecruitConfirmTime > AchievementTrackerHelper.Instance.GetProgressToGroup(AchievementIds.HrManager))
+                            {
+                                AchievementTrackerHelper.Instance.AddProgressToGroup(AchievementIds.HrManager);
+                            }
+
                             Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("RecruitConfirm"), UiLogColor.Info);
                             break;
 
@@ -1371,11 +1582,11 @@ public class AsstProxy
                         //    Instances.TaskQueueViewModel.AddLog("开始战斗");
                         //    break;
                         case "MissionCompletedFlag":
-                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("FightCompleted"), UiLogColor.SuccessIS);
+                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("FightCompleted"), UiLogColor.SuccessIS, updateCardImage: true);
                             break;
 
                         case "MissionFailedFlag":
-                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("FightFailed"), UiLogColor.Error);
+                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("FightFailed"), UiLogColor.Error, updateCardImage: true);
                             break;
 
                         case "StageTrader":
@@ -1393,12 +1604,12 @@ public class AsstProxy
                         // case "StageBoonsEnter":
                         //    Instances.TaskQueueViewModel.AddLog("古堡馈赠");
                         //    break;
-                        case "StageCombatDps":
-                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CombatDps"), UiLogColor.CombatIS);
+                        case "StageCombatOps":
+                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CombatOps"), UiLogColor.CombatIS);
                             break;
 
-                        case "StageEmergencyDps":
-                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("EmergencyDps"), UiLogColor.EmergencyIS);
+                        case "StageEmergencyOps":
+                            Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("EmergencyOps"), UiLogColor.EmergencyIS);
                             break;
 
                         case "StageDreadfulFoe":
@@ -1480,17 +1691,36 @@ public class AsstProxy
         switch (subTask)
         {
             case "ProcessTask":
-                var taskchain = details["taskchain"]?.ToString();
-                switch (taskchain)
+                var taskName = details["details"]?["task"]?.ToString();
+                var taskChain = details["taskchain"]?.ToString();
+                AsstTaskId taskId = details["taskid"]?.ToObject<AsstTaskId>() ?? 0;
+                switch (taskChain)
                 {
+                    case "Infrast":
+                        {
+                            switch (taskName)
+                            {
+                                case "UnlockClues":
+                                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("ClueExchangeUnlocked"));
+                                    AchievementTrackerHelper.Instance.AddProgressToGroup(AchievementIds.ClueUseGroup);
+                                    AchievementTrackerHelper.Instance.ClueObsessionAdd();
+                                    break;
+
+                                case "SendClues":
+                                    AchievementTrackerHelper.Instance.AddProgressToGroup(AchievementIds.ClueSendGroup);
+                                    break;
+                            }
+
+                            break;
+                        }
+
                     case "Roguelike":
                         {
-                            var taskName = details!["details"]!["task"]!.ToString();
                             int execTimes = (int)details!["details"]!["exec_times"]!;
 
                             if (taskName == "StartExplore")
                             {
-                                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("BegunToExplore") + $" {execTimes} " + LocalizationHelper.GetString("UnitTime"), UiLogColor.Info);
+                                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("BegunToExplore") + $" {execTimes} " + LocalizationHelper.GetString("UnitTime"), UiLogColor.Info, splitMode: TaskQueueViewModel.LogCardSplitMode.Before);
                             }
 
                             break;
@@ -1498,19 +1728,30 @@ public class AsstProxy
 
                     case "Mall":
                         {
-                            var taskName = details["details"]!["task"]!.ToString();
                             switch (taskName)
                             {
                                 case "EndOfActionThenStop":
-                                    TaskQueueViewModel.MallTask.LastCreditFightTaskTime = DateTime.UtcNow.ToYjDate().ToFormattedString();
-                                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + LocalizationHelper.GetString("CreditFight"));
-                                    AchievementTrackerHelper.Instance.AddProgress(AchievementIds.MosquitoLeg);
-                                    break;
+                                    {
+                                        var index = Instances.TaskQueueViewModel.TaskItemViewModels.FirstOrDefault(t => t.TaskId == taskId)?.Index ?? -1;
+                                        if (index >= 0 && index < ConfigFactory.CurrentConfig.TaskQueue.Count && ConfigFactory.CurrentConfig.TaskQueue[index] is MallTask mall)
+                                        {
+                                            mall.CreditFightLastTime = DateTime.UtcNow.ToYjDate().ToFormattedString();
+                                        }
+                                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + LocalizationHelper.GetString("CreditFight"));
+                                        AchievementTrackerHelper.Instance.AddProgress(AchievementIds.MosquitoLeg);
+                                        break;
+                                    }
 
                                 case "VisitLimited" or "VisitNextBlack":
-                                    TaskQueueViewModel.MallTask.LastCreditVisitFriendsTime = DateTime.UtcNow.ToYjDate().ToFormattedString();
-                                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + LocalizationHelper.GetString("Visiting"));
-                                    break;
+                                    {
+                                        var index = Instances.TaskQueueViewModel.TaskItemViewModels.FirstOrDefault(t => t.TaskId == taskId)?.Index ?? -1;
+                                        if (index >= 0 && index < ConfigFactory.CurrentConfig.TaskQueue.Count && ConfigFactory.CurrentConfig.TaskQueue[index] is MallTask mall)
+                                        {
+                                            mall.VisitFriendsLastTime = DateTime.UtcNow.ToYjDate().ToFormattedString();
+                                        }
+                                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("CompleteTask") + LocalizationHelper.GetString("Visiting"));
+                                        break;
+                                    }
                             }
 
                             break;
@@ -1530,16 +1771,18 @@ public class AsstProxy
                 ProcRecruitCalcMsg(details);
                 break;
 
-            case "VideoRecognition":
-                ProcVideoRecMsg(details);
-                break;
+                /*
+                case "VideoRecognition":
+                    ProcVideoRecMsg(details);
+                    break;
+                */
         }
 
         var subTaskDetails = details["details"];
         switch (taskChain)
         {
             case "Depot":
-                Instances.ToolboxViewModel.DepotParse((JObject?)subTaskDetails);
+                Instances.ToolboxViewModel.DepotParse((JObject?)subTaskDetails, updateSyncTime: true);
                 break;
 
             case "OperBox":
@@ -1598,9 +1841,13 @@ public class AsstProxy
                         $"{allDrops}{(curTimes >= 0
                             ? $"\n{LocalizationHelper.GetString("CurTimes")} : {curTimes}"
                             : string.Empty)}",
-                        toolTip: dropsForTooltip.CreateMaterialDropTooltip());
+                        toolTip: dropsForTooltip.CreateMaterialDropTooltip(),
+                        updateCardImage: true);
 
                     AchievementTrackerHelper.Instance.AddProgressToGroup(AchievementIds.SanitySpenderGroup, curTimes > 0 ? curTimes : 1);
+
+                    // 联动更新 Depot 数据
+                    Instances.ToolboxViewModel.UpdateDepotFromDrops(drops);
 
                     break;
                 }
@@ -1608,7 +1855,8 @@ public class AsstProxy
             case "EnterFacility":
                 Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("ThisFacility") +
                                                     LocalizationHelper.GetString($"{subTaskDetails?["facility"]}") + " " +
-                                                    ((int)(subTaskDetails?["index"] ?? -2) + 1).ToString("D2"));
+                                                    ((int)(subTaskDetails?["index"] ?? -2) + 1).ToString("D2"),
+                                                    splitMode: TaskQueueViewModel.LogCardSplitMode.Before);
                 break;
 
             case "ProductIncorrect":
@@ -1623,6 +1871,10 @@ public class AsstProxy
                 Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("ProductChanged"), UiLogColor.Info);
                 break;
 
+            case "InfrastConfirmButton":
+                Instances.TaskQueueViewModel.AddLog(string.Empty, updateCardImage: true, fetchLatestImage: true);
+                break;
+
             case "RecruitTagsDetected":
                 {
                     var tags = subTaskDetails!["tags"] ?? new JArray();
@@ -1630,7 +1882,7 @@ public class AsstProxy
                         .Aggregate(string.Empty, (current, tagStr) => current + (tagStr + "\n"));
 
                     logContent = logContent.EndsWith('\n') ? logContent.TrimEnd('\n') : LocalizationHelper.GetString("Error");
-                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("RecruitingResults") + "\n" + logContent);
+                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("RecruitingResults") + "\n" + logContent, splitMode: TaskQueueViewModel.LogCardSplitMode.Before, updateCardImage: true);
 
                     break;
                 }
@@ -1725,6 +1977,7 @@ public class AsstProxy
                 {
                     int refreshCount = (int)subTaskDetails!["count"]!;
                     Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("Refreshed") + refreshCount + LocalizationHelper.GetString("UnitTime"));
+                    AchievementTrackerHelper.Instance.AddProgress(AchievementIds.RecruitGambler);
                     break;
                 }
 
@@ -1758,7 +2011,7 @@ public class AsstProxy
                 }
 
             case "StageInfoError":
-                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("StageInfoError"), UiLogColor.Error);
+                Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("StageInfoError"), UiLogColor.Error, splitMode: TaskQueueViewModel.LogCardSplitMode.Both, updateCardImage: true);
                 break;
 
             case "BattleFormation":
@@ -1770,6 +2023,10 @@ public class AsstProxy
                         (subTaskDetails!["formation"]?.ToObject<List<string?>>() ?? [])
                             .Select(oper => DataHelper.GetLocalizedCharacterName(oper) ?? oper)
                             .Where(oper => !string.IsNullOrEmpty(oper))) + "]");
+                break;
+
+            case "BattleFormationParseFailed":
+                Instances.CopilotViewModel.AddLog(LocalizationHelper.GetString("BattleFormationParseFailed"));
                 break;
 
             case "BattleFormationSelected":
@@ -1788,11 +2045,14 @@ public class AsstProxy
             case "BattleFormationOperUnavailable":
                 {
                     var oper_name = DataHelper.GetLocalizedCharacterName(subTaskDetails!["oper_name"]?.ToString());
-                    var requirement_type = subTaskDetails["requirement_type"]?.ToString() == "module"
-                        ? LocalizationHelper.GetString("BattleFormationModuleUnavailable")
-                        : subTaskDetails["requirement_type"]?.ToString() ?? "UnknownRequirementType";
+                    var requirement_type = subTaskDetails["requirement_type"]?.ToString() switch {
+                        "level" => LocalizationHelper.GetString("BattleFormationOperUnavailable.Level"),
+                        "skill_level" => LocalizationHelper.GetString("BattleFormationOperUnavailable.SkillLevel"),
+                        "module" => LocalizationHelper.GetString("BattleFormationOperUnavailable.Module"),
+                        _ => subTaskDetails["requirement_type"]?.ToString() ?? "Unknown Type",
+                    };
 
-                    Instances.CopilotViewModel.AddLog(string.Format(LocalizationHelper.GetString("BattleFormationOperUnavailable"), oper_name, requirement_type), Instances.CopilotViewModel.IgnoreRequirements ? UiLogColor.Warning : UiLogColor.Error);
+                    Instances.CopilotViewModel.AddLog(LocalizationHelper.GetStringFormat("BattleFormationOperUnavailable", oper_name ?? string.Empty, requirement_type), Instances.CopilotViewModel.IgnoreRequirements ? UiLogColor.Warning : UiLogColor.Error);
                     break;
                 }
 
@@ -1813,6 +2073,12 @@ public class AsstProxy
                             LocalizationHelper.GetString("CurrentSteps"),
                             LocalizationHelper.GetString(actionString),
                             DataHelper.GetLocalizedCharacterName(target) ?? target));
+
+                    var elapsed_time_str = subTaskDetails!["elapsed_time"]?.ToString();
+                    if (int.TryParse(elapsed_time_str, out int elapsed_time_int) && elapsed_time_int >= 0)
+                    {
+                        Instances.CopilotViewModel.AddLog(string.Format(LocalizationHelper.GetString("ElapsedTime"), elapsed_time_int), UiLogColor.Message);
+                    }
 
                     break;
                 }
@@ -1930,9 +2196,9 @@ public class AsstProxy
                             AchievementTrackerHelper.Instance.SetProgress(AchievementIds.OverLimitAgent, FightTask.FightReport.TimesFinished);
                         }
 
-                        if (FightTask.Instance.HasTimesLimited != false && FightTask.FightReport.TimesFinished + FightTask.FightReport.Series > FightTask.Instance.MaxTimes)
+                        if (FightTask.Instance.HasTimesLimited != false && FightTask.FightReport.IsFinished && FightTask.FightReport.TimesFinished < FightTask.Instance.MaxTimes)
                         {
-                            Instances.TaskQueueViewModel.AddLog(string.Format(LocalizationHelper.GetString("FightTimesUnused"), FightTask.FightReport.TimesFinished, FightTask.FightReport.Series, FightTask.FightReport.TimesFinished + FightTask.FightReport.Series, FightTask.Instance.MaxTimes), UiLogColor.Error);
+                            Instances.TaskQueueViewModel.AddLog(string.Format(LocalizationHelper.GetString("FightTimesUnused"), FightTask.FightReport.TimesFinished, FightTask.FightReport.Series, FightTask.FightReport.TimesFinished + FightTask.FightReport.Series, FightTask.Instance.MaxTimes), UiLogColor.Warning);
                         }
                     }
 
@@ -2000,8 +2266,7 @@ public class AsstProxy
                 // string p = @"C:\tmp\this path contains spaces, and,commas\target.txt";
                 string args = $"/e, /select, \"{filename}\"";
 
-                ProcessStartInfo info = new()
-                {
+                ProcessStartInfo info = new() {
                     FileName = "explorer",
                     Arguments = args,
                 };
@@ -2016,6 +2281,15 @@ public class AsstProxy
         if (string.IsNullOrEmpty(url))
         {
             _logger.Error("Report request received with empty URL.");
+            return;
+        }
+
+        string subTask = details["subtask"]?.ToString() ?? string.Empty;
+
+        // 企鹅物流不收集 txwy 客户端数据
+        if (SettingsViewModel.GameSettings.ClientType == ClientType.Txwy && (subTask == "ReportToPenguinStats"))
+        {
+            _logger.Information("PenguinStats report skipped for txwy client type.");
             return;
         }
 
@@ -2038,14 +2312,15 @@ public class AsstProxy
 
         var content = new StringContent(body, Encoding.UTF8, "application/json");
 
-        string subTask = details["subtask"]?.ToString() ?? string.Empty;
-
         bool success = false;
         try
         {
-            success = await GameDataReportService.PostWithRetryAsync(url, content, headers, subTask, penguinId =>
-            {
-                SettingsViewModel.GameSettings.PenguinId = penguinId;
+            success = await GameDataReportService.PostWithRetryAsync(url, content, headers, subTask, penguinId => {
+                if (string.IsNullOrWhiteSpace(SettingsViewModel.GameSettings.PenguinId))
+                {
+                    SettingsViewModel.GameSettings.PenguinId = penguinId;
+                }
+
                 _logger.Information("New PenguinId got: {PenguinId}", penguinId);
             });
         }
@@ -2069,8 +2344,6 @@ public class AsstProxy
     {
         return MaaService.AsstSetStaticOption(key, value);
     }
-
-    private static readonly bool _forcedReloadResource = File.Exists("DEBUG") || File.Exists("DEBUG.txt");
 
     /// <summary>
     /// 使用 TCP 或 adb devices 命令检查连接。TCP 检测相比 adb devices 更快，但不支持实体机。
@@ -2135,6 +2408,121 @@ public class AsstProxy
     /// <returns>是否成功。</returns>
     public bool AsstConnect(ref string error)
     {
+        // 如果启用了 AttachWindow 模式，则使用窗口绑定而非 ADB 连接
+        if (SettingsViewModel.ConnectSettings.UseAttachWindow)
+        {
+            return AsstAttachWindowConnect(ref error);
+        }
+
+        return AsstAdbConnect(ref error);
+    }
+
+    /// <summary>
+    /// 搜索指定窗口标题的窗口句柄。
+    /// </summary>
+    /// <param name="windowName">窗口标题（完全匹配）。</param>
+    /// <returns>找到的窗口句柄列表。</returns>
+    private static List<IntPtr> FindWindowsByName(string windowName)
+    {
+        var results = new List<IntPtr>();
+
+        PInvoke.EnumWindows((hWnd, lParam) => {
+            if (!PInvoke.IsWindowVisible(hWnd))
+            {
+                return true;
+            }
+
+            var len = PInvoke.GetWindowTextLength(hWnd);
+            if (len <= 0)
+            {
+                return true;
+            }
+
+            Span<char> buffer = len <= 1024 ? stackalloc char[len + 1] : new char[len + 1];
+            int written = PInvoke.GetWindowText(hWnd, buffer);
+            var title = new string(buffer[..Math.Max(0, Math.Min(written, buffer.Length))]);
+
+            if (title == windowName)
+            {
+                results.Add((IntPtr)hWnd);
+            }
+
+            return true;
+        }, IntPtr.Zero);
+
+        return results;
+    }
+
+    /// <summary>
+    /// 通过 AttachWindow 绑定 Win32 窗口。
+    /// 自动搜索 "明日方舟" 窗口。
+    /// </summary>
+    /// <param name="error">具体的连接错误。</param>
+    /// <returns>是否成功。</returns>
+    private bool AsstAttachWindowConnect(ref string error)
+    {
+        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("UseAttachWindowWarning"), UiLogColor.Warning);
+
+        const string TargetWindowName = "明日方舟";
+        var foundWindows = FindWindowsByName(TargetWindowName);
+
+        if (foundWindows.Count == 0)
+        {
+            error = string.Format(LocalizationHelper.GetString("AttachWindowNotFound"), TargetWindowName);
+            Instances.TaskQueueViewModel.AddLog(error, UiLogColor.Error);
+            _logger.Warning("AttachWindow: No window found with name {WindowName}", TargetWindowName);
+            return false;
+        }
+
+        var hwnd = foundWindows[0];
+
+        if (foundWindows.Count > 1)
+        {
+            // 找到多个窗口，使用第一个并记录日志
+            var multipleMsg = string.Format(LocalizationHelper.GetString("AttachWindowMultipleFound"), foundWindows.Count, TargetWindowName);
+            Instances.TaskQueueViewModel.AddLog(multipleMsg, UiLogColor.Info);
+            _logger.Warning("AttachWindow: Multiple windows found with name {WindowName}, count: {Count}, using first one: {Hwnd}", TargetWindowName, foundWindows.Count, hwnd);
+        }
+        else
+        {
+            var foundMsg = string.Format(LocalizationHelper.GetString("AttachWindowFound"), TargetWindowName);
+            Instances.TaskQueueViewModel.AddLog(foundMsg, UiLogColor.Info);
+            _logger.Information("AttachWindow: Found window \"{WindowName}\" with HWND: {Hwnd}", TargetWindowName, hwnd);
+        }
+
+        if (!ulong.TryParse(SettingsViewModel.ConnectSettings.AttachWindowScreencapMethod, out var screencapMethod))
+        {
+            screencapMethod = 2; // 默认 FramePool
+        }
+
+        if (!ulong.TryParse(SettingsViewModel.ConnectSettings.AttachWindowMouseMethod, out var mouseMethod))
+        {
+            mouseMethod = 64; // 默认 PostMessageWithCursorPos
+        }
+
+        if (!ulong.TryParse(SettingsViewModel.ConnectSettings.AttachWindowKeyboardMethod, out var keyboardMethod))
+        {
+            keyboardMethod = 64; // 默认 PostMessageWithCursorPos
+        }
+
+        bool ret = AsstAttachWindow(_handle, hwnd, screencapMethod, mouseMethod, keyboardMethod);
+
+        if (!ret)
+        {
+            error = LocalizationHelper.GetString("AttachWindowFailed");
+            Instances.TaskQueueViewModel.AddLog(error, UiLogColor.Error);
+        }
+
+        return ret;
+    }
+
+    /// <summary>
+    /// 通过 ADB 连接模拟器。
+    /// </summary>
+    /// <param name="error">具体的连接错误。</param>
+    /// <returns>是否成功。</returns>
+    private bool AsstAdbConnect(ref string error)
+    {
         switch (SettingsViewModel.ConnectSettings.ConnectConfig)
         {
             case "MuMuEmulator12":
@@ -2167,7 +2555,7 @@ public class AsstProxy
             else
             {
                 _logger.Information("Already connected to {ConnectedAdb} {ConnectedAddress}", _connectedAdb, _connectedAddress);
-                if (!_forcedReloadResource)
+                if (!Instances.TaskQueueViewModel.EnableAutoReload)
                 {
                     return true;
                 }
@@ -2208,10 +2596,9 @@ public class AsstProxy
             else
             {
                 Execute.OnUIThreadAsync(
-                    () =>
-                {
-                    Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("AutoDetectConnectionNotSupported"), UiLogColor.Error);
-                });
+                    () => {
+                        Instances.TaskQueueViewModel.AddLog(LocalizationHelper.GetString("AutoDetectConnectionNotSupported"), UiLogColor.Error);
+                    });
             }
         }
 
@@ -2286,6 +2673,9 @@ public class AsstProxy
         return AsstSetTaskParams(_handle, id, JsonConvert.SerializeObject(taskParams));
     }
 
+    /// <summary>
+    /// WPF 区分任务的类型
+    /// </summary>
     public enum TaskType
     {
         /// <summary>开始唤醒</summary>
@@ -2294,14 +2684,8 @@ public class AsstProxy
         /// <summary>关闭游戏</summary>
         CloseDown,
 
-        /// <summary>刷理智</summary>
+        /// <summary>理智作战</summary>
         Fight,
-
-        /// <summary>关卡选择为剿灭时的备选刷理智</summary>
-        FightAnnihilationAlternate,
-
-        /// <summary>剩余理智</summary>
-        FightRemainingSanity,
 
         /// <summary>自动公招</summary>
         Recruit,
@@ -2324,8 +2708,10 @@ public class AsstProxy
         /// <summary>自动战斗</summary>
         Copilot,
 
+        /*
         /// <summary>视频识别（真有人用吗）</summary>
         VideoRec,
+        */
 
         /// <summary>仓库识别</summary>
         Depot,
@@ -2350,8 +2736,6 @@ public class AsstProxy
     [
         TaskType.StartUp,
         TaskType.Fight,
-        TaskType.FightAnnihilationAlternate,
-        TaskType.FightRemainingSanity,
         TaskType.Recruit,
         TaskType.Infrast,
         TaskType.Mall,
@@ -2364,26 +2748,32 @@ public class AsstProxy
 
     public IReadOnlyDictionary<AsstTaskId, (TaskType Type, TaskStatus Status)> TasksStatus => new Dictionary<AsstTaskId, (TaskType, TaskStatus)>(_tasksStatus);
 
-    private bool TaskStatusUpdate(AsstTaskId id, TaskStatus status)
+    private bool UpdateTaskStatus(AsstTaskId id, TaskStatus status)
     {
-        if (id == 0)
+        if (id <= 0)
         {
             return false;
         }
 
-        if (_tasksStatus.TryGetValue(id, out var value))
+        if (!_tasksStatus.TryGetValue(id, out var value))
         {
-            value.Status = status;
-            if (value.Status == TaskStatus.InProgress)
-            {
-                TaskSettingVisibilityInfo.Instance.CurrentTask = value.Type.ToString();
-            }
-
-            return true;
+            _logger.Error("Task ID {TaskId} not found in _tasksStatus", id);
+            return false;
         }
 
-        _logger.Error("Task ID {TaskId} not found in _tasksStatus", id);
-        return false;
+        if (value.Status == TaskStatus.Idle && status == TaskStatus.InProgress)
+        {
+            RunningState.Instance.ResetTimeout(); // 进入新任务时重置超时计时
+        }
+
+        _tasksStatus[id] = (value.Type, status);
+        Instances.TaskQueueViewModel.TaskItemViewModels.FirstOrDefault(item => item.TaskId == id)?.Status = (int)status;
+        if (status == TaskStatus.InProgress)
+        {
+            TaskSettingVisibilityInfo.Instance.NotifyOfTaskStatus();
+        }
+
+        return true;
     }
 
     public bool AsstAppendCloseDown(string clientType)
@@ -2437,8 +2827,7 @@ public class AsstProxy
     /// <returns>是否成功。</returns>
     public bool AsstStartGacha(bool once = true)
     {
-        var task = new AsstCustomTask()
-        {
+        var task = new AsstCustomTask() {
             CustomTasks = [once ? "GachaOnce" : "GachaTenTimes"],
         };
         var (type, param) = task.Serialize();
@@ -2452,14 +2841,14 @@ public class AsstProxy
     /// <returns>是否成功。</returns>
     public bool AsstMiniGame(string taskName)
     {
-        var task = new AsstCustomTask()
-        {
+        var task = new AsstCustomTask() {
             CustomTasks = [taskName],
         };
         var (type, param) = task.Serialize();
         return AsstAppendTaskWithEncoding(TaskType.MiniGame, type, param) && AsstStart();
     }
 
+    /*
     /// <summary>
     /// 视频识别。
     /// </summary>
@@ -2467,14 +2856,14 @@ public class AsstProxy
     /// <returns>是否成功。</returns>
     public bool AsstStartVideoRec(string filename)
     {
-        var taskParams = new JObject
-        {
+        var taskParams = new JObject {
             ["filename"] = filename,
         };
         AsstTaskId id = AsstAppendTaskWithEncoding(AsstTaskType.VideoRecognition, taskParams);
         _tasksStatus.Add(id, (TaskType.Copilot, TaskStatus.Idle));
         return id != 0 && AsstStart();
     }
+    */
 
     public bool AsstAppendTaskWithEncoding(TaskType wpfTasktype, AsstBaseTask task)
     {
@@ -2668,6 +3057,11 @@ public enum TaskStatus
     /// 已完成
     /// </summary>
     Completed = 2,
+
+    /// <summary>
+    /// 错误终止
+    /// </summary>
+    Error = 3,
 }
 
 public enum AsstStaticOptionKey

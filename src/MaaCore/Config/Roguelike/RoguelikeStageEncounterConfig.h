@@ -10,7 +10,9 @@
 
 namespace asst
 {
-class RoguelikeStageEncounterConfig final : public SingletonHolder<RoguelikeStageEncounterConfig>, public AbstractConfig
+class RoguelikeStageEncounterConfig final :
+    public MAA_NS::SingletonHolder<RoguelikeStageEncounterConfig>,
+    public AbstractConfig
 {
 public:
     virtual ~RoguelikeStageEncounterConfig() override = default;
@@ -51,12 +53,13 @@ public:
     struct RoguelikeEvent
     {
         std::string name;
-        int option_num = 0;
-        int default_choose = 0;
+        std::vector<std::string> option_text;
+        size_t option_num = 0;
+        size_t default_choose = 0;
         std::vector<ChoiceRequire> choice_require;
         std::string next_event;
 
-        std::vector<std::pair<int, int>>
+        std::vector<std::pair<size_t, size_t>>
             fallback_choices; // 备用选项，格式为 (选项数量，选择的选项)，有些事件的选项数量可变
     };
 

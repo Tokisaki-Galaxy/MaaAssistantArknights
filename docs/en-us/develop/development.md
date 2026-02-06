@@ -3,19 +3,39 @@ order: 1
 icon: iconoir:developer
 ---
 
-# Getting Started with Development
+# Development Guide
 
 ::: tip
 This page mainly describes the PR workflow and MAA's file formatting requirements. If you want to learn specifically how to make changes to MAA's operational logic, please refer to the [Protocol Documentation](../protocol/)
 :::
 
-## Introduction to GitHub Pull Request Flow
+::: tip
+You can [Ask DeepWiki](https://deepwiki.com/MaaAssistantArknights/MaaAssistantArknights) to learn about the overall architecture of the MAA project.
+:::
 
-### I don't know programming but just want to modify some JSON files/documents, how can I do it?
+## I don't know programming but just want to modify some JSON files/documents, how can I do it?
 
 Welcome to the [Web-based PR Tutorial](./pr-tutorial.md) that anyone can understand (purely web-based on Github.com)
 
-### I can program, but I've never used GitHub/C++/..., how do I get started?
+## I want to make simple modifications to a few lines of code, but configuring the environment is too tedious and pure web editing is difficult to use. What should I do?
+
+Use the [GitHub Codespaces](https://github.com/codespaces) online development environment and try it out!
+
+We've preset several different development environments for you to choose from:
+
+- Blank environment with a bare Linux container (default)
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2Fdevcontainer.json)
+
+- Lightweight environment, suitable for documentation site frontend development
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F0%2Fdevcontainer.json)
+
+- Full environment, suitable for MAA Core related development (not recommended, suggest local development with full environment setup. See next section)
+
+  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F1%2Fdevcontainer.json)
+
+## Complete Environment Setup (Windows)
 
 1. If you forked the repository long ago, first delete it via your repository's `Settings` at the bottom.
 2. Visit the [MAA main repository](https://github.com/MaaAssistantArknights/MaaAssistantArknights), click `Fork`, then `Create fork`.
@@ -38,32 +58,45 @@ Welcome to the [Web-based PR Tutorial](./pr-tutorial.md) that anyone can underst
    ```
 
 5. Configure development environment
-   - Download and install `Visual Studio 2022 Community`, selecting `Desktop development with C++` and `.NET Desktop Development` during installation.
+   - Download and install `CMake`
+   - Download and install `Visual Studio 2026 Community`, selecting `Desktop development with C++` and `.NET Desktop Development` during installation.
 
-6. Double-click `MAA.sln` to open the project in Visual Studio.
-7. Configure Visual Studio settings
-   - Select `RelWithDebInfo` and `x64` in the top configuration bar (Skip for Release builds or ARM platforms)
-   - Right-click `MaaWpfGui` → Properties → Debug → Enable native debugging (This enables breakpoints in C++ Core)
+6. Execute cmake project configuration
 
-8. Now you're ready to happily ~~mess around~~ start developing!
-9. Commit regularly with meaningful messages during development  
-   If you're not familiar with git usage, you might want to create a new branch for changes instead of committing directly to `dev`:
-
-   ```bash
-   git branch your_own_branch
-   git checkout your_own_branch
+   ```cmd
+   mkdir -p build
+   cmake -G "Visual Studio 18 2026" -B build -DBUILD_WPF_GUI=ON -DBUILD_DEBUG_DEMO=ON
    ```
 
-   This keeps your changes isolated from upstream `dev` updates.
+7. Double-click `build/MAA.slnx` to open the project in Visual Studio.
+8. Configure Visual Studio settings
+   - Select `Debug` and `x64` in the top configuration bar
+   - Right-click `MaaWpfGui` - Set as Startup Project
+   - Press F5 to run
 
-10. After development, push your local branch (e.g. `dev`) to your remote repository:
+   ::: tip
+   To debug Win32Controller (Windows window control) features, you need to manually download the corresponding platform package from [MaaFramework Releases](https://github.com/MaaXYZ/MaaFramework/releases), and place `MaaWin32ControlUnit.dll` from the `bin` directory into MAA's DLL directory (e.g. `build/bin/Debug`). PRs for an auto-download script are welcome!
+   :::
+
+9. Now you're ready to happily ~~mess around~~ start developing!
+10. Commit regularly with meaningful messages during development  
+    If you're not familiar with git usage, you might want to create a new branch for changes instead of committing directly to `dev`:
+
+    ```bash
+    git branch your_own_branch
+    git checkout your_own_branch
+    ```
+
+    This keeps your changes isolated from upstream `dev` updates.
+
+11. After development, push your local branch (e.g. `dev`) to your remote repository:
 
     ```bash
     git push origin dev
     ```
 
-11. Submit a Pull Request at the [MAA main repository](https://github.com/MaaAssistantArknights/MaaAssistantArknights). Ensure your changes are based on the `dev` branch, not `master`.
-12. To sync upstream changes:
+12. Submit a Pull Request at the [MAA main repository](https://github.com/MaaAssistantArknights/MaaAssistantArknights). Ensure your changes are based on the `dev` branch, not `master`.
+13. To sync upstream changes:
     1. Add upstream repository:
 
        ```bash
@@ -88,7 +121,7 @@ Welcome to the [Web-based PR Tutorial](./pr-tutorial.md) that anyone can underst
        git merge # merge
        ```
 
-    4. Repeat steps 7, 8, 9, 10.
+    4. Repeat steps 8, 9, 10, 11.
 
 ::: tip
 After opening Visual Studio, Git operations can be performed using VS's built-in "Git Changes" instead of command-line tools.
@@ -142,9 +175,3 @@ You are all set with the clang-format integrated in Visual Studio supporting c++
 You can also format with `tools\ClangFormatter\clang-formatter.py` directly, by executing in the root folder of the project:
 
 - `python tools\ClangFormatter\clang-formatter.py --clang-format=PATH\TO\YOUR\clang-format.exe --input=src\MaaCore`
-
-## Develop in cloud using GitHub codespace
-
-Create GitHub codespace with pre-configured C++ dev environments:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg?color=green)](https://codespaces.new/MaaAssistantArknights/MaaAssistantArknights?devcontainer_path=.devcontainer%2F1%2Fdevcontainer.json)

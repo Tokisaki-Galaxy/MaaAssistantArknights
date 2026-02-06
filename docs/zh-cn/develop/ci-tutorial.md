@@ -7,7 +7,7 @@ icon: devicon-plain:githubactions
 
 MAA 借助 Github Action 完成了大量的自动化工作，包括网站的构建，自动更新资源，最终文件的构建与发版等等过程。随着时间的推移，这些 CI 逐渐开始嵌套，部分甚至引向了其他的存储库。本文档旨在为想要对 MAA 的 CI 系统做出改进的各位做一个简要的介绍。
 
-阅读本文当前，最好对 MAA 的项目结构以及组成有一个基本的概念
+阅读本文之前，最好对 MAA 的项目结构以及组成有一个基本的概念。
 
 ::: tip
 你可以通过在本页面内搜索 CI 文件名来快速导航到想看的部分
@@ -17,6 +17,7 @@ MAA 借助 Github Action 完成了大量的自动化工作，包括网站的构�
 
 - [代码测试](#代码测试)
 - [代码构建](#代码构建)
+- [代码安全检查](#代码安全检查)
 - [版本发布](#版本发布)
 - [资源更新](#资源更新)
 - [网站构建](#网站构建)
@@ -33,27 +34,43 @@ MAA 借助 Github Action 完成了大量的自动化工作，包括网站的构�
 
 `smoke-testing.yml`
 
-本工作流主要负责对 MaaCore 做出基本的检测，包括资源文件加载，部分简单 task 运行测试等等
+本工作流主要负责对 MaaCore 做出基本的检测，包括资源文件加载，部分简单 task 运行测试等等。
 
-由于测试用例已经较久没有更新，该工作流现在基本是为了保证资源文件不会出现错误，以及 MaaCore 的代码没有出现致命性错误（影响到构建的那种）
+由于测试用例已经较久没有更新，该工作流现在基本是为了保证资源文件不会出现错误，以及 MaaCore 的代码没有出现影响到构建的致命性错误。
 
 ### 代码构建
 
 `ci.yml`
 
-本工作流负责对代码进行全量构建工作，包含 MAA 的所有组件，构建成品即为可运行的 MAA
+本工作流负责对代码进行全量构建工作，包含 MAA 的所有组件，构建成品即为可运行的 MAA。
 
-除了必要的 MaaCore 外，Windows 构建产物会包含 MaaWpfGui，MacOS 构建产物会包含 MaaMacGui，Linux 构建产物会包含 MaaCLI
+除了必要的 MaaCore 外，Windows 构建产物会包含 MaaWpfGui，MacOS 构建产物会包含 MaaMacGui，Linux 构建产物会包含 MaaCLI。
 
-该工作流在出现任何新 Commit 以及 PR 时都会自动运行，且当该工作流由发版 PR 触发时，本次的构建产物将会直接用于发版，并且会创建一个 Release
+该工作流在出现任何新 Commit 以及 PR 时都会自动运行，且当该工作流由发版 PR 触发时，本次的构建产物将会直接用于发版，并且会创建一个 Release。
+
+### 代码安全检查
+
+代码安全检查通过 CodeQL 对代码和工作流进行安全分析，具体工作流如下：
+
+`codeql-core.yml`
+
+本工作流负责对 MaaCore 和 MaaWpfGui 的 C++ 和 C# 代码进行安全分析，检测潜在的安全漏洞。
+
+该工作流在修改相关源代码的 PR 时自动运行，同时每天 UTC 时间 11:45 自动执行定期检查。
+
+`codeql-wf.yml`
+
+本工作流负责对 GitHub Actions 工作流文件本身进行安全分析，确保 CI/CD 流程的安全性。
+
+该工作流在修改工作流文件的 PR 时自动运行，同时每天 UTC 时间 12:00 自动执行定期检查。
 
 ### 版本发布
 
-版本发布，简称发版，是向用户发布更新的必要操作，由以下工作流组成
+版本发布，简称发版，是向用户发布更新的必要操作，由以下工作流组成：
 
 - `release-nightly-ota.yml` 发布内测版
 - `release-ota.yml` 发布正式版/公测版
-  - `gen-changelog.yml` 为正式版/公测版生成 changelog
+  - `release-preparation.yml` 为正式版/公测版生成 changelog 和准备发布
   - `pr-auto-tag.yml` 对正式版/公测版生成 tag
 
 ::: tip
@@ -64,16 +81,16 @@ MAA 借助 Github Action 完成了大量的自动化工作，包括网站的构�
 
 `release-nightly-ota.yml`
 
-本工作流会在每天 UTC 时间 22 点自动运行，以保证内测版的发版频率。当然，你也可以在做出更改需要验证时手动发版
+本工作流会在每天 UTC 时间 22 点自动运行，以保证内测版的发版频率。当然，你也可以在做出更改需要验证时手动发版。
 
-需要注意的是，内测版的发布仅针对 Windows 用户，MacOS 与 Linux 用户并不能接收到内测更新
+需要注意的是，内测版的发布仅针对 Windows 用户，MacOS 与 Linux 用户并不能接收到内测更新。
 
 #### 正式版/公测版
 
-这两个通道的发版流程相对复杂一点，我们通过模拟一次发版步骤来解释各工作流的作用
+这两个通道的发版流程相对复杂一点，我们通过模拟一次发版步骤来解释各工作流的作用：
 
 1. 建立由 `dev` 到 `master` 分支的 pr，且该 pr 的名字需要为 `Release v******`
-2. `gen-changelog.yml` 会生成最近的正式版/公测版到当前版本的 changelog（以一个新 pr 的形式）
+2. `release-preparation.yml` 会生成最近的正式版/公测版到当前版本的 changelog（以一个新 pr 的形式）
 3. 对 changelog 进行手动调整，并且添加简要描述
 4. 合并 pr，触发 `pr-auto-tag.yml`，创建 tag 并且同步分支
 5. Release 事件触发 `release-ota.yml`，对 master 打完 tag 后进行 ota 包的构建以及附件上传
@@ -84,30 +101,29 @@ MAA 借助 Github Action 完成了大量的自动化工作，包括网站的构�
 
 - `res-update-game.yml` 定期执行，从指定的仓库拉取游戏资源
 - `sync-resource.yml` 将资源同步到 MaaResource 仓库，用于资源更新
-- `optimize-templates.yml` 优化模板图大小
+- `optimize-templates.yml` 优化包括模板图在内的图片大小
 
 ### 网站构建
 
 `website-workflow.yml`
 
-本工作流主要负责 MAA 官网的构建与发布，包括主页面与文档两个组件，
+本工作流主要负责 MAA 文档站的构建与发布。
 
-请注意，网站的发布与发版强绑定，平常修改网页组件的时候只会进行构建以保证不会有错误，在发版时才会正式部署到 Azure 上
+请注意，网站的发布与发版强绑定，平常修改网页组件的时候只会进行构建以保证不会有错误，在发版时才会正式部署到 GitHub Pages 上。
 
 ### Issues 管理
 
 `issue-checker.yml`
 
-通过正则匹配给各个 Issue 打 Tag，以此来分类标记 Issue 内容，方便查看与管理
+通过正则匹配给各个 Issue 打 Tag，以此来分类标记 Issue 内容，方便查看与管理。
 
 `issue-checkbox-checker.yml`
 
-通过正则匹配自动关闭勾选“我未仔细阅读”的 Issue
-若“我未仔细阅读”未被勾选，则将所有勾选框折叠
+通过正则匹配自动关闭勾选“我未仔细阅读”的 Issue；若“我未仔细阅读”未被勾选，则将所有勾选框折叠。
 
 `stale.yml`
 
-检查超过 90 天没有活动的 Bug Issue，将其标记并发起通知，7 天后若还没有活动则关闭
+检查超过 90 天没有活动的 Bug Issue，将其标记并发起通知，7 天后若还没有活动则关闭。
 
 ### Pull Requests 管理
 
@@ -119,19 +135,23 @@ MAA 借助 Github Action 完成了大量的自动化工作，包括网站的构�
 
 MirrorChyan 是有偿的更新镜像服务，与其相关的工作流如下：
 
-- `mirrorchyan.yml` 同步更新包到 MirrorChyan
+- `release-package-distribution.yml` 同步更新包到 MirrorChyan
 - `mirrorchyan_release_note.yml` 生成 MirrorChyan 的 Release Note
 
 ### 其他
 
 `markdown-checker.yml`
 
-负责检查仓库中的所有 Markdown 文件中是否包含无效链接
+负责检查仓库中的所有 Markdown 文件中是否包含无效链接。
 
 `blame-ignore.yml`
 
-自动忽略 Commit Message 包含 `blame ignore` 的提交，保证仓库历史的干净
+自动忽略 Commit Message 包含 `blame ignore` 的提交，保证仓库历史的干净。
 
 `cache-delete.yml`
 
-在 PR 合并后清理相关的缓存，以此来节省缓存用量
+在 PR 合并后清理相关的缓存，以此来节省缓存用量。
+
+`update-submodules.yml`
+
+定期更新 MaaMacGui 和 maa-cli 等子模块到最新版本。该工作流每天 UTC 时间 21:50 自动执行（在每日内测版发布之前），确保子模块保持最新状态。

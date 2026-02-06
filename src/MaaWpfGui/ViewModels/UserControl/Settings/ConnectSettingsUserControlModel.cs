@@ -29,6 +29,7 @@ using MaaWpfGui.Constants;
 using MaaWpfGui.Helper;
 using MaaWpfGui.Main;
 using MaaWpfGui.States;
+using MaaWpfGui.Utilities;
 using MaaWpfGui.Utilities.ValueType;
 using MaaWpfGui.ViewModels.UI;
 using MaaWpfGui.WineCompat;
@@ -52,6 +53,11 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         Instance = new();
     }
 
+    private ConnectSettingsUserControlModel()
+    {
+        PropertyDependsOnUtility.InitializePropertyDependencies(this);
+    }
+
     public static ConnectSettingsUserControlModel Instance { get; }
 
     private static readonly ILogger _logger = Log.ForContext<ConnectSettingsUserControlModel>();
@@ -69,6 +75,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
             new() { Display = LocalizationHelper.GetString("LDPlayer"), Value = "LDPlayer" },
             new() { Display = LocalizationHelper.GetString("Nox"), Value = "Nox" },
             new() { Display = LocalizationHelper.GetString("XYAZ"), Value = "XYAZ" },
+            new() { Display = LocalizationHelper.GetString("PC"), Value = "PC" },
             new() { Display = LocalizationHelper.GetString("WSA"), Value = "WSA" },
             new() { Display = LocalizationHelper.GetString("Compatible"), Value = "Compatible" },
             new() { Display = LocalizationHelper.GetString("SecondResolution"), Value = "SecondResolution" },
@@ -90,8 +97,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public bool AutoDetectConnection
     {
         get => _autoDetectConnection;
-        set
-        {
+        set {
             if (!SetAndNotify(ref _autoDetectConnection, value))
             {
                 return;
@@ -111,8 +117,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public bool AlwaysAutoDetectConnection
     {
         get => _alwaysAutoDetectConnection;
-        set
-        {
+        set {
             SetAndNotify(ref _alwaysAutoDetectConnection, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.AlwaysAutoDetect, value.ToString());
         }
@@ -134,8 +139,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public string ConnectAddress
     {
         get => _connectAddress;
-        set
-        {
+        set {
             value = value
                 .Replace(" ", string.Empty)
                 .Replace("：", ":")
@@ -195,8 +199,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public string AdbPath
     {
         get => _adbPath;
-        set
-        {
+        set {
             if (!Path.GetFileName(value).ToLower().Contains("adb"))
             {
                 var count = 3;
@@ -231,8 +234,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public string ConnectConfig
     {
         get => _connectConfig;
-        set
-        {
+        set {
             Instances.AsstProxy.Connected = false;
             SetAndNotify(ref _connectConfig, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.ConnectConfig, value);
@@ -259,8 +261,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public bool Enable
         {
             get => _enable;
-            set
-            {
+            set {
                 if (!SetAndNotify(ref _enable, value))
                 {
                     return;
@@ -291,11 +292,14 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
                 string[] possibleUninstallKeys =
                 [
                     @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MuMuPlayer-12.0",
-                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MuMuPlayer"
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MuMuPlayer",
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MuMuPlayerGlobal-12.0",
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\YXArkNights-12.0",
                 ];
 
                 const string UninstallExeName = @"\uninstall.exe";
-                string? uninstallString = null;
+                var detectedPaths = new List<string>();
+
                 foreach (var keyPath in possibleUninstallKeys)
                 {
                     using var driverKey = Registry.LocalMachine.OpenSubKey(keyPath);
@@ -304,28 +308,47 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
                         continue;
                     }
 
-                    uninstallString = driverKey.GetValue("UninstallString") as string;
-                    if (!string.IsNullOrEmpty(uninstallString) && uninstallString.Contains(UninstallExeName))
+                    var uninstallString = driverKey.GetValue("UninstallString") as string;
+                    if (string.IsNullOrEmpty(uninstallString) || !uninstallString.Contains(UninstallExeName))
                     {
-                        break;
+                        continue;
+                    }
+
+                    var match = Regex.Match(uninstallString,
+                        $"""
+                         ^"(.*?){Regex.Escape(UninstallExeName)}
+                         """,
+                        RegexOptions.IgnoreCase);
+
+                    if (match.Success && Directory.Exists(match.Groups[1].Value))
+                    {
+                        var path = match.Groups[1].Value;
+                        if (!detectedPaths.Contains(path))
+                        {
+                            detectedPaths.Add(path);
+                        }
                     }
                 }
 
-                if (string.IsNullOrEmpty(uninstallString) || string.IsNullOrEmpty(uninstallString) || !uninstallString.Contains(UninstallExeName))
+                if (detectedPaths.Count == 0)
                 {
                     EmulatorPath = string.Empty;
                     return;
                 }
 
-                var match = Regex.Match(uninstallString,
-                    $"""
-                     ^"(.*?){Regex.Escape(UninstallExeName)}
-                     """,
-                    RegexOptions.IgnoreCase);
-
-                if (match.Success && Directory.Exists(match.Groups[1].Value))
+                if (detectedPaths.Count == 1)
                 {
-                    EmulatorPath = match.Groups[1].Value;
+                    EmulatorPath = detectedPaths[0];
+                    return;
+                }
+
+                // 多个路径，弹出选择框
+                var selectionWindow = new Views.Dialogs.EmulatorPathSelectionDialogView(detectedPaths) {
+                    Owner = Application.Current.MainWindow,
+                };
+                if (selectionWindow.ShowDialog() == true && !string.IsNullOrEmpty(selectionWindow.SelectedPath))
+                {
+                    EmulatorPath = selectionWindow.SelectedPath;
                 }
             }
             catch (Exception e)
@@ -344,13 +367,26 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public string EmulatorPath
         {
             get => _emulatorPath;
-            set
-            {
+            set {
                 if (_enable && !string.IsNullOrEmpty(value) && !Directory.Exists(value))
                 {
-                    MessageBoxHelper.Show("MuMu Emulator 12 Path Not Found");
-                    AutoDetectEmulatorPath();
+                    MessageBoxHelper.Show(LocalizationHelper.GetString("MuMuEmulatorPathNotFound"));
+                    MessageBoxHelper.Show(LocalizationHelper.GetString("MuMu12ExtrasEnabledTip"));
                     return;
+                }
+
+                // 当路径存在时，检查 external_renderer_ipc.dll 是否可用（兼容 MuMu 5/12 路径）
+                if (!string.IsNullOrEmpty(value) && Directory.Exists(value))
+                {
+                    var dllPath1 = Path.Combine(value, "nx_device", "12.0", "shell", "sdk", "external_renderer_ipc.dll");
+                    var dllPath2 = Path.Combine(value, "shell", "sdk", "external_renderer_ipc.dll");
+
+                    if (!File.Exists(dllPath1) && !File.Exists(dllPath2))
+                    {
+                        MessageBoxHelper.Show(LocalizationHelper.GetString("MuMuExternalRendererMissing"));
+                        MessageBoxHelper.Show(LocalizationHelper.GetString("MuMu12ExtrasEnabledTip"));
+                        return;
+                    }
                 }
 
                 Instances.AsstProxy.Connected = false;
@@ -364,8 +400,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public bool MuMuBridgeConnection
         {
             get => _mumuBridgeConnection;
-            set
-            {
+            set {
                 if (_mumuBridgeConnection == value)
                 {
                     return;
@@ -400,8 +435,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public string Index
         {
             get => _index;
-            set
-            {
+            set {
                 Instances.AsstProxy.Connected = false;
                 SetAndNotify(ref _index, value);
                 ConfigurationHelper.SetValue(ConfigurationKeys.MuMu12Index, value);
@@ -410,15 +444,13 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
 
         public string Config
         {
-            get
-            {
+            get {
                 if (!Enable)
                 {
                     return JsonConvert.SerializeObject(new JObject());
                 }
 
-                var configObject = new JObject
-                {
+                var configObject = new JObject {
                     ["path"] = EmulatorPath,
                 };
 
@@ -441,8 +473,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public bool Enable
         {
             get => _enable;
-            set
-            {
+            set {
                 if (!SetAndNotify(ref _enable, value))
                 {
                     return;
@@ -477,6 +508,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
                 ];
 
                 const string InstallDirValueName = "InstallDir";
+                var detectedPaths = new List<string>();
 
                 foreach (var regPath in possiblePaths)
                 {
@@ -489,9 +521,30 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
                     var installDir = driverKey.GetValue(InstallDirValueName) as string;
                     if (!string.IsNullOrEmpty(installDir) && Directory.Exists(installDir))
                     {
-                        EmulatorPath = installDir;
-                        break;
+                        if (!detectedPaths.Contains(installDir))
+                        {
+                            detectedPaths.Add(installDir);
+                        }
                     }
+                }
+
+                if (detectedPaths.Count == 0)
+                {
+                    EmulatorPath = string.Empty;
+                    return;
+                }
+
+                if (detectedPaths.Count == 1)
+                {
+                    EmulatorPath = detectedPaths[0];
+                    return;
+                }
+
+                // 多个路径，弹出选择框
+                var selectionWindow = new Views.Dialogs.EmulatorPathSelectionDialogView(detectedPaths);
+                if (selectionWindow.ShowDialog() == true && !string.IsNullOrEmpty(selectionWindow.SelectedPath))
+                {
+                    EmulatorPath = selectionWindow.SelectedPath;
                 }
             }
             catch (Exception e)
@@ -510,13 +563,24 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public string EmulatorPath
         {
             get => _emulatorPath;
-            set
-            {
+            set {
                 if (_enable && !string.IsNullOrEmpty(value) && !Directory.Exists(value))
                 {
-                    MessageBoxHelper.Show("LD Emulator Path Not Found");
-                    AutoDetectEmulatorPath();
+                    MessageBoxHelper.Show(LocalizationHelper.GetString("LdPlayerEmulatorPathNotFound"));
+                    MessageBoxHelper.Show(LocalizationHelper.GetString("LdExtrasEnabledTip"));
                     return;
+                }
+
+                // 当路径存在时，检查 ldopengl64.dll 是否存在
+                if (!string.IsNullOrEmpty(value) && Directory.Exists(value))
+                {
+                    var libPath = Path.Combine(value, "ldopengl64.dll");
+                    if (!File.Exists(libPath))
+                    {
+                        MessageBoxHelper.Show(LocalizationHelper.GetString("LdPlayerOpenglMissing"));
+                        MessageBoxHelper.Show(LocalizationHelper.GetString("LdExtrasEnabledTip"));
+                        return;
+                    }
                 }
 
                 Instances.AsstProxy.Connected = false;
@@ -530,8 +594,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public bool ManualSetIndex
         {
             get => _manualSetIndex;
-            set
-            {
+            set {
                 if (_manualSetIndex == value)
                 {
                     return;
@@ -556,8 +619,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
         public string Index
         {
             get => _index;
-            set
-            {
+            set {
                 Instances.AsstProxy.Connected = false;
                 SetAndNotify(ref _index, value);
                 ConfigurationHelper.SetValue(ConfigurationKeys.LdPlayerIndex, value);
@@ -572,8 +634,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
                 return 0;
             }
 
-            var startInfo = new ProcessStartInfo
-            {
+            var startInfo = new ProcessStartInfo {
                 FileName = emulatorPath,
                 Arguments = "list2",
                 RedirectStandardOutput = true,
@@ -641,8 +702,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
 
         public string Config
         {
-            get
-            {
+            get {
                 if (!Enable)
                 {
                     return JsonConvert.SerializeObject(new JObject());
@@ -658,8 +718,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
                     index = GetEmulatorIndex(SettingsViewModel.ConnectSettings.ConnectAddress);
                 }
 
-                var configObject = new JObject
-                {
+                var configObject = new JObject {
                     ["path"] = EmulatorPath,
                     ["index"] = index,
                     ["pid"] = GetEmulatorPid(index),
@@ -680,8 +739,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public bool RetryOnDisconnected
     {
         get => _retryOnDisconnected;
-        set
-        {
+        set {
             if (string.IsNullOrEmpty(SettingsViewModel.StartSettings.EmulatorPath))
             {
                 MessageBoxHelper.Show(
@@ -705,8 +763,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public bool AllowAdbRestart
     {
         get => _allowAdbRestart;
-        set
-        {
+        set {
             SetAndNotify(ref _allowAdbRestart, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.AllowAdbRestart, value.ToString());
         }
@@ -720,8 +777,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public bool AllowAdbHardRestart
     {
         get => _allowAdbHardRestart;
-        set
-        {
+        set {
             SetAndNotify(ref _allowAdbHardRestart, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.AllowAdbHardRestart, value.ToString());
         }
@@ -732,8 +788,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public bool AdbLiteEnabled
     {
         get => _adbLiteEnabled;
-        set
-        {
+        set {
             SetAndNotify(ref _adbLiteEnabled, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.AdbLiteEnabled, value.ToString());
             UpdateInstanceSettings();
@@ -745,8 +800,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public bool KillAdbOnExit
     {
         get => _killAdbOnExit;
-        set
-        {
+        set {
             SetAndNotify(ref _killAdbOnExit, value);
             ConfigurationHelper.SetValue(ConfigurationKeys.KillAdbOnExit, value.ToString());
             UpdateInstanceSettings();
@@ -914,7 +968,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
             return;
         }
 
-        TestLinkImage = await Instances.AsstProxy.AsstGetFreshImageAsync();
+        TestLinkImage = await Instances.AsstProxy.AsstGetImageAsync(forceScreencap: true);
         _runningState.SetIdle(true);
 
         if (TestLinkImage is null)
@@ -957,26 +1011,21 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
             double contentHeight = contentWidth * 9.0 / 16.0;
 
             double totalWindowHeight = contentHeight + (nc.Top + nc.Bottom + rb.Top + rb.Bottom);
-            _imagePopupWindow = new()
-            {
+            _imagePopupWindow = new() {
                 Width = TotalWindowWidth,
                 Height = totalWindowHeight,
-                Content = new Image
-                {
+                Content = new Image {
                     Source = TestLinkImage,
                 },
             };
-            _imagePopupWindow.Loaded += (_, _) =>
-            {
+            _imagePopupWindow.Loaded += (_, _) => {
                 WindowManager.MoveWindowToRootCenter(_imagePopupWindow);
             };
-            _imagePopupWindow.Closed += (_, _) =>
-            {
+            _imagePopupWindow.Closed += (_, _) => {
                 _imagePopupWindow = null;
             };
             var img = (Image)_imagePopupWindow.Content;
-            img.MouseLeftButtonUp += (_, _) =>
-            {
+            img.MouseLeftButtonUp += (_, _) => {
                 _ = TestLinkAndGetImage();
             };
         }
@@ -1062,8 +1111,7 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     public string TouchMode
     {
         get => _touchMode;
-        set
-        {
+        set {
             SetAndNotify(ref _touchMode, value);
             UpdateInstanceSettings();
             ConfigurationHelper.SetValue(ConfigurationKeys.TouchMode, value);
@@ -1152,4 +1200,80 @@ public class ConnectSettingsUserControlModel : PropertyChangedBase
     }
 
     public bool AdbReplaced { get; set; } = Convert.ToBoolean(ConfigurationHelper.GetValue(ConfigurationKeys.AdbReplaced, bool.FalseString));
+
+    #region AttachWindow (Win32窗口绑定) 配置
+
+    /// <summary>
+    /// Gets a value indicating whether to use AttachWindow mode instead of ADB connection.
+    /// </summary>
+    [PropertyDependsOn(nameof(ConnectConfig))]
+    public bool UseAttachWindow => ConnectConfig == "PC";
+
+    /// <summary>
+    /// Gets win32 截图方式枚举（与 AsstCaller.h 中 AsstWin32ScreencapMethodEnum 对应）
+    /// </summary>
+    public List<CombinedData> AttachWindowScreencapMethodList { get; } =
+    [
+        new() { Display = LocalizationHelper.GetString("AttachWindowScreencapFramePool"), Value = "2" },
+        new() { Display = LocalizationHelper.GetString("AttachWindowScreencapPrintWindow"), Value = "16" },
+        new() { Display = LocalizationHelper.GetString("AttachWindowScreencapScreenDC"), Value = "32" },
+        new() { Display = LocalizationHelper.GetString("AttachWindowScreencapDesktopDupWindow"), Value = "8" },
+    ];
+
+    private string _attachWindowScreencapMethod = ConfigurationHelper.GetValue(ConfigurationKeys.AttachWindowScreencapMethod, "2"); // 默认 FramePool
+
+    /// <summary>
+    /// Gets or sets the screencap method for AttachWindow mode.
+    /// </summary>
+    public string AttachWindowScreencapMethod
+    {
+        get => _attachWindowScreencapMethod;
+        set {
+            Instances.AsstProxy.Connected = false;
+            SetAndNotify(ref _attachWindowScreencapMethod, value);
+            ConfigurationHelper.SetValue(ConfigurationKeys.AttachWindowScreencapMethod, value);
+        }
+    }
+
+    /// <summary>
+    /// Win32 输入方式枚举（与 AsstCaller.h 中 AsstWin32InputMethodEnum 对应）
+    /// </summary>
+    public List<CombinedData> AttachWindowInputMethodList { get; } =
+    [
+        new() { Display = LocalizationHelper.GetString("AttachWindowInputSeize"), Value = "1" },
+        new() { Display = LocalizationHelper.GetString("AttachWindowInputPostWithCursor"), Value = "64" },
+        new() { Display = LocalizationHelper.GetString("AttachWindowInputSendWithCursor"), Value = "32" },
+    ];
+
+    private string _attachWindowMouseMethod = ConfigurationHelper.GetValue(ConfigurationKeys.AttachWindowMouseMethod, "64"); // 默认 PostMessageWithCursorPos
+
+    /// <summary>
+    /// Gets or sets the mouse input method for AttachWindow mode.
+    /// </summary>
+    public string AttachWindowMouseMethod
+    {
+        get => _attachWindowMouseMethod;
+        set {
+            Instances.AsstProxy.Connected = false;
+            SetAndNotify(ref _attachWindowMouseMethod, value);
+            ConfigurationHelper.SetValue(ConfigurationKeys.AttachWindowMouseMethod, value);
+        }
+    }
+
+    private string _attachWindowKeyboardMethod = ConfigurationHelper.GetValue(ConfigurationKeys.AttachWindowKeyboardMethod, "64"); // 默认 PostMessageWithCursorPos
+
+    /// <summary>
+    /// Gets or sets the keyboard input method for AttachWindow mode.
+    /// </summary>
+    public string AttachWindowKeyboardMethod
+    {
+        get => _attachWindowKeyboardMethod;
+        set {
+            Instances.AsstProxy.Connected = false;
+            SetAndNotify(ref _attachWindowKeyboardMethod, value);
+            ConfigurationHelper.SetValue(ConfigurationKeys.AttachWindowKeyboardMethod, value);
+        }
+    }
+
+    #endregion
 }

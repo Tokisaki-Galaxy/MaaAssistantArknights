@@ -9,9 +9,9 @@
     xmlns:helper="clr-namespace:MaaWpfGui.Helper"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:s="https://github.com/canton7/Stylet"
-    xmlns:viewModels="clr-namespace:MaaWpfGui.ViewModels.UserControl.Settings"
+    xmlns:settings_vms="clr-namespace:MaaWpfGui.ViewModels.UserControl.Settings"
     d:Background="White"
-    d:DataContext="{d:DesignInstance {x:Type viewModels:BackgroundSettingsUserControlModel}}"
+    d:DataContext="{d:DesignInstance {x:Type settings_vms:BackgroundSettingsUserControlModel}}"
     d:DesignHeight="300"
     d:DesignWidth="550"
     s:View.ActionTarget="{Binding}"
@@ -22,27 +22,31 @@
                 Margin="0,0,0,5"
                 HorizontalAlignment="Center"
                 Text="{DynamicResource BackgroundImage}" />
-            <StackPanel
+            <Grid
+                Width="400"
                 HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Orientation="Horizontal">
-                <TextBox
-                    Width="350"
-                    hc:BorderElement.CornerRadius="4,0,0,4"
-                    Text="{Binding BackgroundImagePath}" />
+                VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox hc:BorderElement.CornerRadius="4,0,0,4" Text="{Binding BackgroundImagePath}" />
                 <Button
-                    Width="50"
+                    Grid.Column="1"
                     hc:BorderElement.CornerRadius="0,4,4,0"
                     BorderThickness="0,1,1,1"
                     Command="{s:Action SelectImagePath}"
                     Content="{DynamicResource Select}" />
-            </StackPanel>
+            </Grid>
         </StackPanel>
         <StackPanel
             Margin="10"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
-            <controls:TextBlock HorizontalAlignment="Center" Text="{DynamicResource BackgroundOpacity}" Margin="0,0,0,5"/>
+            <controls:TextBlock
+                Margin="0,0,0,5"
+                HorizontalAlignment="Center"
+                Text="{DynamicResource BackgroundOpacity}" />
             <hc:PreviewSlider
                 Width="400"
                 d:Value="50"
@@ -79,10 +83,12 @@
             Margin="10"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
-            <controls:TextBlock HorizontalAlignment="Center" Text="{DynamicResource BackgroundImageStretchMode}" Margin="0,0,0,5"/>
+            <controls:TextBlock
+                Margin="0,0,0,5"
+                HorizontalAlignment="Center"
+                Text="{DynamicResource BackgroundImageStretchMode}" />
             <hc:ComboBox
                 Width="200"
-
                 HorizontalContentAlignment="Stretch"
                 DisplayMemberPath="Display"
                 IsEditable="True"

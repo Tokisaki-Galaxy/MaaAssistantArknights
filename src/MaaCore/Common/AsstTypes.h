@@ -4,6 +4,7 @@
 #include <climits>
 #include <cmath>
 #include <concepts>
+#include <format>
 #include <functional>
 #include <optional>
 #include <ostream>
@@ -14,6 +15,7 @@
 #include <vector>
 
 #include "Utils/StringMisc.hpp"
+#include "meojson/json.hpp"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -53,6 +55,39 @@ enum class TouchMode
     Maatouch = 2,
     MacPlayTools = 3,
 };
+
+#ifdef _WIN32
+
+// Win32 截图方式，与 MaaFramework 的 MaaWin32ScreencapMethod 保持一致
+using Win32ScreencapMethod = uint64_t;
+
+namespace Win32Screencap
+{
+constexpr Win32ScreencapMethod None = 0ULL;
+constexpr Win32ScreencapMethod GDI = 1ULL;
+constexpr Win32ScreencapMethod FramePool = 1ULL << 1;
+constexpr Win32ScreencapMethod DXGI_DesktopDup = 1ULL << 2;
+constexpr Win32ScreencapMethod DXGI_DesktopDup_Window = 1ULL << 3;
+constexpr Win32ScreencapMethod PrintWindow = 1ULL << 4;
+constexpr Win32ScreencapMethod ScreenDC = 1ULL << 5;
+} // namespace Win32Screencap
+
+// Win32 输入方式，与 MaaFramework 的 MaaWin32InputMethod 保持一致
+using Win32InputMethod = uint64_t;
+
+namespace Win32Input
+{
+constexpr Win32InputMethod None = 0ULL;
+constexpr Win32InputMethod Seize = 1ULL;
+constexpr Win32InputMethod SendMessage = 1ULL << 1;
+constexpr Win32InputMethod PostMessage = 1ULL << 2;
+constexpr Win32InputMethod LegacyEvent = 1ULL << 3;
+constexpr Win32InputMethod PostThreadMessage = 1ULL << 4;
+constexpr Win32InputMethod SendMessageWithCursorPos = 1ULL << 5;
+constexpr Win32InputMethod PostMessageWithCursorPos = 1ULL << 6;
+} // namespace Win32Input
+
+#endif // _WIN32
 
 namespace ControlFeat
 {
@@ -259,36 +294,91 @@ inline constexpr To make_rect(const From& rect)
     return To { rect.x, rect.y, rect.width, rect.height };
 }
 
-struct TextRect
+struct AnalyzerResult
 {
-    std::string to_string() const
-    {
-        return "{ " + text + ": " + rect.to_string() + ", score: " + std::to_string(score) + " }";
-    }
+    virtual ~AnalyzerResult() = default;
+
+    virtual std::string to_string() const { return {}; };
 
     explicit operator std::string() const { return to_string(); }
+
+    virtual json::object to_json() const { return {}; };
+
+    explicit operator json::object() const { return to_json(); }
+};
+
+struct TextRect : public AnalyzerResult
+{
+    TextRect() = default;
+
+    TextRect(Rect r, double s, std::string t) :
+        rect(r),
+        score(s),
+        text(std::move(t))
+    {
+    }
+
+    std::string to_string() const override
+    {
+        return std::format("{{ text: {}, rect: {}, score: {:.6f} }}", text, rect.to_string(), score);
+    }
+
+    json::object to_json() const override
+    {
+        return { { "rect", json::array { rect.x, rect.y, rect.width, rect.height } },
+                 { "score", score },
+                 { "text", text } };
+    }
 
     Rect rect;
     double score = 0.0;
     std::string text;
 };
 
-struct MatchRect
+struct MatchRect : public AnalyzerResult
 {
-    std::string to_string() const { return "{ rect: " + rect.to_string() + ", score: " + std::to_string(score) + " }"; }
+    MatchRect() = default;
 
-    explicit operator std::string() const { return to_string(); }
+    MatchRect(Rect r, double s, std::string t) :
+        rect(r),
+        score(s),
+        templ_name(std::move(t))
+    {
+    }
+
+    std::string to_string() const override
+    {
+        return std::format("{{ template: {}, rect: {}, score: {:.6f} }}", templ_name, rect.to_string(), score);
+    }
+
+    json::object to_json() const override
+    {
+        return { { "rect", json::array { rect.x, rect.y, rect.width, rect.height } },
+                 { "score", score },
+                 { "template", templ_name } };
+    }
 
     Rect rect;
     double score = 0.0;
     std::string templ_name;
 };
 
-struct FeatureMatchRect
+struct FeatureMatchRect : public AnalyzerResult
 {
-    std::string to_string() const { return "{ rect: " + rect.to_string() + ", count: " + std::to_string(count) + " }"; }
+    FeatureMatchRect() = default;
 
-    explicit operator std::string() const { return to_string(); }
+    FeatureMatchRect(Rect r, int c) :
+        rect(r),
+        count(c)
+    {
+    }
+
+    std::string to_string() const override { return std::format("{{ rect: {}, count: {} }}", rect.to_string(), count); }
+
+    json::object to_json() const override
+    {
+        return { { "rect", json::array { rect.x, rect.y, rect.width, rect.height } }, { "count", count } };
+    }
 
     Rect rect;
     int count = 0;
@@ -536,7 +626,7 @@ struct TaskPipelineInfo
     TaskList sub;                // 子任务（列表）
     TaskList on_error_next;      // 任务出错之后要去执行什么
     TaskList exceeded_next;      // 达到最多次数了之后，下一个可能的任务（列表）
-    TaskList reduce_other_times; // 执行了该任务后，需要减少别的任务的执行次数。例如执行了吃理智药，
+    TaskList reduce_other_times; // 执行了该任务后，需要减少别的任务的执行次数。例如执行了使用理智药，
                                  // 则说明上一次点击蓝色开始行动按钮没生效，所以蓝色开始行动要-1
 };
 
@@ -631,6 +721,7 @@ struct MatchTaskInfo : public TaskInfo
     Ranges mask_ranges;                   // 匹配掩码范围，TaskData 仅允许 array<int, 2>，但保留彩色掩码支持
     Ranges color_scales;                  // 数色掩码范围
     bool color_close = true;              // 数色时是否使用闭运算处理
+    bool pure_color = false;              // 数色时是否忽略模板匹配结果
 };
 
 using MatchTaskPtr = std::shared_ptr<MatchTaskInfo>;

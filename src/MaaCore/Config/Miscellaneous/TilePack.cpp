@@ -1,6 +1,6 @@
 #include "TilePack.h"
 
-#include "Common/AsstConf.h"
+#include "MaaUtils/Conf.h"
 #include "meojson/json.hpp"
 
 #include <algorithm>
@@ -15,9 +15,9 @@
 #include <optional>
 #include <queue>
 
-ASST_SUPPRESS_CV_WARNINGS_START
+MAA_SUPPRESS_CV_WARNINGS_BEGIN
 #include <Arknights-Tile-Pos/TileCalc2.hpp>
-ASST_SUPPRESS_CV_WARNINGS_END
+MAA_SUPPRESS_CV_WARNINGS_END
 
 #include "Utils/Logger.hpp"
 
@@ -54,14 +54,25 @@ bool proc_data(
     using TileInfo = asst::TilePack::TileInfo;
 
     static const std::unordered_map<std::string, TileKey> TileKeyMapping = {
-        { "tile_forbidden", TileKey::Forbidden }, { "tile_wall", TileKey::Wall },
-        { "tile_road", TileKey::Road },           { "tile_end", TileKey::Home },
-        { "tile_start", TileKey::EnemyHome },     { "tile_flystart", TileKey::Airport },
-        { "tile_floor", TileKey::Floor },         { "tile_hole", TileKey::Hole },
-        { "tile_telin", TileKey::Telin },         { "tile_telout", TileKey::Telout },
-        { "tile_grass", TileKey::Grass },         { "tile_deepsea", TileKey::DeepSea },
-        { "tile_deepwater", TileKey::DeepSea },   { "tile_volcano", TileKey::Volcano },
-        { "tile_healing", TileKey::Healing },     { "tile_fence", TileKey::Fence },
+        { "tile_forbidden", TileKey::Forbidden },
+        { "tile_wall", TileKey::Wall },
+        { "tile_road", TileKey::Road },
+        { "tile_end", TileKey::Home },
+        { "tile_start", TileKey::EnemyHome },
+        { "tile_green", TileKey::Green },
+        { "tile_flystart", TileKey::Airport },
+        { "tile_floor", TileKey::Floor },
+        { "tile_hole", TileKey::Hole },
+        { "tile_telin", TileKey::Telin },
+        { "tile_telout", TileKey::Telout },
+        { "tile_grass", TileKey::Grass },
+        { "tile_deepsea", TileKey::DeepSea },
+        { "tile_deepwater", TileKey::DeepSea },
+        { "tile_volcano", TileKey::Volcano },
+        { "tile_healing", TileKey::Healing },
+        { "tile_fence", TileKey::Fence /* 疑似弃用, 改为 tile_fence_bound */ },
+        { "tile_fence_bound", TileKey::Fence },
+        { "tile_infection", TileKey::Infection },
     };
 
     auto key = TileKey::Invalid;
@@ -70,7 +81,7 @@ bool proc_data(
     }
     else {
         key = TileKey::Invalid;
-        Log.warn("Unknown tile type:", tile.tileKey);
+        LogWarn << "Unknown tile type" << loc << ":" << tile.tileKey;
     }
 
     dst.emplace(
@@ -105,14 +116,37 @@ asst::TilePack::result_type asst::TilePack::calc_(const Map::Level& level, doubl
             const bool ret = proc_data(result.normal_tile_info, loc, screen_pos, tile);
             const bool ret_side = proc_data(result.side_tile_info, loc, screen_pos_side, tile);
 
+            if (tile.tileKey == "tile_start" || tile.tileKey == "tile_end") {
+                // 检查 screen_pos 是否在允许的范围内（带5%容差）
+                constexpr double MIN_X = 0.0;
+                constexpr double MAX_X = 1280.0;
+                constexpr double MIN_Y = 0.0;
+                constexpr double MAX_Y = 720.0;
+                constexpr double TOLERANCE = 0.05;
+
+                constexpr double x_tolerance = MAX_X * TOLERANCE;
+                constexpr double y_tolerance = MAX_Y * TOLERANCE;
+
+                constexpr double min_x_bound = MIN_X - x_tolerance;
+                constexpr double max_x_bound = MAX_X + x_tolerance;
+                constexpr double min_y_bound = MIN_Y - y_tolerance;
+                constexpr double max_y_bound = MAX_Y + y_tolerance;
+
+                if (screen_pos.x < min_x_bound || screen_pos.x > max_x_bound || screen_pos.y < min_y_bound ||
+                    screen_pos.y > max_y_bound) {
+                    LogInfo << "Tile" << tile.tileKey << "at" << loc << ", screen position:" << screen_pos
+                            << ", map has multi stages";
+                    result.has_multi_stages = true;
+                }
+            }
             if (!ret || !ret_side) {
                 Log.info("Tiles calc error!");
                 return {};
             }
         }
     }
-    auto retreat = Map::TileCalc2::get_retreat_screen_pos(level);
-    auto skill = Map::TileCalc2::get_skill_screen_pos(level);
+    auto retreat = Map::TileCalc2::get_retreat_screen_pos(level, result.has_multi_stages);
+    auto skill = Map::TileCalc2::get_skill_screen_pos(level, result.has_multi_stages);
     result.retreat_button = { retreat.x, retreat.y };
     result.skill_button = { skill.x, skill.y };
 

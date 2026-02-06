@@ -1591,6 +1591,14 @@
         "sortId": -10000,
         "usage": "关卡首通报酬，用于在博物馆兑换台换取奖励；首通后复刷不会再次获得。"
     },
+    "act1autochess_token_chess": {
+        "classifyType": "NONE",
+        "description": "罗德岛工坊为参与卫戍协议的干员准备的勋章，带有磁性，听说集齐一定数量便可合成一个堡垒棋子。",
+        "icon": "act1autochess_token_chess.png",
+        "name": "卫戍认证",
+        "sortId": -10000,
+        "usage": "用于在卫戍协议中兑换各类物资。"
+    },
     "act1bossrush_milestone_point": {
         "classifyType": "NONE",
         "description": "模拟中的对错并不重要，它们只是种辅助，帮助你在实战中做出正确的选择。",
@@ -1670,6 +1678,14 @@
         "name": "繁荣证章",
         "sortId": -10000,
         "usage": "用以在里程碑处兑换奖励。"
+    },
+    "act1teamquest_point": {
+        "classifyType": "NONE",
+        "description": "促融共竞能有今日的盛况，正是因为有您的全力支持。",
+        "icon": "act1teamquest_point.png",
+        "name": "共竞积分",
+        "sortId": -10000,
+        "usage": "用于兑换相应的阶段性活动奖励。"
     },
     "act1vautochess_token_chess": {
         "classifyType": "NONE",
@@ -1967,6 +1983,14 @@
         "sortId": -10000,
         "usage": "Raidian制作的胸章型通讯器。回收它们可以减少通讯网络受到的信号干扰，还可以在可露希尔那里兑换各类物资。"
     },
+    "act2multi_token_cap": {
+        "classifyType": "NONE",
+        "description": "罗德岛促融共竞的参赛认证。“留在赛场上的是汗水，从赛场带走的是友谊。”",
+        "icon": "act2multi_token_cap.png",
+        "name": "参赛认证-S2",
+        "sortId": -10000,
+        "usage": "参赛认证的累积代表着赛事热度的攀升，达到一定热度等级即可获取对应奖励。"
+    },
     "act2vmulti_token_cap": {
         "classifyType": "NONE",
         "description": "参赛纪念的累积代表了赛事热度的攀升，达到一定热度等级即可获取对应奖励",
@@ -2151,6 +2175,30 @@
         "sortId": -10000,
         "usage": "美轮美奂的梦境拼图碎片。碎片遍布城堡的各个角落，将其悉心收集起来，可以拼凑出一幅幅定格美梦的画面。"
     },
+    "act46side_token_detector": {
+        "classifyType": "NONE",
+        "description": "莱茵生命研发的专用于谢拉格境内的探测仪器，用来收集这片神秘雪境的各种数据，在低温环境下也能保持稳定性。 “神话只是未明缘由的现实，科学总有一天会扯下祂的面纱。”——埃琳娜坚定地相信着。",
+        "icon": "act46side_token_detector.png",
+        "name": "雪地用多功能探测器",
+        "sortId": -10000,
+        "usage": "因雪崩而散落在各处的多功能探测仪器，捡到的话请交回观测站，工作人员会用实际物资表示感谢。"
+    },
+    "act47side_token_bottle": {
+        "classifyType": "NONE",
+        "description": "只是在丰蹄能量饮料的基础上微调了香精比例的廉价糖水？谁在乎呢。如今，只有那些想不到把产品装进火箭瓶子的可悲破产厂商，才会酸涩地吐出这种无趣的事实。",
+        "icon": "act47side_token_bottle.png",
+        "name": "天空氧气瓶",
+        "sortId": -10000,
+        "usage": "以高空供氧装置为灵感设计的新概念饮品，已然成为哥伦比亚人新的血液。为了品尝一口新时代的、星荚之外的味道，没有谁不愿开出高价。"
+    },
+    "act48side_token_ostracon": {
+        "classifyType": "NONE",
+        "description": "即使如今人们手中已拥有了加载着各类程序的终端，在投票这一件事上，米诺斯人依然选择遵循古法。",
+        "icon": "act48side_token_ostracon.png",
+        "name": "投票用的陶片",
+        "sortId": -10000,
+        "usage": "雅赛努斯公民在投票时的必备品。至于用过的陶片该如何处理？理事官办公室决定收集起来，将其放入精美包装之中，出售给来到雅赛努斯的游客。这一创新的举措获得了各方的好评。"
+    },
     "act4bossrush_milestone_point": {
         "classifyType": "NONE",
         "description": "模拟中的对错并不重要，它们只是种辅助，帮助你在实战中做出正确的选择。",
@@ -2231,6 +2279,22 @@
         "sortId": -10000,
         "usage": "作为协议的象征，可用于解锁更多危机合约内容。"
     },
+    "act6bossrush_milestone_point": {
+        "classifyType": "NONE",
+        "description": "模拟中的对错并不重要，它们只是种辅助，帮助你在实战中做出正确的选择。",
+        "icon": "act6bossrush_milestone_point.png",
+        "name": "试炼经验",
+        "sortId": -10000,
+        "usage": "试炼结束后获得的经验，可以提升试炼等级。"
+    },
+    "act6bossrush_token_relic": {
+        "classifyType": "NONE",
+        "description": "未解码的数据方块。永远记住，信息转换往往伴随着不可避免的损耗。善用信息储存工具，但别依赖它们。",
+        "icon": "act6bossrush_token_relic.png",
+        "name": "数据黑盒",
+        "sortId": -10000,
+        "usage": "用于对遏制单元进行数据迭代。"
+    },
     "act6collection_point_token": {
         "classifyType": "NONE",
         "description": "为了激励外勤人员，罗德岛发放了一定量的特殊兑换点数。凭借兑换点数可兑换急需的物资。",
@@ -2254,6 +2318,14 @@
         "name": "元宵通宝",
         "sortId": -10000,
         "usage": "在年关过后搜集到的道具，可以用来兑换报酬。"
+    },
+    "act7collection_point_token": {
+        "classifyType": "NONE",
+        "description": "为了激励在各项集成战略行动中做出贡献的外勤人员，罗德岛发放了一定量的特殊奖励兑换点数。凭借兑换点数可兑换急需的物资。",
+        "icon": "act7collection_point_token.png",
+        "name": "“战略家”点数",
+        "sortId": -10000,
+        "usage": "用于兑换相应的阶段性活动奖励。"
     },
     "act7d5_point_coupon": {
         "classifyType": "NONE",
@@ -2316,7 +2388,7 @@
         "description": "为应对加工时部分材料紧缺的问题，采购部发行了提货券供干员们自行取用所需的材料。",
         "icon": "advanced_material_voucher_perm.png",
         "name": "高级材料提货券",
-        "sortId": 60005,
+        "sortId": 60006,
         "usage": "罗德岛采购部特别发行的提货券，凭此券可领取一份高级品质的精英材料。"
     },
     "ap_supply_lt_010": {
@@ -2596,7 +2668,7 @@
         "description": "为应对加工时部分材料紧缺的问题，采购部发行了提货券供干员们自行取用所需的材料。",
         "icon": "premium_material_voucher_perm.png",
         "name": "特级材料提货券",
-        "sortId": 60004,
+        "sortId": 60005,
         "usage": "罗德岛采购部特别发行的提货券，凭此券可领取一份特级品质的精英材料。"
     },
     "randomDiamondShd_1": {
@@ -2797,6 +2869,14 @@
         "icon": "randomMaterial_6.png",
         "name": "罗德岛物资补给III",
         "sortId": 60106,
+        "usage": "装有各种物资补给，包含多种随机材料。"
+    },
+    "randomMaterial_6d5": {
+        "classifyType": "CONSUME",
+        "description": "罗德岛从各地采购、储备的材料补给箱。不过因为缺乏系统性的整理收纳，每一个箱子里都装着截然不同的材料。",
+        "icon": "randomMaterial_6d5.png",
+        "name": "2025感谢庆典物资补给",
+        "sortId": 60117,
         "usage": "装有各种物资补给，包含多种随机材料。"
     },
     "randomMaterial_7": {

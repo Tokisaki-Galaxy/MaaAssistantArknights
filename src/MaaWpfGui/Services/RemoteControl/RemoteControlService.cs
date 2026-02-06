@@ -21,6 +21,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using MaaWpfGui.Configuration.Factory;
+using MaaWpfGui.Configuration.Single.MaaTask;
 using MaaWpfGui.Constants;
 using MaaWpfGui.Helper;
 using MaaWpfGui.States;
@@ -31,8 +33,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using Stylet;
-using Windows.ApplicationModel;
-using static MaaWpfGui.Main.AsstProxy;
 
 namespace MaaWpfGui.Services.RemoteControl;
 
@@ -76,8 +76,7 @@ public class RemoteControlService
 
         _inited = true;
 
-        _pollJobTask = _pollJobTask.ContinueWith(async _ =>
-        {
+        _pollJobTask = _pollJobTask.ContinueWith(async _ => {
             while (true)
             {
                 await Task.Delay(RemoteSettings.RemoteControlPollIntervalMs);
@@ -101,8 +100,7 @@ public class RemoteControlService
             // ReSharper disable once FunctionNeverReturns
         });
 
-        _executeSequentialJobTask = _executeSequentialJobTask.ContinueWith(async _ =>
-        {
+        _executeSequentialJobTask = _executeSequentialJobTask.ContinueWith(async _ => {
             while (true)
             {
                 await Task.Delay(RemoteSettings.RemoteControlPollIntervalMs);
@@ -125,8 +123,7 @@ public class RemoteControlService
             // ReSharper disable once FunctionNeverReturns
         });
 
-        _executeInstantJobTask = _executeInstantJobTask.ContinueWith(async _ =>
-        {
+        _executeInstantJobTask = _executeInstantJobTask.ContinueWith(async _ => {
             while (true)
             {
                 await Task.Delay(RemoteSettings.RemoteControlPollIntervalMs);
@@ -154,10 +151,7 @@ public class RemoteControlService
 
     private static T GetPrivateFieldValue<T>(object instance, string fieldName)
     {
-        if (instance == null)
-        {
-            throw new ArgumentNullException(nameof(instance));
-        }
+        ArgumentNullException.ThrowIfNull(instance);
 
         if (string.IsNullOrEmpty(fieldName))
         {
@@ -165,13 +159,7 @@ public class RemoteControlService
         }
 
         Type type = instance.GetType();
-        FieldInfo fieldInfo = type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
-
-        if (fieldInfo == null)
-        {
-            throw new ArgumentException($"Field '{fieldName}' not found in type '{type.FullName}'.");
-        }
-
+        FieldInfo fieldInfo = type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new ArgumentException($"Field '{fieldName}' not found in type '{type.FullName}'.");
         if (!typeof(T).IsAssignableFrom(fieldInfo.FieldType))
         {
             throw new ArgumentException($"Field '{fieldName}' is not of type {typeof(T)}.");
@@ -182,10 +170,7 @@ public class RemoteControlService
 
     private static void InvokeInstanceMethod(object instance, string methodName)
     {
-        if (instance == null)
-        {
-            throw new ArgumentNullException(nameof(instance));
-        }
+        ArgumentNullException.ThrowIfNull(instance);
 
         if (string.IsNullOrEmpty(methodName))
         {
@@ -193,22 +178,13 @@ public class RemoteControlService
         }
 
         Type type = instance.GetType();
-        MethodInfo methodInfo = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-
-        if (methodInfo == null)
-        {
-            throw new ArgumentException($"Method '{methodName}' not found in type '{type.FullName}'.");
-        }
-
+        MethodInfo methodInfo = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new ArgumentException($"Method '{methodName}' not found in type '{type.FullName}'.");
         methodInfo.Invoke(instance, null);
     }
 
     private static T InvokeInstanceFunction<T>(object instance, string methodName)
     {
-        if (instance == null)
-        {
-            throw new ArgumentNullException(nameof(instance));
-        }
+        ArgumentNullException.ThrowIfNull(instance);
 
         if (string.IsNullOrEmpty(methodName))
         {
@@ -216,13 +192,7 @@ public class RemoteControlService
         }
 
         Type type = instance.GetType();
-        MethodInfo methodInfo = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-
-        if (methodInfo == null)
-        {
-            throw new ArgumentException($"Method '{methodName}' not found in type '{type.FullName}'.");
-        }
-
+        MethodInfo methodInfo = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new ArgumentException($"Method '{methodName}' not found in type '{type.FullName}'.");
         if (!typeof(T).IsAssignableFrom(methodInfo.ReturnType))
         {
             throw new ArgumentException($"Method '{methodName}' is not {typeof(T)}.");
@@ -233,10 +203,7 @@ public class RemoteControlService
 
     private static async Task<T> InvokeInstanceAsyncFunction<T>(object instance, string methodName)
     {
-        if (instance == null)
-        {
-            throw new ArgumentNullException(nameof(instance));
-        }
+        ArgumentNullException.ThrowIfNull(instance);
 
         if (string.IsNullOrEmpty(methodName))
         {
@@ -244,12 +211,7 @@ public class RemoteControlService
         }
 
         Type type = instance.GetType();
-        MethodInfo methodInfo = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-
-        if (methodInfo == null)
-        {
-            throw new ArgumentException($"Method '{methodName}' not found in type '{type.FullName}'.");
-        }
+        MethodInfo methodInfo = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new ArgumentException($"Method '{methodName}' not found in type '{type.FullName}'.");
 
         // 检查方法是否是异步方法 (返回Task或Task<T>)
         if (!typeof(Task).IsAssignableFrom(methodInfo.ReturnType))
@@ -262,10 +224,7 @@ public class RemoteControlService
 
     private static TResult InvokeStaticFunction<TResult>(Type staticType, string methodName)
     {
-        if (staticType == null)
-        {
-            throw new ArgumentNullException(nameof(staticType));
-        }
+        ArgumentNullException.ThrowIfNull(staticType);
 
         if (string.IsNullOrEmpty(methodName))
         {
@@ -274,12 +233,9 @@ public class RemoteControlService
 
         MethodInfo methodInfo = staticType.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static);
 
-        if (methodInfo == null)
-        {
-            throw new ArgumentException($"Method '{methodName}' not found in type '{staticType.FullName}'.");
-        }
-
-        return (TResult)methodInfo.Invoke(null, null);
+        return methodInfo == null
+            ? throw new ArgumentException($"Method '{methodName}' not found in type '{staticType.FullName}'.")
+            : (TResult)methodInfo.Invoke(null, null);
     }
 
     #endregion
@@ -349,6 +305,9 @@ public class RemoteControlService
                     case "StopTask":
                         _instantTaskQueue.Enqueue(task);
                         break;
+                    default:
+                        AchievementTrackerHelper.Instance.Unlock(AchievementIds.NotFound404);
+                        break;
                 }
             }
         }
@@ -375,9 +334,8 @@ public class RemoteControlService
                         var startLogStr = string.Format(LocalizationHelper.GetString("RemoteControlReceivedTask"), type, id);
 
                         Instances.TaskQueueViewModel.AddLog(startLogStr);
-                        await Execute.OnUIThreadAsync(() =>
-                        {
-                           _ = Instances.TaskQueueViewModel.LinkStart();
+                        await Execute.OnUIThreadAsync(() => {
+                            _ = Instances.TaskQueueViewModel.LinkStart();
                         });
                         await _runningState.UntilIdleAsync();
 
@@ -423,7 +381,7 @@ public class RemoteControlService
                         bool connected = await Task.Run(() => Instances.AsstProxy.AsstConnect(ref errMsg));
                         if (connected)
                         {
-                            var image = await Instances.AsstProxy.AsstGetImageAsync();
+                            var image = await Instances.AsstProxy.AsstGetFreshImageAsync();
                             if (image == null)
                             {
                                 status = "FAILED";
@@ -449,22 +407,22 @@ public class RemoteControlService
 
                 case "Settings-ConnectAddress":
                     // ConfigurationHelper.SetValue(type.Split('-')[1], data);
-                    await Execute.OnUIThreadAsync(() =>
-                    {
+                    await Execute.OnUIThreadAsync(() => {
                         SettingsViewModel.ConnectSettings.ConnectAddress = data;
                     });
                     break;
                 case "Settings-Stage1":
-                    await Execute.OnUIThreadAsync(() =>
-                    {
-                        TaskQueueViewModel.FightTask.Stage1 = data;
+                    await Execute.OnUIThreadAsync(() => {
+                        if (TaskQueueViewModel.FightTask.StagePlan.Count != 1)
+                        {
+                            TaskQueueViewModel.FightTask.StagePlan.Clear();
+                            TaskQueueViewModel.FightTask.StagePlan.Add(new());
+                        }
+                        TaskQueueViewModel.FightTask.StagePlan[0].Value = data;
                     });
                     break;
-
-                // ReSharper disable once RedundantEmptySwitchSection
                 default:
-                    // 未知的Type统一直接发给MAACore
-                    // No! 未知的任务一概不处理
+                    AchievementTrackerHelper.Instance.Unlock(AchievementIds.NotFound404);
                     break;
             }
 
@@ -473,8 +431,7 @@ public class RemoteControlService
             {
                 var uid = RemoteSettings.RemoteControlUserIdentity;
                 var did = RemoteSettings.RemoteControlDeviceIdentity;
-                var response = await Instances.HttpService.PostAsJsonAsync(new Uri(endpoint), new
-                {
+                var response = await Instances.HttpService.PostAsJsonAsync(new Uri(endpoint), new {
                     user = uid,
                     device = did,
                     status,
@@ -513,8 +470,7 @@ public class RemoteControlService
 
                 case "StopTask":
                     {
-                        await Task.Run(() =>
-                        {
+                        await Task.Run(() => {
                             if (!Instances.AsstProxy.AsstStop())
                             {
                                 // 无法确定当前的界面，找不到借用的UI位置，因此只能Log
@@ -532,7 +488,7 @@ public class RemoteControlService
                         bool connected = await Task.Run(() => Instances.AsstProxy.AsstConnect(ref errMsg));
                         if (connected)
                         {
-                            var image = Instances.AsstProxy.AsstGetImage();
+                            var image = Instances.AsstProxy.AsstGetFreshImage();
                             if (image == null)
                             {
                                 status = "FAILED";
@@ -556,10 +512,8 @@ public class RemoteControlService
                         break;
                     }
 
-                // ReSharper disable once RedundantEmptySwitchSection
                 default:
-                    // 未知的Type统一直接发给MAACore
-                    // No! 未知的任务一概不处理
+                    AchievementTrackerHelper.Instance.Unlock(AchievementIds.NotFound404);
                     break;
             }
 
@@ -568,8 +522,7 @@ public class RemoteControlService
             {
                 var uid = RemoteSettings.RemoteControlUserIdentity;
                 var did = RemoteSettings.RemoteControlDeviceIdentity;
-                var response = await Instances.HttpService.PostAsJsonAsync(new Uri(endpoint), new
-                {
+                var response = await Instances.HttpService.PostAsJsonAsync(new Uri(endpoint), new {
                     user = uid,
                     device = did,
                     status,
@@ -606,12 +559,10 @@ public class RemoteControlService
 
         _runningState.SetIdle(false);
 
-        await Execute.OnUIThreadAsync(async () =>
-        {
+        await Execute.OnUIThreadAsync(async () => {
             // 虽然更改时已经保存过了，不过保险起见还是在点击开始之后再保存一次(任务及基建列表)
-            Instances.TaskQueueViewModel.TaskItemSelectionChanged();
-            TaskQueueViewModel.InfrastTask.InfrastOrderSelectionChanged();
-
+            // Instances.TaskQueueViewModel.TaskItemSelectionChanged();
+            // TaskQueueViewModel.InfrastTask.InfrastOrderSelectionChanged();
             InvokeInstanceMethod(Instances.TaskQueueViewModel, "ClearLog");
 
             /*await Task.Run(() => Instances.SettingsViewModel.RunScript("StartsWithScript"));*/
@@ -640,6 +591,7 @@ public class RemoteControlService
             bool taskRet = true;
 
             // 直接遍历TaskItemViewModels里面的内容，是排序后的
+            // 20260112 status102: 先做兼容处理
             int count = 0;
             foreach (var item in originalNames)
             {
@@ -647,36 +599,108 @@ public class RemoteControlService
                 switch (item)
                 {
                     case "Base":
-                        taskRet &= Instances.TaskQueueViewModel.AppendInfrast();
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<InfrastTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= InfrastSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     case "WakeUp":
-                        taskRet &= Instances.AsstProxy.AsstAppendTaskWithEncoding(TaskType.StartUp, StartUpSettingsUserControlModel.Instance.Serialize());
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<StartUpTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= StartUpSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     case "Combat":
-                        taskRet &= Instances.TaskQueueViewModel.AppendFight();
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<FightTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= FightSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     case "Recruiting":
-                        taskRet &= Instances.AsstProxy.AsstAppendTaskWithEncoding(TaskType.Recruit, RecruitSettingsUserControlModel.Instance.Serialize());
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<RecruitTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= RecruitSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     case "Mall":
-                        taskRet &= Instances.AsstProxy.AsstAppendTaskWithEncoding(TaskType.Mall, MallSettingsUserControlModel.Instance.Serialize());
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<MallTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= MallSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     case "Mission":
-                        taskRet &= Instances.AsstProxy.AsstAppendTaskWithEncoding(TaskType.Award, AwardSettingsUserControlModel.Instance.Serialize());
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<AwardTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= AwardSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     case "AutoRoguelike":
-                        taskRet &= Instances.AsstProxy.AsstAppendTaskWithEncoding(TaskType.Roguelike, RoguelikeSettingsUserControlModel.Instance.Serialize());
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<RoguelikeTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= RoguelikeSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     case "Reclamation":
-                        taskRet &= Instances.AsstProxy.AsstAppendTaskWithEncoding(TaskType.Reclamation, ReclamationSettingsUserControlModel.Instance.Serialize());
-                        break;
+                        {
+                            var tasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<ReclamationTask>().ToList();
+                            if (tasks.Count == 1)
+                            {
+                                taskRet &= ReclamationSettingsUserControlModel.Instance.SerializeTask(tasks[0]) ?? false;
+                                break;
+                            }
+
+                            taskRet = false;
+                            break;
+                        }
 
                     default:
                         --count;

@@ -1,10 +1,11 @@
 #include "Matcher.h"
 
-#include "Utils/NoWarningCV.h"
+#include "MaaUtils/NoWarningCV.hpp"
 
 #include "Config/TaskData.h"
 #include "Config/TemplResource.h"
-#include "Utils/ImageIo.hpp"
+#include "MaaUtils/ImageIo.h"
+#include "Utils/DebugImageHelper.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/StringMisc.hpp"
 
@@ -57,10 +58,7 @@ Matcher::ResultOpt Matcher::analyze() const
                                                               95,
                                                               cv::IMWRITE_JPEG_OPTIMIZE,
                                                               1 };
-                asst::imwrite(
-                    utils::path(std::format("debug/hsv/{}_{}.jpg", text, utils::format_now_for_filename())),
-                    cropped,
-                    jpeg_params);
+                utils::save_debug_image(cropped, utils::path("debug") / "hsv", true, text, "", "jpeg", jpeg_params);
             }
 #endif
         }
@@ -223,7 +221,12 @@ std::vector<Matcher::RawResult> Matcher::preproc_and_match(const cv::Mat& image,
             fp.convertTo(fp, CV_32S);
             cv::Mat count_result;
             cv::divide(2 * tp, tp + fp + tp_fn, count_result, 1, CV_32F); // 数色结果为 f1_score
-            cv::multiply(matched, count_result, matched);                 // 最终结果是数色和模板匹配的点积
+
+            if (params.pure_color) {
+                matched = 1.0f;
+            }
+
+            cv::multiply(matched, count_result, matched); // 最终结果是数色和模板匹配的点积
         }
         results.emplace_back(RawResult { .matched = matched, .templ = templ, .templ_name = templ_name });
     }

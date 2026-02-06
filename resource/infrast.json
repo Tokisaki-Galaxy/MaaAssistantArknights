@@ -75,6 +75,20 @@
                 "name": ["同谋·β"],
                 "template": "Bskill_ctrl_c_babel2.png"
             },
+            "bskill_ctrl_c_minos": {
+                "desc": [
+                    "进驻控制中枢时，基建内（不包含副手及活动室使用者）每有1名米诺斯干员，会客室线索搜集速度+4%（最多+20%，同种效果取最高）；当与萨尔贡干员进驻控制中枢一起工作时，自身心情每小时消耗+0.02"
+                ],
+                "name": ["英雄的骄傲·α"],
+                "template": "Bskill_ctrl_c_minos.png"
+            },
+            "bskill_ctrl_c_minos2": {
+                "desc": [
+                    "进驻控制中枢时，基建内（不包含副手及活动室使用者）每有1名米诺斯干员，会客室线索搜集速度+5%（最多+25%，同种效果取最高）；当与萨尔贡干员进驻控制中枢一起工作时，自身心情每小时消耗+0.02"
+                ],
+                "name": ["英雄的骄傲·β"],
+                "template": "Bskill_ctrl_c_minos2.png"
+            },
             "bskill_ctrl_c_spd": {
                 "desc": ["进驻控制中枢时，会客室线索搜集速度+25%"],
                 "efficient": {
@@ -476,6 +490,11 @@
                 "name": ["精密计算"],
                 "template": "Bskill_ctrl_t_limit&spd.png"
             },
+            "bskill_ctrl_t_limit&spd3": {
+                "desc": ["进驻控制中枢时，每个存在3名谢拉格干员的贸易站，订单获取效率+10%"],
+                "name": ["商业版图"],
+                "template": "Bskill_ctrl_t_limit&spd3.png"
+            },
             "bskill_ctrl_t_limit&spd_tmoris": {
                 "desc": ["进驻控制中枢时，每个进驻在贸易站的叙拉古干员，订单获取效率+5%"],
                 "efficient": {
@@ -689,6 +708,7 @@
                     "进驻宿舍时，该宿舍内所有干员的心情每小时恢复+0.15（同种效果取最高）",
                     "进驻宿舍时，该宿舍内所有干员的心情每小时恢复+0.15（同种效果取最高）",
                     "进驻宿舍时，该宿舍内所有干员的心情每小时恢复+0.15（同种效果取最高）",
+                    "进驻宿舍时，该宿舍内所有干员的心情每小时恢复+0.15（同种效果取最高）",
                     "进驻宿舍时，该宿舍内所有干员的心情每小时恢复+0.15（同种效果取最高）"
                 ],
                 "efficient": {
@@ -703,7 +723,8 @@
                     "乡野笛音",
                     "静心仪式·α",
                     "倾听者",
-                    "明星效应"
+                    "明星效应",
+                    "沉静心灵"
                 ],
                 "template": "Bskill_dorm_all2.png"
             },
@@ -739,6 +760,11 @@
                 },
                 "name": ["芬芳疗养·β"],
                 "template": "Bskill_dorm_all_tired.png"
+            },
+            "bskill_dorm_all_tired2": {
+                "desc": ["进驻宿舍时，该宿舍内心情20以下的干员恢复效果额外+0.1（同种效果取最高）"],
+                "name": ["净化呼吸"],
+                "template": "Bskill_dorm_all_tired2.png"
             },
             "bskill_dorm_bd_dungeon": {
                 "desc": ["进驻宿舍时，当前宿舍每级提供1层魔物料理"],
@@ -796,12 +822,13 @@
             },
             "bskill_dorm_one": {
                 "desc": [
+                    "进驻宿舍时，自身心情每小时恢复+0.7；如果该宿舍内有其他干员，则每人额外为自身心情每小时恢复+0.05",
                     "进驻宿舍时，自身心情每小时恢复+0.7；如果该宿舍内有其他干员，则每人额外为自身心情每小时恢复+0.05"
                 ],
                 "efficient": {
                     "all": 0
                 },
-                "name": ["“独处”"],
+                "name": ["“独处”", "赋格融汇"],
                 "template": "Bskill_dorm_one.png"
             },
             "bskill_dorm_one1": {
@@ -871,6 +898,18 @@
                 },
                 "name": ["自律"],
                 "template": "Bskill_dorm_reborn.png"
+            },
+            "bskill_dorm_rec_all&lv2": {
+                "desc": [
+                    "进驻宿舍时，该宿舍内所有干员的心情每小时恢复+0.15，同时当前宿舍每级为恢复效果额外+0.02（叠加后的最终值同种效果取最高）"
+                ],
+                "name": ["死前必做清单"],
+                "template": "Bskill_dorm_rec_all&lv2.png"
+            },
+            "bskill_dorm_rec_all&lvl1": {
+                "desc": ["进驻宿舍时，该宿舍内所有干员的心情每小时恢复+0.15（同种效果取最高）"],
+                "name": ["睡前必听故事"],
+                "template": "Bskill_dorm_rec_all&lvl1.png"
             },
             "bskill_dorm_rec_all&profession": {
                 "desc": [
@@ -1242,6 +1281,13 @@
                 "name": ["挑大梁"],
                 "template": "Bskill_man_gold&blacksteel.png"
             },
+            "bskill_man_gold&rhine": {
+                "desc": [
+                    "进驻制造站时，基建内（不包含副手及活动室使用者）每有1名莱茵生命干员（最多5名），贵金属类配方的生产力+3%"
+                ],
+                "name": ["造价高昂"],
+                "template": "Bskill_man_gold&rhine.png"
+            },
             "bskill_man_gold1": {
                 "desc": ["进驻制造站时，贵金属类配方的生产力+30%"],
                 "efficient": {
@@ -1319,6 +1365,11 @@
                 "name": ["掘进工程"],
                 "template": "Bskill_man_limit&cost5.png"
             },
+            "bskill_man_limit1": {
+                "desc": ["进驻制造站时，当前制造站内每个莱茵科技类技能为自身+5的仓库上限容量"],
+                "name": ["勘探背包"],
+                "template": "Bskill_man_limit1.png"
+            },
             "bskill_man_marcille1": {
                 "desc": ["进驻制造站时，生产力+20%"],
                 "efficient": {
@@ -1395,6 +1446,22 @@
                 },
                 "name": ["量体裁衣"],
                 "template": "Bskill_man_spd&cost1.png"
+            },
+            "bskill_man_spd&cost2": {
+                "desc": ["进驻制造站时，生产力+20%，心情每小时消耗+0.25"],
+                "efficient": {
+                    "all": 20
+                },
+                "name": ["虔信"],
+                "template": "Bskill_man_spd&cost2.png"
+            },
+            "bskill_man_spd&cost3": {
+                "desc": ["进驻制造站时，生产力+30%，心情每小时消耗+0.25"],
+                "efficient": {
+                    "all": 30
+                },
+                "name": ["独当一面"],
+                "template": "Bskill_man_spd&cost3.png"
             },
             "bskill_man_spd&dorm1": {
                 "desc": ["进驻制造站时，每间宿舍每级为贵金属类配方的生产力+1%"],
@@ -1484,7 +1551,7 @@
                     "进驻制造站时，当前制造站内其他干员提供的生产力全部归零（不包含根据设施数量提供加成的生产力），每个发电站为当前制造站+5%的生产力"
                 ],
                 "efficient": {
-                    "all": 0
+                    "all": -40
                 },
                 "name": ["自动化·α"],
                 "template": "Bskill_man_spd&power1.png"
@@ -1494,7 +1561,7 @@
                     "进驻制造站时，当前制造站内其他干员提供的生产力全部归零（不包含根据设施数量提供加成的生产力），每个发电站为当前制造站+10%的生产力"
                 ],
                 "efficient": {
-                    "all": 0
+                    "all": -40
                 },
                 "name": ["自动化·β"],
                 "template": "Bskill_man_spd&power2.png"
@@ -1504,7 +1571,7 @@
                     "进驻制造站时，当前制造站内其他干员提供的生产力全部归零（不包含根据设施数量提供加成的生产力），每个发电站为当前制造站+15%的生产力"
                 ],
                 "efficient": {
-                    "all": 0
+                    "all": -40
                 },
                 "name": ["仿生海龙"],
                 "template": "Bskill_man_spd&power3.png"
@@ -1688,6 +1755,9 @@
                 "desc": [
                     "进驻制造站时，当前制造站内其他干员提供的生产力全部归零（不包含根据设施数量提供加成的生产力），每个当前制造站内干员为当前制造站仓库容量上限+5"
                 ],
+                "efficient": {
+                    "all": -40
+                },
                 "name": ["科学改造"],
                 "template": "Bskill_man_spd_manu1.png"
             },
@@ -1695,6 +1765,9 @@
                 "desc": [
                     "进驻制造站时，当前制造站内其他干员提供的生产力全部归零（不包含根据设施数量提供加成的生产力），每个当前制造站内干员为当前制造站+10%生产力，仓库容量上限+5"
                 ],
+                "efficient": {
+                    "all": -40
+                },
                 "name": ["流程优化"],
                 "template": "Bskill_man_spd_manu2.png"
             },
@@ -1781,6 +1854,34 @@
                         },
                         "filter": ["夜刀", "流星"],
                         "skills": ["bskill_man_spd1"]
+                    }
+                ]
+            },
+            {
+                "desc": "苍苔组",
+                "necessary": [
+                    {
+                        "desc": "苍苔-2",
+                        "efficient": {
+                            "PureGold": 35.1
+                        },
+                        "skills": ["bskill_man_skill_spd3", "bskill_man_gold1"]
+                    }
+                ],
+                "optional": [
+                    {
+                        "desc": "金属工艺·β",
+                        "efficient": {
+                            "PureGold": 40.1
+                        },
+                        "skills": ["bskill_man_gold2"]
+                    },
+                    {
+                        "desc": "金属工艺·α",
+                        "efficient": {
+                            "PureGold": 35.1
+                        },
+                        "skills": ["bskill_man_gold1"]
                     }
                 ]
             },
@@ -2081,9 +2182,16 @@
                     {
                         "desc": "森蚺-2",
                         "efficient": {
-                            "all": 30
+                            "all": 30.2
                         },
                         "skills": ["bskill_man_spd&power2"]
+                    },
+                    {
+                        "desc": "冬时-1",
+                        "efficient": {
+                            "all": 30
+                        },
+                        "skills": ["bskill_man_spd_manu2"]
                     },
                     {
                         "desc": "清流-1",
@@ -2110,7 +2218,7 @@
                     {
                         "desc": "温蒂、森蚺-2",
                         "efficient": {
-                            "all": 30
+                            "all": 30.2
                         },
                         "skills": ["bskill_man_spd&power2"]
                     }
@@ -2119,9 +2227,16 @@
                     {
                         "desc": "温蒂、森蚺-2",
                         "efficient": {
-                            "all": 30
+                            "all": 30.2
                         },
                         "skills": ["bskill_man_spd&power2"]
+                    },
+                    {
+                        "desc": "冬时-1",
+                        "efficient": {
+                            "all": 30
+                        },
+                        "skills": ["bskill_man_spd_manu2"]
                     },
                     {
                         "desc": "清流-1",
@@ -2155,6 +2270,13 @@
                 ],
                 "optional": [
                     {
+                        "desc": "冬时-1",
+                        "efficient": {
+                            "all": 30
+                        },
+                        "skills": ["bskill_man_spd_manu2"]
+                    },
+                    {
                         "desc": "森蚺-2",
                         "efficient": {
                             "all": 20
@@ -2186,12 +2308,19 @@
                     {
                         "desc": "温蒂、森蚺-2",
                         "efficient": {
-                            "all": 30
+                            "all": 20
                         },
                         "skills": ["bskill_man_spd&power2"]
                     }
                 ],
                 "optional": [
+                    {
+                        "desc": "冬时-1",
+                        "efficient": {
+                            "all": 30
+                        },
+                        "skills": ["bskill_man_spd_manu2"]
+                    },
                     {
                         "desc": "温蒂、森蚺-2",
                         "efficient": {
@@ -2199,6 +2328,68 @@
                         },
                         "skills": ["bskill_man_spd&power2"]
                     },
+                    {
+                        "desc": "清流-1",
+                        "efficient": {
+                            "PureGold_reg": "[NumOfTrade] * 20"
+                        },
+                        "skills": ["bskill_man_spd&trade"]
+                    },
+                    {
+                        "desc": "森蚺、异客2",
+                        "efficient": {
+                            "all": 10
+                        },
+                        "skills": ["bskill_man_spd&power1"]
+                    }
+                ]
+            },
+            {
+                "conditions": {
+                    "NumOfPower": 3
+                },
+                "desc": "冬时组",
+                "necessary": [
+                    {
+                        "desc": "冬时-1",
+                        "efficient": {
+                            "all": 30
+                        },
+                        "skills": ["bskill_man_spd_manu2"]
+                    }
+                ],
+                "optional": [
+                    {
+                        "desc": "清流-1",
+                        "efficient": {
+                            "PureGold_reg": "[NumOfTrade] * 20"
+                        },
+                        "skills": ["bskill_man_spd&trade"]
+                    },
+                    {
+                        "desc": "森蚺、异客2",
+                        "efficient": {
+                            "all": 15
+                        },
+                        "skills": ["bskill_man_spd&power1"]
+                    }
+                ]
+            },
+            {
+                "conditions": {
+                    "NumOfPower": 2
+                },
+                "desc": "冬时组: 2电站",
+                "necessary": [
+                    {
+                        "desc": "冬时-1",
+                        "efficient": {
+                            "all": 30
+                        },
+                        "skills": ["bskill_man_spd_manu2"]
+                    }
+                ],
+                "optional": [
                     {
                         "desc": "清流-1",
                         "efficient": {
@@ -2282,6 +2473,13 @@
                 "name": ["内幕"],
                 "template": "Bskill_hire_spd&blacksteel2.png"
             },
+            "bskill_hire_spd&char1": {
+                "desc": [
+                    "进驻人力办公室时，人脉资源的联络速度+35%，心情每小时消耗-0.25，如果凛御银灰进驻在控制中枢，则人脉资源的联络速度额外+10%"
+                ],
+                "name": ["雪境归心"],
+                "template": "Bskill_hire_spd&char1.png"
+            },
             "bskill_hire_spd&clue": {
                 "desc": [
                     "进驻人力办公室时，人脉资源的联络速度+35%，同时每个招募位（不包含初始招募位）额外+5%会客室线索搜集速度",
@@ -2359,6 +2557,11 @@
                 },
                 "name": ["威权谕使", "踏坊寻味·β"],
                 "template": "Bskill_hire_spd&cost6.png"
+            },
+            "bskill_hire_spd&cost7": {
+                "desc": ["进驻人力办公室时，人脉资源的联络速度+20%，心情每小时消耗-0.25"],
+                "name": ["圣女声望"],
+                "template": "Bskill_hire_spd&cost7.png"
             },
             "bskill_hire_spd&dorm1": {
                 "desc": ["进驻人力办公室时，人脉资源的联络速度+5%，每间宿舍每级额外+1%人脉资源的联络速度"],
@@ -2523,6 +2726,7 @@
                     "进驻发电站时，无人机充能速度+10%",
                     "进驻发电站时，无人机充能速度+10%",
                     "进驻发电站时，无人机充能速度+10%",
+                    "进驻发电站时，无人机充能速度+10%",
                     "进驻发电站时，无人机充能速度+10%"
                 ],
                 "efficient": {
@@ -2536,12 +2740,14 @@
                     "挽歌充能·α",
                     "灵河充能·α",
                     "充能中",
-                    "雷法专精"
+                    "雷法专精",
+                    "澎湃紊流"
                 ],
                 "template": "Bskill_pow_spd1.png"
             },
             "bskill_pow_spd2": {
                 "desc": [
+                    "进驻发电站时，无人机充能速度+15%",
                     "进驻发电站时，无人机充能速度+15%",
                     "进驻发电站时，无人机充能速度+15%",
                     "进驻发电站时，无人机充能速度+15%",
@@ -2562,7 +2768,8 @@
                     "脉冲电弧·α",
                     "聚能",
                     "灯塔供能模块",
-                    "穹顶物流管理·α"
+                    "穹顶物流管理·α",
+                    "澎湃紊流"
                 ],
                 "template": "Bskill_pow_spd2.png"
             },
@@ -2572,12 +2779,13 @@
                     "进驻发电站时，无人机充能速度+20%",
                     "进驻发电站时，无人机充能速度+20%",
                     "进驻发电站时，无人机充能速度+20%",
+                    "进驻发电站时，无人机充能速度+20%",
                     "进驻发电站时，无人机充能速度+20%"
                 ],
                 "efficient": {
                     "all": 20
                 },
-                "name": ["静电场", "电荷释放", "热能充能·γ", "脉冲电弧·β", "穹顶物流管理·β"],
+                "name": ["静电场", "电荷释放", "热能充能·γ", "脉冲电弧·β", "穹顶物流管理·β", "合法窃电"],
                 "template": "Bskill_pow_spd3.png"
             },
             "bskill_pow_spd_P": {
@@ -2702,6 +2910,11 @@
                 },
                 "name": ["无辜笑脸"],
                 "template": "Bskill_meet_exchange.png"
+            },
+            "bskill_meet_exchange2": {
+                "desc": ["进驻会客室时，处于线索交流时线索搜集速度提升30%"],
+                "name": ["特殊渠道顾问"],
+                "template": "Bskill_meet_exchange2.png"
             },
             "bskill_meet_flag_glasgow": {
                 "desc": [
@@ -3599,7 +3812,7 @@
                     "进驻贸易站时，当前贸易站内其他干员提供的订单获取效率全部归零，且每人为自身+45%订单获取效率，同时全体心情每小时消耗+0.25"
                 ],
                 "efficient": {
-                    "all": 0
+                    "all": -40
                 },
                 "name": ["低语"],
                 "template": "Bskill_tra_vodfox.png"

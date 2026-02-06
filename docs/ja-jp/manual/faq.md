@@ -15,13 +15,13 @@ MAAがアップデート後に動作しなくなった場合、またはエラ�
 MAAディレクトリ内の `DependencySetup_依赖库安装.bat` を実行するか、以下のコマンドを端末で実行するか、
 
 ```sh
-winget install "Microsoft.VCRedist.2015+.x64" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements && winget install "Microsoft.DotNet.DesktopRuntime.8" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements
+winget install "Microsoft.VCRedist.2015+.x64" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements && winget install "Microsoft.DotNet.DesktopRuntime.10" --override "/repair /passive /norestart" --force --uninstall-previous --accept-package-agreements
 ```
 
 以下の<u>**2つ**</u>のランタイムライブラリを手動でダウンロードしてインストールして問題を解決してください。
 
-- [Visual C++ 再頒布可能パッケージ](https://aka.ms/vs/17/release/vc_redist.x64.exe)
-- [.NET デスクトップランタイム 8](https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe)
+- [Visual C++ 再頒布可能パッケージ](https://aka.ms/vc14/vc_redist.x64.exe)
+- [.NET デスクトップランタイム 10](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe)
 
 :::
 
@@ -51,7 +51,7 @@ Windows N/KN（ヨーロッパ/韓国）の場合、[メディア機能パック
 
 #### Windows 7 関連
 
-.NET 8 は Windows 7 / 8 / 8.1 システムをサポートしていないため<sup>[ソース](https://github.com/dotnet/core/issues/7556)</sup>、MAA も同様にサポートしていません。最後に利用可能な .NET 8 バージョンは [`v5.4.0-beta.1.d035.gd2e5001e7`](https://github.com/MaaAssistantArknights/MaaRelease/releases/tag/v5.4.0-beta.1.d035.gd2e5001e7) です。最後に利用可能な .NET 4.8 バージョンは [`v4.28.8`](https://github.com/MaaAssistantArknights/MaaAssistantArknights/releases/tag/v4.28.8) です。自己コンパイルの実現可能性はまだ確認されていません。
+.NET 10 は Windows 7 / 8 / 8.1 システムをサポートしていないため<sup>[ソース](https://github.com/dotnet/core/issues/7556)</sup>、MAA も同様にサポートしていません。最後に利用可能な .NET 8 バージョンは [`v5.4.0-beta.1.d035.gd2e5001e7`](https://github.com/MaaAssistantArknights/MaaRelease/releases/tag/v5.4.0-beta.1.d035.gd2e5001e7) です。最後に利用可能な .NET 4.8 バージョンは [`v4.28.8`](https://github.com/MaaAssistantArknights/MaaAssistantArknights/releases/tag/v4.28.8) です。自己コンパイルの実現可能性はまだ確認されていません。
 
 Windows 7 の場合、上記の 2 つのランタイムライブラリをインストールする前に、以下のパッチがインストールされているかどうかを確認する必要があります：
 
@@ -144,65 +144,6 @@ Android Phone Assistant は adb を使用してスマホと通信しますが、
 
 それでもうまくいかない場合は、`接続設定` - `タッチモード` の `Minitouch` を `MaaTouch` に切り替えて再度使用してください。 `Adb Input` は非常に動作が遅いため最終手段としてご使用ください。
 
-## Blue Stackエミュレータが起動するたびにポート番号が異なる（Hyper-V）
-
-MAAを起動し `設定` - `接続設定` で `接続構成` に `BlueStacks` を選んで、 `接続自動認識` と `毎回再検出する` にチェックを入れます。或いは `ウェイクアップ` に設定する。
-
-通常、これにより接続が設定されます。 接続できない場合は、複数のエミュレータコアをインストールしているか、機能に問題がある可能性がありますので、以下の手順に従って追加設定を行ってください。
-
-### `Bluestacks.Config.Keyword` を指定する
-
-::: info 注意
-マルチコアを有効にしている場合、または複数のエミュレータコアをインストールしている場合は、使用するエミュレータ番号を指定するための追加設定が必要です。
-:::
-
-`gui.json` に `Bluestacks.Config.Keyword`フィールドを探し、`"bst.instance.emulator_number.status.adb_port"`というコンテンツを追加します。シミュレーター番号は、シミュレーター パスの `BlueStacks_nxt\Engine` で確認できます。
-
-::: details 示例
-Nougat64コア：
-
-```json
-"Bluestacks.Config.Keyword":"bst.instance.Nougat64.status.adb_port",
-```
-
-Pie64_2コア：（コア名の後の数字は、これがマルチコアであることを意味する）
-
-```json
-"Bluestacks.Config.Keyword": "bst.instance.Pie64_2.status.adb_port",
-```
-
-:::
-
-### `Bluestacks.Config.Path` を指定する
-
-::: info 注意
-MAA はレジストリから `bluestacks.conf` の保存場所を読み取ろうとするようになり、機能が失敗したりエラーが発生したりした場合は、構成ファイルのパスを手動で指定する必要があります
-:::
-
-1. Bluestacksエミュレータのデータディレクトリにある`bluestacks.conf`ファイルを探します
-   - グローバル版のデフォルトパス `C:\ProgramData\BlueStacks_nxt\bluestacks.conf`
-   - 中国版のデフォルトパス `C:\ProgramData\BlueStacks_nxt_cn\bluestacks.conf`
-
-2. 初めて MAA を使用する場合は、一度 MAA を起動してください。MAAの `config` ディレクトリに `gui.json` が生成されます。
-
-3. **最初に** MAAを **終了してから** `gui.json` を開きます、 `Configurations` の下の現在の構成名フィールドを見つけます（設定 - 構成を切り替える で表示でき、デフォルトは `Default` です）、その中のフィールド `Bluestacks.Config.Path` を検索しますし、 `bluestacks.conf` へのフルパスを記入します。（注意として `\\`をエスケープに使用しています）
-
-::: details 示例
-`C:\ProgramData\BlueStacks_nxt\bluestacks.conf` を記入例として使用します
-
-```json
-{
-  "Configurations": {
-    "Default": {
-      "Bluestacks.Config.Path":"C:\\ProgramData\\BlueStacks_nxt\\bluestacks.conf",
-      // 残りの設定フィールドを手動で入力して変更しないでください
-    }
-  }
-}
-```
-
-:::
-
 ## 接続に成功し、数回クリックすることができ、その後スタックまたはタスクエラーになる
 
 - `UI調整`を使用している場合は、0に調整してください。
@@ -211,6 +152,7 @@ MAA はレジストリから `bluestacks.conf` の保存場所を読み取ろう
 - 自動戦闘が頻繁に一時停止し、オペレーターが配置されない場合は、`設定` - `実行設定` にある `統合戦略/保全駐在でポーズトリックを使用します` を無効にしてください。
 - 自動編成がオペレーターを正しく認識しない場合は、該当するオペレーターの特別フォーカスを解除してください。
 - `Adb Input` のタッチモードで動作が遅いのは正常です。オートバトルなどが必要な場合は他のモードに切り替えてみてください。
+- MuMuエミュレータを使用する場合、`ビデオメモリ使用ポリシー`を`リソース使用量が少ない`に設定しないでください。
 
 ### スクリーンショットに時間がかかる/長すぎるというメッセージが表示される
 
