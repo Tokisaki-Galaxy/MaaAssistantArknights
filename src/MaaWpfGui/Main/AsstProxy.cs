@@ -2415,6 +2415,7 @@ public class AsstProxy
         {
             return ConnectCloudGaming(ref error);
         }
+
         // 如果启用了 AttachWindow 模式，则使用窗口绑定而非 ADB 连接
         if (SettingsViewModel.ConnectSettings.UseAttachWindow)
         {
@@ -2700,7 +2701,7 @@ public class AsstProxy
             else
             {
                 _logger.Information("Already connected to cloud backend {Address}", normalizedAddress);
-                if (!_forcedReloadResource)
+                if (!Instances.TaskQueueViewModel.EnableAutoReload)
                 {
                     return true;
                 }
