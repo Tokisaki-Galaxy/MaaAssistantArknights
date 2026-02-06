@@ -1,7 +1,7 @@
 #include "CloudGamingController.h"
 #include "Utils/Logger.hpp"
 #include <meojson/json.hpp>
-#include "Utils/NoWarningCV.h"
+#include "MaaUtils/NoWarningCV.hpp"
 #include <algorithm>
 #include <cctype>
 #include <istream>
